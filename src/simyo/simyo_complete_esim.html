@@ -1030,6 +1030,8 @@
                 sessionToken: appState.sessionToken,
                 phoneNumber: appState.phoneNumber,
                 currentStep: appState.currentStep,
+                isDeviceChange: appState.isDeviceChange,
+                activationCode: appState.activationCode,
                 timestamp: Date.now()
             };
             localStorage.setItem('simyo_session', JSON.stringify(sessionData));
@@ -1048,6 +1050,8 @@
                         appState.sessionToken = data.sessionToken;
                         appState.phoneNumber = data.phoneNumber;
                         appState.currentStep = data.currentStep;
+                        appState.isDeviceChange = data.isDeviceChange || false;
+                        appState.activationCode = data.activationCode || "";
                         
                         // 恢复UI状态
                         if (appState.phoneNumber) {
@@ -1055,7 +1059,19 @@
                         }
                         
                         if (appState.sessionToken) {
-                            showSection(Math.max(2, appState.currentStep)); // 至少跳到第二步
+                            // 根据用户之前的选择决定显示什么
+                            if (appState.isDeviceChange) {
+                                // 用户之前选择了设备更换，直接显示设备更换步骤
+                                document.getElementById('deviceChangeOption').style.display = 'none';
+                                document.getElementById('deviceChangeSteps').style.display = 'block';
+                                bindDeviceChangeEvents();
+                            } else if (appState.activationCode) {
+                                // 用户已经获取了eSIM，直接跳转到相应步骤
+                                showSection(Math.max(3, appState.currentStep));
+                            } else {
+                                // 显示设备更换选项让用户选择
+                                showDeviceChangeOption();
+                            }
                         }
                         
                         updateStatus();

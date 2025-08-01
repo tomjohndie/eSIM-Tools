@@ -49,8 +49,8 @@ function createProxyHeaders(sessionToken = null) {
 
 // API路由
 
-// 1. 登录Simyo账户
-app.post('/api/simyo/login', async (req, res) => {
+// 1. 登录Simyo账户 (匹配前端调用的端点)
+app.post('/api/simyo/sessions', async (req, res) => {
     try {
         const { phoneNumber, password } = req.body;
         
@@ -112,7 +112,7 @@ app.post('/api/simyo/login', async (req, res) => {
     }
 });
 
-// 2. 获取eSIM信息
+// 2. 获取eSIM信息 (旧端点，保持兼容性)
 app.get('/api/simyo/esim', async (req, res) => {
     try {
         const sessionToken = req.headers['x-session-token'];
@@ -164,8 +164,60 @@ app.get('/api/simyo/esim', async (req, res) => {
     }
 });
 
-// 3. 申请新eSIM（设备更换）
-app.post('/api/simyo/apply-new-esim', async (req, res) => {
+// 2b. 获取eSIM信息 (匹配前端调用的端点)
+app.get('/api/simyo/esim/get-by-customer', async (req, res) => {
+    try {
+        const sessionToken = req.headers['x-session-token'];
+        
+        if (!sessionToken) {
+            return res.status(401).json({
+                success: false,
+                error: 'MISSING_SESSION_TOKEN',
+                message: '缺少会话令牌'
+            });
+        }
+
+        console.log(`获取eSIM信息 (get-by-customer)，会话令牌: ${sessionToken.substring(0, 10)}...`);
+        
+        const response = await fetch(`${SIMYO_CONFIG.baseUrl}/esim/get-by-customer`, {
+            method: 'GET',
+            headers: createProxyHeaders(sessionToken)
+        });
+
+        const data = await response.json();
+        
+        if (response.ok && data.result) {
+            console.log(`eSIM信息获取成功 (get-by-customer)`);
+            res.json({
+                success: true,
+                result: {
+                    activationCode: data.result.activationCode,
+                    status: data.result.status || 'READY',
+                    phoneNumber: data.result.phoneNumber || null,
+                    iccid: data.result.iccid || null,
+                    createdAt: data.result.createdAt || null
+                }
+            });
+        } else {
+            console.log(`eSIM信息获取失败 (get-by-customer): ${JSON.stringify(data)}`);
+            res.status(response.status).json({
+                success: false,
+                error: data.error || 'ESIM_FETCH_FAILED',
+                message: data.message || '获取eSIM信息失败'
+            });
+        }
+    } catch (error) {
+        console.error('获取eSIM信息错误 (get-by-customer):', error);
+        res.status(500).json({
+            success: false,
+            error: 'SERVER_ERROR',
+            message: '服务器内部错误'
+        });
+    }
+});
+
+// 3. 申请新eSIM（设备更换）(匹配前端调用的端点)
+app.post('/api/simyo/esim/apply-new-esim', async (req, res) => {
     try {
         const sessionToken = req.headers['x-session-token'];
         
@@ -199,8 +251,8 @@ app.post('/api/simyo/apply-new-esim', async (req, res) => {
     }
 });
 
-// 4. 发送验证码到短信
-app.post('/api/simyo/send-sms-code', async (req, res) => {
+// 4. 发送验证码到短信 (匹配前端调用的端点)
+app.post('/api/simyo/esim/send-sms-code', async (req, res) => {
     try {
         const sessionToken = req.headers['x-session-token'];
         
@@ -234,8 +286,8 @@ app.post('/api/simyo/send-sms-code', async (req, res) => {
     }
 });
 
-// 5. 验证验证码
-app.post('/api/simyo/verify-code', async (req, res) => {
+// 5. 验证验证码 (匹配前端调用的端点)
+app.post('/api/simyo/esim/verify-code', async (req, res) => {
     try {
         const sessionToken = req.headers['x-session-token'];
         const { validationCode } = req.body;
@@ -279,8 +331,8 @@ app.post('/api/simyo/verify-code', async (req, res) => {
     }
 });
 
-// 6. 确认eSIM安装
-app.post('/api/simyo/confirm-install', async (req, res) => {
+// 6. 确认eSIM安装 (匹配前端调用的端点)
+app.post('/api/simyo/esim/reorder-profile-installed', async (req, res) => {
     try {
         const sessionToken = req.headers['x-session-token'];
         
