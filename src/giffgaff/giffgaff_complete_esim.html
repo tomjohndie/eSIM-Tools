@@ -529,6 +529,16 @@
                     <div id="cookieLoginSection" class="mt-4" style="display: none;">
                         <h5 class="mb-3">Cookie 登录</h5>
                         
+                        <div class="alert alert-warning mb-4">
+                            <h6><i class="fas fa-exclamation-triangle me-2"></i>功能状态说明：</h6>
+                            <p class="mb-2">Cookie登录功能需要后端服务支持。如果您看到"后端服务不可用"的错误，请：</p>
+                            <ul class="mb-2">
+                                <li>使用<strong>OAuth 2.0登录</strong>（推荐，功能完整）</li>
+                                <li>或部署提供的 <code>verify_cookie.php</code> 文件到您的服务器</li>
+                            </ul>
+                            <p class="mb-0"><small class="text-muted">💡 OAuth 2.0登录无需后端，功能完整且更安全</small></p>
+                        </div>
+                        
                         <div class="alert alert-info mb-4">
                             <h6><i class="fas fa-info-circle me-2"></i>如何获取Cookie：</h6>
                             <ol class="mb-2">
@@ -894,30 +904,47 @@
                 
                 showStatus(elements.cookieStatus, "正在验证Cookie...", "success");
                 
-                // 这里应该调用Cookie验证API，但由于CORS限制，我们暂时模拟验证
-                // 实际应用中，您需要实现Cookie到Access Token的转换逻辑
+                // 调用Cookie验证API
+                const response = await fetch('verify_cookie.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        cookie: cookie
+                    })
+                });
                 
-                // 模拟验证延迟
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`验证失败: ${response.status} - ${errorText}`);
+                }
                 
-                // 检查Cookie格式
-                if (cookie.includes('=') && cookie.length > 20) {
-                    // 模拟成功 - 在实际应用中，这里应该调用API验证Cookie并获取Access Token
-                    showStatus(elements.cookieStatus, "Cookie验证成功！请注意：当前为演示模式，实际应用需要服务器端验证", "success");
-                    
-                    // 保存Cookie信息到应用状态
-                    appState.cookie = cookie;
+                const result = await response.json();
+                
+                if (result.success) {
+                    appState.accessToken = result.accessToken;
+                    showStatus(elements.cookieStatus, "Cookie验证成功！已获取Access Token", "success");
                     
                     // 跳过邮件验证，直接进入第三步
                     setTimeout(() => {
                         showSection(3);
                     }, 2000);
                 } else {
-                    throw new Error("Cookie格式不正确，请检查输入");
+                    throw new Error(result.message || "Cookie验证失败");
                 }
                 
             } catch (error) {
-                showStatus(elements.cookieStatus, "Cookie验证失败：" + error.message, "error");
+                console.error('Cookie验证详细错误:', error);
+                
+                // 检查是否是网络错误或后端不可用
+                if (error.message.includes('fetch') || error.message.includes('404') || error.message.includes('500')) {
+                    showStatus(elements.cookieStatus, 
+                        "Cookie登录功能需要后端支持。当前后端服务不可用，请使用OAuth 2.0登录方式。", 
+                        "error");
+                } else {
+                    showStatus(elements.cookieStatus, "Cookie验证失败：" + error.message, "error");
+                }
             } finally {
                 elements.verifyCookieBtn.innerHTML = '<i class="fas fa-check-circle me-2"></i> 验证Cookie';
                 elements.verifyCookieBtn.disabled = false;
@@ -1054,7 +1081,11 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${appState.accessToken}`
+                        'Authorization': `Bearer ${appState.accessToken}`,
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                        'Accept': 'application/json',
+                        'Origin': 'https://www.giffgaff.com',
+                        'Referer': 'https://www.giffgaff.com/'
                     },
                     body: JSON.stringify({
                         source: "esim",
@@ -1103,7 +1134,11 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${appState.accessToken}`
+                        'Authorization': `Bearer ${appState.accessToken}`,
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                        'Accept': 'application/json',
+                        'Origin': 'https://www.giffgaff.com',
+                        'Referer': 'https://www.giffgaff.com/'
                     },
                     body: JSON.stringify({
                         ref: appState.emailCodeRef,
