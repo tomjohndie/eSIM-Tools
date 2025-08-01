@@ -8,19 +8,19 @@
 [[redirects]]
   # Giffgaff eSIM页面
   from = "/giffgaff"
-  to = "/giffgaff_complete_esim.html"
+  to = "/src/giffgaff/giffgaff_complete_esim.html"
   status = 200
 
 [[redirects]]
   # Simyo eSIM页面（完整版本）
   from = "/simyo"
-  to = "/simyo_complete_esim.html"
+  to = "/src/simyo/simyo_complete_esim.html"
   status = 200
 
 [[redirects]]
   # Simyo eSIM页面（静态版本）
   from = "/simyo-static"
-  to = "/simyo_static.html"
+  to = "/src/simyo/simyo_static.html"
   status = 200
 
 [[redirects]]
@@ -58,4 +58,4 @@
     X-XSS-Protection = "1; mode=block"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; img-src 'self' data: https: http:; connect-src 'self' https://api.qrserver.com https://appapi.simyo.nl https://api.giffgaff.com; font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; img-src 'self' data: https: http:; connect-src 'self' https://api.qrserver.com https://appapi.simyo.nl https://api.giffgaff.com https://id.giffgaff.com https://publicapi.giffgaff.com; font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;"

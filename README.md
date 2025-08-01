@@ -157,6 +157,45 @@
 - **适用**: 功能演示，界面展示
 - **限制**: 受CORS限制，无法调用真实API
 
+## 📁 项目结构
+
+```
+esim-tools/
+├── index.html                    # 主页面 - 工具选择
+├── src/                          # 源代码目录
+│   ├── giffgaff/                 # Giffgaff eSIM工具
+│   │   └── giffgaff_complete_esim.html
+│   └── simyo/                    # Simyo eSIM工具
+│       ├── simyo_complete_esim.html  # 完整版（需要代理）
+│       ├── simyo_static.html         # 静态版（演示用）
+│       └── simyo_proxy_server.js     # CORS代理服务器
+├── docs/                         # 文档目录
+│   ├── fixes/                    # 问题修复说明
+│   │   ├── GIFFGAFF_OAUTH_FIX.md
+│   │   └── GIFFGAFF_CSP_CALLBACK_FIX.md
+│   ├── guides/                   # 使用指南
+│   │   ├── CORS_SOLUTION.md
+│   │   └── DEPLOYMENT_GUIDE.md
+│   └── reference/                # 参考文档
+│       ├── README_giffgaff_esim.md
+│       └── README_simyo_esim.md
+├── tests/                        # 测试文件
+│   ├── test_giffgaff_esim.html
+│   └── test_simyo_esim.html
+├── scripts/                      # 脚本文件
+│   ├── start_simyo_server.sh
+│   ├── start_simyo_server.bat
+│   └── deploy.sh
+├── postman/                      # Postman脚本和参考文件
+│   ├── Giffgaff-swap-esim.json
+│   ├── Simyo-swap-esim.json
+│   ├── giffgaff.html
+│   └── simyo.html
+├── netlify.toml                  # Netlify部署配置
+├── package.json                  # Node.js依赖配置
+└── README.md                     # 项目说明
+```
+
 ### CORS解决方案
 静态部署环境下通过以下方式解决跨域问题：
 1. **推荐**: 使用公共服务 [esim.cosr.eu.org](https://esim.cosr.eu.org)
@@ -164,15 +203,15 @@
 3. **本地代理服务器**: 运行Node.js代理
 4. **浏览器插件**: 临时解决方案
 
-详细解决方案请参考 [CORS_SOLUTION.md](./CORS_SOLUTION.md)
+详细解决方案请参考 [docs/guides/CORS_SOLUTION.md](./docs/guides/CORS_SOLUTION.md)
 
 ## 🧪 测试
 
 ### 运行测试
 ```bash
 # 在浏览器中打开测试页面
-open test_giffgaff_esim.html
-open test_simyo_esim.html
+open tests/test_giffgaff_esim.html
+open tests/test_simyo_esim.html
 ```
 
 ### 测试覆盖
@@ -210,7 +249,7 @@ open test_simyo_esim.html
 
 如果您遇到问题或有建议，请：
 - 提交 [GitHub Issue](https://github.com/Silentely/esim-tools/issues)
-- 查看 [常见问题解答](./DEPLOYMENT_GUIDE.md#故障排除)
+- 查看 [常见问题解答](./docs/guides/DEPLOYMENT_GUIDE.md#故障排除)
 - 参考详细文档和使用指南
 
 ---
