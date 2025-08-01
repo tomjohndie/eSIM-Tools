@@ -199,7 +199,7 @@ const response = await fetch('https://appapi.simyo.nl/simyoapi/api/v1/sessions',
     method: 'POST',
     headers: createHeaders(false),
     body: JSON.stringify({
-        phoneNumber: '0613715742',
+        phoneNumber: '0613123712',
         password: 'your_password'
     })
 });

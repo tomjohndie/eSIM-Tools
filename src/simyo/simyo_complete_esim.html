@@ -628,7 +628,7 @@
                     
                     <div class="mb-4">
                         <label for="phoneNumber" class="form-label">手机号码：</label>
-                        <input type="text" id="phoneNumber" class="form-control" placeholder="例如: 0613715742" maxlength="15">
+                        <input type="text" id="phoneNumber" class="form-control" placeholder="例如: 0613123712" maxlength="15">
                     </div>
                     
                     <div class="mb-4">
@@ -997,6 +997,22 @@
                 // 重置UI
                 showSection(1);
                 updateSteps(1);
+                
+                // 确保显示登录步骤，隐藏设备更换相关界面
+                const step1 = document.getElementById('step1');
+                if (step1) {
+                    step1.style.display = 'block';
+                }
+                
+                const deviceChangeOption = document.getElementById('deviceChangeOption');
+                if (deviceChangeOption) {
+                    deviceChangeOption.style.display = 'none';
+                }
+                
+                const deviceChangeSteps = document.getElementById('deviceChangeSteps');
+                if (deviceChangeSteps) {
+                    deviceChangeSteps.style.display = 'none';
+                }
 
                 // 重置所有表单
                 document.querySelectorAll('input').forEach(input => {
@@ -1491,10 +1507,20 @@
 
         // 显示设备更换选项
         function showDeviceChangeOption() {
+            // 隐藏登录步骤
+            const step1 = document.getElementById('step1');
+            if (step1) {
+                step1.style.display = 'none';
+            }
+            
+            // 显示设备更换选项
             const deviceChangeOption = document.getElementById('deviceChangeOption');
             if (deviceChangeOption) {
                 deviceChangeOption.style.display = 'block';
             }
+            
+            // 更新步骤指示器，跳过步骤1
+            updateSteps(2);
         }
 
         // 开始设备更换流程

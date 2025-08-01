@@ -226,7 +226,7 @@
                     <div class="mock-data">
                         <h6>Simyo 账户</h6>
                         <input type="text" class="mock-input" id="mockPhoneNumber" 
-                               placeholder="手机号码" value="0613715742">
+                               placeholder="手机号码" value="0613123712">
                         <input type="text" class="mock-input" id="mockPassword" 
                                placeholder="密码" value="test_password">
                     </div>
@@ -414,7 +414,7 @@
                             result: {
                                 activationCode: "1$esim.simyo.nl$mock_activation_abcdef123456",
                                 status: "READY",
-                                phoneNumber: "0613715742",
+                                phoneNumber: "0613123712",
                                 iccid: "8931088123456789012",
                                 createdAt: "2024-01-15T10:30:00Z"
                             }
@@ -560,7 +560,7 @@
         async function testPhoneValidation() {
             await testFramework.runTest('phone-validation', async () => {
                 // 测试有效的荷兰手机号
-                testFramework.assertTrue(mockValidatePhoneNumber('0613715742'), 'Should accept valid Dutch mobile number');
+                testFramework.assertTrue(mockValidatePhoneNumber('0613123712'), 'Should accept valid Dutch mobile number');
                 testFramework.assertTrue(mockValidatePhoneNumber('0687654321'), 'Should accept another valid number');
                 
                 // 测试无效的手机号
