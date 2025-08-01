@@ -103,3 +103,5 @@ dist/
 .env.local
 .env.development
 .env.test
+Giffgaff-swap-esim.json
+giffgaff.html
