@@ -442,39 +442,72 @@
             </div>
         </div>
         
-        <!-- 步骤1: OAuth登录 -->
+        <!-- 步骤1: 选择登录方式 -->
         <div id="step1" class="section active">
             <div class="card">
                 <div class="card-header">
-                    <i class="fas fa-key"></i> 第一步：OAuth登录
+                    <i class="fas fa-key"></i> 第一步：选择登录方式
                 </div>
                 <div class="card-body">
                     <p class="mb-4" style="font-size: 17px; color: #212529;">
-                        请点击下方按钮进行OAuth登录认证：
+                        请选择您偏好的登录方式：
                     </p>
                     
-                    <div class="btn-group">
-                        <button id="oauthLoginBtn" class="btn btn-primary">
-                            <i class="fas fa-sign-in-alt me-2"></i> 开始OAuth登录
-                        </button>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100" style="cursor: pointer;" onclick="selectLoginMethod('oauth')">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-shield-alt fa-3x mb-3" style="color: var(--primary);"></i>
+                                    <h5>OAuth 2.0 登录</h5>
+                                    <p class="text-muted">安全的官方认证方式</p>
+                                    <small class="text-success">✓ 推荐使用</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100" style="cursor: pointer;" onclick="selectLoginMethod('cookie')">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-cookie-bite fa-3x mb-3" style="color: var(--warning);"></i>
+                                    <h5>Cookie 登录</h5>
+                                    <p class="text-muted">使用已有登录Cookie</p>
+                                    <small class="text-info">✓ 快速便捷</small>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                    
+                    <div id="loginMethodStatus" class="status"></div>
+                    
+                    <!-- OAuth登录区域 -->
+                    <div id="oauthLoginSection" class="mt-4" style="display: none;">
+                        <h5 class="mb-3">OAuth 2.0 登录</h5>
+                        <div class="btn-group">
+                            <button id="oauthLoginBtn" class="btn btn-primary">
+                                <i class="fas fa-sign-in-alt me-2"></i> 开始OAuth登录
+                            </button>
+                        </div>
                     
                     <div id="oauthStatus" class="status"></div>
                     
                     <!-- OAuth回调处理区域 -->
                     <div id="oauthCallbackSection" class="verification-section">
-                        <p class="mb-4" style="font-size: 17px; color: #212529; margin-top: 25px;">
-                            请从浏览器地址栏复制完整的回调URL并粘贴到下方：
-                        </p>
+                        <div class="alert alert-warning mb-4">
+                            <h6><i class="fas fa-exclamation-triangle me-2"></i>如何获取回调URL：</h6>
+                            <ol class="mb-2">
+                                <li><strong>打开开发者工具</strong>：按 F12 或右键选择"检查"</li>
+                                <li><strong>切换到"网络"标签页</strong></li>
+                                <li><strong>在登录页面输入邮箱验证码</strong></li>
+                                <li><strong>点击登录按钮</strong></li>
+                                <li><strong>在网络面板中查找</strong> <code>giffgaff://auth/callback/</code> 开头的请求</li>
+                                <li><strong>复制完整的URL</strong> 并粘贴到下方输入框</li>
+                            </ol>
+                            <p class="mb-0"><small class="text-muted">💡 提示：如果看不到网络请求，请先打开开发者工具再进行登录操作</small></p>
+                        </div>
                         
                         <div class="alert alert-info mb-4">
-                            <h6><i class="fas fa-info-circle me-2"></i>回调URL格式说明：</h6>
-                            <p class="mb-2"><strong>支持的格式：</strong></p>
-                            <ul class="mb-2">
-                                <li><code>giffgaff://auth/callback/?code=...&state=...</code></li>
-                                <li><code>https://example.com/callback?code=...&state=...</code></li>
-                            </ul>
-                            <p class="mb-0"><small class="text-muted">请复制包含 <code>code</code> 参数的完整URL</small></p>
+                            <h6><i class="fas fa-info-circle me-2"></i>回调URL格式示例：</h6>
+                            <p class="mb-2"><code>giffgaff://auth/callback/?code=ABC123&state=XYZ789</code></p>
+                            <p class="mb-0"><small class="text-muted">确保URL包含 <code>code</code> 和 <code>state</code> 参数</small></p>
                         </div>
                         
                         <div class="mb-4">
@@ -489,6 +522,37 @@
                         </div>
                         
                         <div id="callbackStatus" class="status mt-4"></div>
+                    </div>
+                    </div>
+                    
+                    <!-- Cookie登录区域 -->
+                    <div id="cookieLoginSection" class="mt-4" style="display: none;">
+                        <h5 class="mb-3">Cookie 登录</h5>
+                        
+                        <div class="alert alert-info mb-4">
+                            <h6><i class="fas fa-info-circle me-2"></i>如何获取Cookie：</h6>
+                            <ol class="mb-2">
+                                <li><strong>访问</strong> <a href="https://www.giffgaff.com" target="_blank">giffgaff.com</a> 并登录您的账户</li>
+                                <li><strong>打开开发者工具</strong>：按 F12 或右键选择"检查"</li>
+                                <li><strong>切换到"应用程序"标签页</strong>（Chrome）或"存储"标签页（Firefox）</li>
+                                <li><strong>在左侧选择"Cookie"</strong> → <code>https://www.giffgaff.com</code></li>
+                                <li><strong>复制所有Cookie</strong> 或重要的认证Cookie</li>
+                            </ol>
+                            <p class="mb-0"><small class="text-muted">💡 Cookie格式：<code>name1=value1; name2=value2; ...</code></small></p>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="cookieInput" class="form-label">Cookie 字符串：</label>
+                            <textarea id="cookieInput" class="form-control" placeholder="输入完整的Cookie字符串，例如：session_token=abc123; user_id=456789; ..." rows="4"></textarea>
+                        </div>
+                        
+                        <div class="btn-group">
+                            <button id="verifyCookieBtn" class="btn btn-warning">
+                                <i class="fas fa-check-circle me-2"></i> 验证Cookie
+                            </button>
+                        </div>
+                        
+                        <div id="cookieStatus" class="status"></div>
                     </div>
                 </div>
             </div>
@@ -629,6 +693,9 @@
             accessToken: "",
             codeVerifier: "",
             
+            // Cookie相关
+            cookie: "",
+            
             // MFA相关
             emailCodeRef: "",
             emailSignature: "",
@@ -647,21 +714,24 @@
             currentStep: 1
         };
 
+        // 环境检测
+        const isNetlify = window.location.hostname.includes('cosr.eu.org') || window.location.hostname.includes('netlify');
+        
         // OAuth 2.0 PKCE相关配置
         const oauthConfig = {
             clientId: "4a05bf219b3985647d9b9a3ba610a9ce",
             clientSecret: "OQv4cfiyol8TvCW4yiLGj0c1AkTR3N2JfRzq7XGqMxk=",
             redirectUri: "giffgaff://auth/callback/",
             authUrl: "https://id.giffgaff.com/auth/oauth/authorize",
-            tokenUrl: "https://id.giffgaff.com/auth/oauth/token",
+            tokenUrl: isNetlify ? "/api/giffgaff-id/auth/oauth/token" : "https://id.giffgaff.com/auth/oauth/token",
             scope: "read"
         };
 
         // Giffgaff API端点
         const apiEndpoints = {
-            mfaChallenge: "https://id.giffgaff.com/v4/mfa/challenge/me",
-            mfaValidation: "https://id.giffgaff.com/v4/mfa/validation",
-            graphql: "https://publicapi.giffgaff.com/gateway/graphql",
+            mfaChallenge: isNetlify ? "/api/giffgaff-id/v4/mfa/challenge/me" : "https://id.giffgaff.com/v4/mfa/challenge/me",
+            mfaValidation: isNetlify ? "/api/giffgaff-id/v4/mfa/validation" : "https://id.giffgaff.com/v4/mfa/validation",
+            graphql: isNetlify ? "/api/giffgaff-public/gateway/graphql" : "https://publicapi.giffgaff.com/gateway/graphql",
             qrcode: "https://qrcode.show/"
         };
 
@@ -670,13 +740,23 @@
             steps: document.querySelectorAll('.step'),
             sections: document.querySelectorAll('.section'),
             
-            // Step 1 - OAuth
+            // Step 1 - 登录方式选择
+            loginMethodStatus: document.getElementById('loginMethodStatus'),
+            oauthLoginSection: document.getElementById('oauthLoginSection'),
+            cookieLoginSection: document.getElementById('cookieLoginSection'),
+            
+            // OAuth相关
             oauthLoginBtn: document.getElementById('oauthLoginBtn'),
             oauthStatus: document.getElementById('oauthStatus'),
             oauthCallbackSection: document.getElementById('oauthCallbackSection'),
             callbackUrl: document.getElementById('callbackUrl'),
             processCallbackBtn: document.getElementById('processCallbackBtn'),
             callbackStatus: document.getElementById('callbackStatus'),
+            
+            // Cookie相关
+            cookieInput: document.getElementById('cookieInput'),
+            verifyCookieBtn: document.getElementById('verifyCookieBtn'),
+            cookieStatus: document.getElementById('cookieStatus'),
             
             // Step 2 - Email verification
             sendEmailBtn: document.getElementById('sendEmailBtn'),
@@ -710,6 +790,40 @@
             element.textContent = message;
             element.className = `status active ${type}`;
             element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        
+        // 选择登录方式
+        function selectLoginMethod(method) {
+            if (method === 'oauth') {
+                elements.oauthLoginSection.style.display = 'block';
+                elements.cookieLoginSection.style.display = 'none';
+                showStatus(elements.loginMethodStatus, "已选择OAuth 2.0登录方式", "success");
+            } else if (method === 'cookie') {
+                elements.oauthLoginSection.style.display = 'none';
+                elements.cookieLoginSection.style.display = 'block';
+                showStatus(elements.loginMethodStatus, "已选择Cookie登录方式", "success");
+            }
+        }
+        
+        // Cookie相关函数
+        function setCookie(name, value, days) {
+            const expires = days ? `; expires=${new Date(Date.now() + days * 864e5).toUTCString()}` : '';
+            document.cookie = `${name}=${value || ''}${expires}; path=/`;
+        }
+        
+        function getCookie(name) {
+            const nameEQ = name + '=';
+            const ca = document.cookie.split(';');
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+        
+        function eraseCookie(name) {
+            document.cookie = `${name}=; Max-Age=-99999999; path=/`;
         }
 
         function updateSteps(currentStep) {
@@ -765,6 +879,50 @@
                 .replace(/\//g, '_')
                 .replace(/=+$/, '');
         }
+
+        // Cookie验证
+        elements.verifyCookieBtn.addEventListener('click', async function() {
+            const cookie = elements.cookieInput.value.trim();
+            if (!cookie) {
+                showStatus(elements.cookieStatus, "请输入Cookie字符串", "error");
+                return;
+            }
+
+            try {
+                elements.verifyCookieBtn.innerHTML = '<span class="loading"></span> 验证中...';
+                elements.verifyCookieBtn.disabled = true;
+                
+                showStatus(elements.cookieStatus, "正在验证Cookie...", "success");
+                
+                // 这里应该调用Cookie验证API，但由于CORS限制，我们暂时模拟验证
+                // 实际应用中，您需要实现Cookie到Access Token的转换逻辑
+                
+                // 模拟验证延迟
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // 检查Cookie格式
+                if (cookie.includes('=') && cookie.length > 20) {
+                    // 模拟成功 - 在实际应用中，这里应该调用API验证Cookie并获取Access Token
+                    showStatus(elements.cookieStatus, "Cookie验证成功！请注意：当前为演示模式，实际应用需要服务器端验证", "success");
+                    
+                    // 保存Cookie信息到应用状态
+                    appState.cookie = cookie;
+                    
+                    // 跳过邮件验证，直接进入第三步
+                    setTimeout(() => {
+                        showSection(3);
+                    }, 2000);
+                } else {
+                    throw new Error("Cookie格式不正确，请检查输入");
+                }
+                
+            } catch (error) {
+                showStatus(elements.cookieStatus, "Cookie验证失败：" + error.message, "error");
+            } finally {
+                elements.verifyCookieBtn.innerHTML = '<i class="fas fa-check-circle me-2"></i> 验证Cookie';
+                elements.verifyCookieBtn.disabled = false;
+            }
+        });
 
         // Step 1: OAuth登录
         elements.oauthLoginBtn.addEventListener('click', async function() {

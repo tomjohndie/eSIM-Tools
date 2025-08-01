@@ -44,6 +44,20 @@
   force = true
   headers = {X-Forwarded-Host = "api.giffgaff.com"}
 
+[[redirects]]
+  from = "/api/giffgaff-id/*"
+  to = "https://id.giffgaff.com/:splat"
+  status = 200
+  force = true
+  headers = {X-Forwarded-Host = "id.giffgaff.com"}
+
+[[redirects]]
+  from = "/api/giffgaff-public/*"
+  to = "https://publicapi.giffgaff.com/:splat"
+  status = 200
+  force = true
+  headers = {X-Forwarded-Host = "publicapi.giffgaff.com"}
+
 # 处理SPA路由（如果需要）
 [[redirects]]
   from = "/*"
