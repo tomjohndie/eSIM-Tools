@@ -23,10 +23,17 @@
 
 ## 🌐 在线使用
 
-### 主要入口
-- **工具选择页面**: [https://esim.yyxx.com/](https://esim.yyxx.com/)
-- **Giffgaff工具**: [https://esim.yyxx.com/giffgaff](https://esim.yyxx.com/giffgaff)
-- **Simyo工具**: [https://esim.yyxx.com/simyo](https://esim.yyxx.com/simyo)
+### 🚀 公共服务（推荐）
+- **完整功能版本**: [https://esim.cosr.eu.org](https://esim.cosr.eu.org)
+  - 无CORS限制，完整API功能
+  - 支持所有eSIM操作
+  - 定期更新维护
+
+### 📱 静态部署版本
+- **工具选择页面**: [https://esim.cosr.eu.org/](https://esim.cosr.eu.org/)
+- **Giffgaff工具**: [https://esim.cosr.eu.org/giffgaff](https://esim.cosr.eu.org/giffgaff)
+- **Simyo完整版**: [https://esim.cosr.eu.org/simyo](https://esim.cosr.eu.org/simyo)
+- **Simyo演示版**: [https://esim.cosr.eu.org/simyo-static](https://esim.cosr.eu.org/simyo-static)
 
 ### 💰 优惠信息
 新用户开卡可享受**额外5欧元话费赠送**！[立即开卡](https://vriendendeal.simyo.nl/prepaid/AZzwPzb)
@@ -133,11 +140,29 @@
 - 不存储用户凭据信息
 - 建议在安全网络环境下使用
 
+### 部署版本说明
+
+#### 🌟 公共服务版本 (esim.cosr.eu.org)
+- **优势**: 完整功能，无CORS限制，即开即用
+- **适用**: 普通用户日常使用
+- **特点**: 定期维护更新，稳定可靠
+
+#### 🔧 完整部署版本 (simyo_complete_esim.html)
+- **优势**: 所有API功能，环境自适应
+- **适用**: 自建服务，企业部署
+- **特点**: 支持Netlify代理和本地代理服务器
+
+#### 👁️ 静态演示版本 (simyo_static.html)
+- **优势**: 纯静态，快速预览界面
+- **适用**: 功能演示，界面展示
+- **限制**: 受CORS限制，无法调用真实API
+
 ### CORS解决方案
 静态部署环境下通过以下方式解决跨域问题：
-- Netlify代理重定向（推荐）
-- 浏览器CORS插件
-- 本地代理服务器
+1. **推荐**: 使用公共服务 [esim.cosr.eu.org](https://esim.cosr.eu.org)
+2. **Netlify代理重定向**: 自动代理API请求
+3. **本地代理服务器**: 运行Node.js代理
+4. **浏览器插件**: 临时解决方案
 
 详细解决方案请参考 [CORS_SOLUTION.md](./CORS_SOLUTION.md)
 

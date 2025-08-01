@@ -12,9 +12,15 @@
   status = 200
 
 [[redirects]]
-  # Simyo eSIM页面  
+  # Simyo eSIM页面（完整版本）
   from = "/simyo"
   to = "/simyo_complete_esim.html"
+  status = 200
+
+[[redirects]]
+  # Simyo eSIM页面（静态版本）
+  from = "/simyo-static"
+  to = "/simyo_static.html"
   status = 200
 
 [[redirects]]

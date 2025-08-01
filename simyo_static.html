@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simyo eSIM申请工具 - 静态版本</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #212529;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .app-header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .app-icon {
+            font-size: 32px;
+            color: #ff6b00;
+        }
+
+        .app-title {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(45deg, #ff6b00, #ff8c42);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .version-badge {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        /* 推广横幅样式 */
+        .promo-banner {
+            background: linear-gradient(135deg, #ff6b00, #ff8c42);
+            border-radius: 12px;
+            margin: 20px 0;
+            padding: 16px 20px;
+            box-shadow: 0 4px 15px rgba(255, 107, 0, 0.3);
+            animation: subtle-pulse 3s ease-in-out infinite;
+        }
+
+        .promo-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            text-align: center;
+        }
+
+        .promo-icon {
+            color: white;
+            font-size: 20px;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        .promo-text {
+            color: white;
+            font-size: 16px;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+
+        .promo-link {
+            color: white;
+            text-decoration: underline;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .promo-link:hover {
+            color: #fff3e0;
+            text-decoration: none;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+        }
+
+        @keyframes subtle-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-5px); }
+            60% { transform: translateY(-3px); }
+        }
+
+        .cors-notice {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3);
+        }
+
+        .cors-notice h4 {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cors-notice ul {
+            margin-bottom: 15px;
+            padding-left: 20px;
+        }
+
+        .cors-notice li {
+            margin-bottom: 8px;
+        }
+
+        .cors-notice .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .cors-notice .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #ff6b00, #ff8c42);
+            color: white;
+            font-weight: 600;
+            font-size: 18px;
+            padding: 20px;
+            border: none;
+        }
+
+        .card-body {
+            padding: 25px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+        }
+
+        .form-control {
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 12px 15px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: #ff6b00;
+            box-shadow: 0 0 0 0.2rem rgba(255, 107, 0, 0.25);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #ff6b00, #ff8c42);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 0, 0.4);
+        }
+
+        .status {
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-weight: 500;
+            display: none;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.info {
+            background: #cce7ff;
+            color: #004085;
+            border: 1px solid #b3d7ff;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .full-version-link {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .full-version-link:hover {
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+            text-decoration: none;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .app-header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .promo-content {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 应用头部 -->
+        <div class="app-header">
+            <div class="logo-container">
+                <i class="fas fa-sim-card app-icon"></i>
+                <div>
+                    <div class="app-title">Simyo eSIM工具</div>
+                    <span class="version-badge">静态版本</span>
+                </div>
+            </div>
+            <a href="/" class="btn btn-outline-primary">
+                <i class="fas fa-home me-2"></i>返回主页
+            </a>
+        </div>
+
+        <!-- 开卡推广 -->
+        <div class="promo-banner">
+            <div class="promo-content">
+                <i class="fas fa-gift promo-icon"></i>
+                <span class="promo-text">
+                    如果您还没有开卡，可以<a href="https://vriendendeal.simyo.nl/prepaid/AZzwPzb" target="_blank" class="promo-link">点击这里开卡</a>，享受额外5欧元话费赠送！
+                </span>
+            </div>
+        </div>
+
+        <!-- 完整版本推荐 -->
+        <a href="https://esim.cosr.eu.org" class="full-version-link" target="_blank">
+            <i class="fas fa-rocket"></i>
+            <div>
+                <div>使用完整功能版本</div>
+                <small style="opacity: 0.9;">无CORS限制，完整API功能</small>
+            </div>
+        </a>
+
+        <!-- CORS解决方案提示 -->
+        <div class="cors-notice">
+            <h4><i class="fas fa-exclamation-triangle"></i>静态版本限制说明</h4>
+            <p>此版本为静态部署版本，受浏览器CORS安全策略限制，无法直接调用Simyo API。</p>
+            <p><strong>推荐解决方案：</strong></p>
+            <ul>
+                <li><strong>最佳选择：</strong>使用完整功能版本 <a href="https://esim.cosr.eu.org" target="_blank" style="color: white; text-decoration: underline;">esim.cosr.eu.org</a></li>
+                <li><strong>本地部署：</strong>下载源码并运行代理服务器</li>
+                <li><strong>临时方案：</strong>安装CORS浏览器插件</li>
+            </ul>
+            <div>
+                <a href="https://github.com/Silentely/esim-tools" class="btn btn-outline-light" target="_blank">
+                    <i class="fas fa-download me-2"></i>下载源码
+                </a>
+                <button class="btn btn-outline-light" onclick="showCorsHelp()">
+                    <i class="fas fa-question-circle me-2"></i>查看CORS解决方案
+                </button>
+            </div>
+        </div>
+
+        <!-- 步骤1: 登录 -->
+        <div class="section active" id="section1">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-sign-in-alt me-2"></i>步骤1: 登录Simyo账户
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>演示模式：</strong>此版本仅用于界面演示，实际API调用需要使用完整版本。
+                    </div>
+                    
+                    <p class="mb-4">请输入您的Simyo账户信息：</p>
+                    
+                    <div class="mb-3">
+                        <label for="phoneNumber" class="form-label">手机号码：</label>
+                        <input type="text" id="phoneNumber" class="form-control" placeholder="例如: 0613715742" maxlength="15">
+                        <small class="text-muted">请输入06开头的荷兰手机号</small>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="password" class="form-label">密码：</label>
+                        <input type="password" id="password" class="form-control" placeholder="输入您的Simyo密码">
+                    </div>
+                    
+                    <button id="loginBtn" class="btn btn-primary w-100">
+                        <i class="fas fa-sign-in-alt me-2"></i>登录账户（演示）
+                    </button>
+                    
+                    <div id="loginStatus" class="status"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 步骤2: 获取eSIM -->
+        <div class="section" id="section2">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-sim-card me-2"></i>步骤2: 获取eSIM配置
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>API限制：</strong>静态版本无法调用真实API，请使用 
+                        <a href="https://esim.cosr.eu.org" target="_blank">完整版本</a> 进行实际操作。
+                    </div>
+                    
+                    <p class="mb-4">获取您的eSIM配置信息：</p>
+                    <button id="getEsimBtn" class="btn btn-primary" onclick="showApiLimitation()">
+                        <i class="fas fa-sim-card me-2"></i>获取eSIM（演示）
+                    </button>
+                    <div id="esimStatus" class="status"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 使用说明 -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <i class="fas fa-book me-2"></i>使用说明
+            </div>
+            <div class="card-body">
+                <h5>静态版本 vs 完整版本</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-warning">静态版本（当前）</h6>
+                        <ul class="text-muted">
+                            <li>仅供界面预览</li>
+                            <li>受CORS限制</li>
+                            <li>无法调用真实API</li>
+                            <li>适合快速了解功能</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-success">完整版本</h6>
+                        <ul>
+                            <li>完整API功能</li>
+                            <li>真实eSIM申请</li>
+                            <li>设备更换支持</li>
+                            <li>验证码处理</li>
+                            <li>二维码生成</li>
+                        </ul>
+                        <a href="https://esim.cosr.eu.org" class="btn btn-success btn-sm" target="_blank">
+                            <i class="fas fa-external-link-alt me-1"></i>立即使用
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 显示API限制提示
+        function showApiLimitation() {
+            alert('静态版本无法调用真实API。\n\n请访问完整版本：https://esim.cosr.eu.org\n或下载源码本地部署。');
+        }
+
+        // 显示CORS帮助信息
+        function showCorsHelp() {
+            const helpText = `
+CORS跨域解决方案：
+
+1. 完整功能版本（推荐）：
+   访问：https://esim.cosr.eu.org
+   特点：无CORS限制，完整API功能
+
+2. 本地部署方案：
+   - git clone https://github.com/Silentely/esim-tools.git
+   - npm install && npm start
+   - 访问：http://localhost:3000
+
+3. 浏览器插件方案：
+   Chrome: 搜索"CORS Unblock"插件
+   Firefox: 搜索"CORS Everywhere"插件
+
+4. Chrome启动参数（开发用）：
+   --disable-web-security --user-data-dir=/tmp/chrome_dev
+
+⚠️ 注意：插件和启动参数方案有安全风险，仅建议测试使用。
+            `;
+            alert(helpText);
+        }
+
+        // 模拟登录（仅用于演示）
+        document.getElementById('loginBtn').addEventListener('click', function() {
+            const phoneNumber = document.getElementById('phoneNumber').value.trim();
+            const password = document.getElementById('password').value.trim();
+            
+            if (!phoneNumber || !password) {
+                showStatus('loginStatus', '请填写完整的登录信息', 'error');
+                return;
+            }
+            
+            if (!/^06\d{8}$/.test(phoneNumber)) {
+                showStatus('loginStatus', '请输入有效的荷兰手机号（06开头，10位数字）', 'error');
+                return;
+            }
+            
+            // 模拟登录成功
+            showStatus('loginStatus', '登录成功！（演示模式 - 请使用完整版本进行真实操作）', 'success');
+            setTimeout(() => {
+                document.getElementById('section1').classList.remove('active');
+                document.getElementById('section2').classList.add('active');
+            }, 2000);
+        });
+
+        function showStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.className = `status ${type}`;
+            element.textContent = message;
+            element.style.display = 'block';
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    element.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        // 页面加载提示
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Simyo eSIM工具 - 静态演示版本已加载');
+            console.log('完整功能请访问：https://esim.cosr.eu.org');
+        });
+    </script>
+</body>
+</html>
