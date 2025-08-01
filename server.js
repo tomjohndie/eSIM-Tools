@@ -85,6 +85,51 @@ app.use('/.netlify/functions/giffgaff-mfa-validation', wrapNetlifyFunction(giffg
 app.use('/.netlify/functions/giffgaff-graphql', wrapNetlifyFunction(giffgaffGraphql));
 app.use('/.netlify/functions/verify-cookie', wrapNetlifyFunction(verifyCookie));
 
+// Simyo API代理路由
+app.use('/api/simyo/*', (req, res) => {
+    const targetUrl = `https://appapi.simyo.nl/simyoapi/api/v1${req.path.replace('/api/simyo', '')}`;
+    console.log(`[Simyo Proxy] ${req.method} ${req.path} -> ${targetUrl}`);
+    
+    // 设置CORS头
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Client-Token, X-Client-Platform, X-Client-Version');
+    
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+    
+    // 代理请求
+    const axios = require('axios');
+    const config = {
+        method: req.method.toLowerCase(),
+        url: targetUrl,
+        headers: {
+            'Content-Type': 'application/json',
+            'User-Agent': req.headers['user-agent'] || 'MijnSimyo/4.8.0 (iPhone; iOS 17.5.1; Scale/3.00)',
+            'X-Client-Token': req.headers['x-client-token'] || 'e77b7e2f43db41bb95b17a2a11581a38',
+            'X-Client-Platform': req.headers['x-client-platform'] || 'ios',
+            'X-Client-Version': req.headers['x-client-version'] || '4.8.0'
+        },
+        timeout: 30000
+    };
+    
+    if (req.body && Object.keys(req.body).length > 0) {
+        config.data = req.body;
+    }
+    
+    axios(config)
+        .then(response => {
+            res.status(response.status).json(response.data);
+        })
+        .catch(error => {
+            console.error('[Simyo Proxy Error]:', error.message);
+            const status = error.response?.status || 500;
+            const data = error.response?.data || { error: 'Proxy Error', message: error.message };
+            res.status(status).json(data);
+        });
+});
+
 // 路由配置
 app.get('/giffgaff', (req, res) => {
     res.sendFile(path.join(__dirname, 'src/giffgaff/giffgaff_complete_esim.html'));
