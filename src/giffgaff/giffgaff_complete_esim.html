@@ -529,16 +529,20 @@
                     <div id="cookieLoginSection" class="mt-4" style="display: none;">
                         <h5 class="mb-3">Cookie 登录</h5>
                         
-                        <div class="alert alert-danger mb-4">
-                            <h6><i class="fas fa-times-circle me-2"></i>功能暂不可用：</h6>
-                            <p class="mb-2">Cookie登录功能需要PHP后端支持，但当前Netlify部署环境不支持PHP。</p>
-                            <p class="mb-2"><strong>建议使用OAuth 2.0登录</strong>：</p>
+                        <div class="alert alert-warning mb-4">
+                            <h6><i class="fas fa-info-circle me-2"></i>Cookie登录说明：</h6>
+                            <p class="mb-2">Cookie登录功能需要PHP后端支持。系统会自动检测是否可用：</p>
                             <ul class="mb-2">
-                                <li>✅ <strong>完全支持</strong> - 无需后端，功能完整</li>
-                                <li>✅ <strong>更安全</strong> - 标准OAuth 2.0协议</li>
-                                <li>✅ <strong>稳定可靠</strong> - 不依赖第三方服务</li>
+                                <li>🟢 <strong>支持PHP的服务器</strong>：功能完全可用</li>
+                                <li>🟡 <strong>静态托管（如Netlify）</strong>：自动回退到OAuth登录</li>
                             </ul>
-                            <p class="mb-0"><small class="text-muted">💡 如需部署Cookie功能，请使用支持PHP的服务器</small></p>
+                            <p class="mb-2"><strong>推荐使用OAuth 2.0登录</strong>（适用于所有环境）：</p>
+                            <ul class="mb-2">
+                                <li>✅ <strong>通用兼容</strong> - 在任何部署环境都可用</li>
+                                <li>✅ <strong>更安全</strong> - 标准OAuth 2.0协议</li>
+                                <li>✅ <strong>无需后端</strong> - 纯前端实现</li>
+                            </ul>
+                            <p class="mb-0"><small class="text-muted">💡 点击"验证Cookie"按钮将自动检测当前环境是否支持</small></p>
                         </div>
                         
                         <div class="alert alert-info mb-4">
@@ -906,8 +910,62 @@
                 
                 showStatus(elements.cookieStatus, "正在验证Cookie...", "success");
                 
-                // Netlify不支持PHP，显示功能不可用提示
-                throw new Error("Cookie登录功能需要PHP后端支持，当前部署环境不支持此功能。请使用OAuth 2.0登录方式。");
+                // 智能检测Cookie功能是否可用
+                try {
+                    // 先尝试检测PHP后端是否可用
+                    const testResponse = await fetch('verify_cookie.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            cookie: 'test=check'
+                        })
+                    });
+                    
+                    // 如果返回404或其他错误，说明PHP不可用
+                    if (!testResponse.ok && testResponse.status === 404) {
+                        throw new Error("Cookie登录功能需要PHP后端支持。当前部署环境（如Netlify）不支持PHP，请使用OAuth 2.0登录方式。");
+                    }
+                    
+                    // PHP后端可用，进行实际的Cookie验证
+                    const response = await fetch('verify_cookie.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            cookie: cookie
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`验证失败: ${response.status} - ${errorText}`);
+                    }
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        appState.accessToken = result.accessToken;
+                        showStatus(elements.cookieStatus, "Cookie验证成功！已获取Access Token", "success");
+                        
+                        // 跳过邮件验证，直接进入第三步
+                        setTimeout(() => {
+                            showSection(3);
+                        }, 2000);
+                    } else {
+                        throw new Error(result.message || "Cookie验证失败");
+                    }
+                    
+                } catch (networkError) {
+                    // 网络错误或PHP不可用
+                    if (networkError.message.includes('fetch') || networkError.message.includes('404')) {
+                        throw new Error("Cookie登录功能需要PHP后端支持。当前部署环境（如Netlify）不支持PHP，请使用OAuth 2.0登录方式。");
+                    } else {
+                        throw networkError;
+                    }
+                }
                 
             } catch (error) {
                 console.error('Cookie验证详细错误:', error);

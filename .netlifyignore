@@ -1,0 +1,40 @@
+# Netlify部署时忽略的文件
+# 这些文件会保留在Git仓库中，但不会部署到Netlify
+
+# PHP文件（Netlify不支持PHP）
+*.php
+
+# 开发相关文件
+*.md
+docs/
+tests/
+scripts/
+
+# 版本控制文件
+.git/
+.gitignore
+.gitattributes
+
+# IDE和编辑器文件
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 日志文件
+*.log
+logs/
+
+# 临时文件
+tmp/
+temp/
+*.tmp
+
+# 备份文件
+*.bak
+*.backup

@@ -9,6 +9,7 @@
 
 ### 🔧 Giffgaff eSIM工具
 - **OAuth 2.0 PKCE认证** - 安全的身份验证流程
+- **智能Cookie登录** - 自动检测PHP支持，优雅降级
 - **MFA多因子验证** - 邮件验证码支持
 - **GraphQL API集成** - 完整的API调用链
 - **自动二维码生成** - LPA格式激活码
