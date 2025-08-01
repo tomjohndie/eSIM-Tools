@@ -39,7 +39,21 @@ const result = await sendRequest('old_esim.php', {
 
 ## 🆚 当前实现对比分析
 
-### ✅ 已实现的纯前端功能
+### ✅ 现代化Node.js架构 (当前版本)
+
+我们已将所有后端功能升级为现代化的Node.js + Netlify Functions架构：
+
+#### Cookie验证服务
+- **原版**: `verify_cookie.php`
+- **现版**: `netlify/functions/verify-cookie.js`
+- **优势**: 无服务器部署，自动扩展，完整日志
+
+#### API代理服务
+- **MFA处理**: `netlify/functions/giffgaff-mfa-challenge.js`
+- **GraphQL代理**: `netlify/functions/giffgaff-graphql.js`
+- **统一CORS**: 所有API调用通过Netlify Functions代理
+
+### ✅ 已实现的前端功能
 
 #### 1. OAuth 2.0 PKCE认证流程
 ```javascript

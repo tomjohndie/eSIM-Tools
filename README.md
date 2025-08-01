@@ -9,8 +9,8 @@
 
 ### 🔧 Giffgaff eSIM工具
 - **OAuth 2.0 PKCE认证** - 安全的身份验证流程
-- **Node.js Cookie登录** - 现代化后端，支持所有部署环境
-- **MFA多因子验证** - 邮件验证码支持，通过Netlify Functions处理
+- **智能Cookie登录** - 通过Netlify Functions处理，支持所有部署环境
+- **MFA多因子验证** - 邮件验证码支持，无服务器架构处理
 - **GraphQL API集成** - 完整的API调用链
 - **自动二维码生成** - LPA格式激活码
 - **设备更换支持** - 完整的SIM卡更换流程
@@ -33,8 +33,7 @@
 ### 📱 静态部署版本
 - **工具选择页面**: [https://esim.cosr.eu.org/](https://esim.cosr.eu.org/)
 - **Giffgaff工具**: [https://esim.cosr.eu.org/giffgaff](https://esim.cosr.eu.org/giffgaff)
-- **Simyo完整版**: [https://esim.cosr.eu.org/simyo](https://esim.cosr.eu.org/simyo)
-- **Simyo演示版**: [https://esim.cosr.eu.org/simyo-static](https://esim.cosr.eu.org/simyo-static)
+- **Simyo工具**: [https://esim.cosr.eu.org/simyo](https://esim.cosr.eu.org/simyo)
 
 ### 💰 优惠信息
 新用户开卡可享受**额外5欧元话费赠送**！[立即开卡](https://vriendendeal.simyo.nl/prepaid/AZzwPzb)
@@ -72,15 +71,20 @@
    ```
 
 ### 环境要求
-- Node.js >= 18.0.0
-- npm >= 8.0.0
-- 现代浏览器（Chrome 80+, Firefox 75+, Safari 13+, Edge 80+）
+
+#### 生产环境
+- **无特殊要求** - 纯静态部署 + Netlify Functions
+- **现代浏览器** - Chrome 80+, Firefox 75+, Safari 13+, Edge 80+
+
+#### 开发环境
+- **Node.js** >= 18.0.0 (仅本地开发需要)
+- **npm** >= 8.0.0 (仅本地开发需要)
 
 ### 技术架构
-- **前端**: 纯HTML/CSS/JavaScript，无框架依赖
-- **后端**: Node.js + Express.js（本地开发）
-- **部署**: Netlify Functions（生产环境）
-- **API代理**: 内置CORS解决方案
+- **前端**: 纯HTML/CSS/JavaScript，无框架依赖，会话持久化
+- **后端**: Netlify Functions（生产）+ Node.js Express（开发）
+- **部署**: 完全无服务器架构
+- **API代理**: 统一CORS处理，完整日志记录
 - **安全**: Helmet.js安全头，CORS配置
 
 ## 📦 Netlify部署
@@ -108,14 +112,16 @@
 - **Bootstrap 5** - UI框架
 - **Font Awesome** - 图标库
 
-### 后端代理
-- **Node.js + Express** - 代理服务器
-- **CORS处理** - 跨域请求解决方案
-- **API转发** - 透明代理到运营商API
+### 后端架构
+- **Netlify Functions** - 无服务器函数处理API代理
+- **Node.js** - 本地开发环境
+- **CORS处理** - 完整的跨域请求解决方案
+- **会话持久化** - LocalStorage + 2小时自动过期
 
 ### 部署平台
-- **Netlify** - 静态站点托管
+- **Netlify** - 静态站点托管 + 无服务器函数
 - **GitHub Actions** - 自动化部署（可选）
+- **CDN加速** - 全球内容分发网络
 - **自定义域名** - 支持HTTPS
 
 ## 📋 使用指南

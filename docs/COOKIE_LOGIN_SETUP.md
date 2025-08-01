@@ -1,182 +1,125 @@
-# Cookie登录功能部署指南
+# Cookie登录功能设置指南
+
+## ⚠️ 重要更新 - Node.js架构
+
+**Cookie登录功能已完全升级为现代化Node.js架构！**
+
+- ✅ **生产环境**: 使用Netlify Functions，无需任何服务器配置
+- ✅ **开发环境**: 使用Node.js Express服务器
+- ✅ **自动部署**: 完全无服务器，零配置
+- ❌ **PHP版本**: 已弃用，仅保留在仓库中作为参考
 
 ## 🍪 功能概述
 
 Cookie登录功能允许用户使用已有的Giffgaff网站登录Cookie快速访问eSIM工具，无需重复OAuth认证流程。
 
-## 🧠 智能检测机制
+## 🚀 现代化架构优势
 
-系统内置智能检测功能，会自动判断当前部署环境是否支持Cookie登录：
+### Netlify Functions版本
+- **零配置部署** - 随项目自动部署
+- **全球CDN** - 低延迟响应
+- **自动扩展** - 无需担心并发限制
+- **完整日志** - 便于调试和监控
+- **HTTPS内置** - 安全传输保障
 
-### 自动检测流程
-1. **用户点击"验证Cookie"** → 系统开始检测
-2. **发送测试请求** → 尝试访问 `verify_cookie.php`
-3. **环境判断**：
-   - ✅ **PHP可用**：正常执行Cookie验证流程
-   - ❌ **PHP不可用**：显示友好提示，建议使用OAuth登录
-4. **用户体验**：无论哪种环境，都有清晰的操作指引
+### 智能环境检测
+系统会自动检测部署环境并选择合适的API端点：
+- **Netlify部署** → 使用 `/.netlify/functions/verify-cookie`
+- **本地开发** → 使用 `http://localhost:3000/.netlify/functions/verify-cookie`
 
-## 📋 部署要求
+## 📋 部署说明
 
-### 后端文件
-- **`verify_cookie.php`** - Cookie验证服务
-- **PHP环境** - PHP 7.0+，支持cURL扩展
-- **Web服务器** - Apache/Nginx等
+### 生产环境（Netlify）
+**无需任何额外配置！**
 
-### 前端配置
-- 前端页面会自动调用 `verify_cookie.php`
-- 如果后端不可用，会提示用户使用OAuth登录
+Cookie登录功能会随项目自动部署到Netlify Functions，包括：
+- `netlify/functions/verify-cookie.js` - Cookie验证服务
+- 自动CORS配置
+- 错误处理和日志记录
 
-## 🚀 部署步骤
+### 开发环境
+1. **启动开发服务器**
+   ```bash
+   npm run dev
+   ```
 
-### 1. 上传PHP文件
-将 `verify_cookie.php` 文件上传到您的Web服务器根目录或与HTML文件相同的目录。
+2. **访问应用**
+   ```
+   http://localhost:3000
+   ```
 
-```bash
-# 文件结构示例
-your-domain.com/
-├── index.html                    # 主页
-├── giffgaff_complete_esim.html  # Giffgaff工具
-├── verify_cookie.php            # Cookie验证服务 ← 上传这个文件
-└── other-files...
-```
+3. **Cookie登录测试**
+   - 前端会自动调用本地Node.js服务器
+   - 完整的错误处理和调试信息
 
-### 2. 配置服务器权限
-确保PHP文件具有执行权限：
+## 🔧 技术实现
 
-```bash
-chmod 644 verify_cookie.php
-```
+### Cookie验证流程
+1. **前端收集** - 用户输入Cookie字符串
+2. **智能解析** - 解析Cookie格式并提取认证信息
+3. **API调用** - 使用Cookie调用Giffgaff API验证身份
+4. **Token生成** - 成功验证后返回Access Token
+5. **会话建立** - 自动保存到LocalStorage，支持2小时持久化
 
-### 3. 测试后端服务
-访问 `https://your-domain.com/verify_cookie.php` 应该返回错误信息（因为没有POST数据），这表明服务正常运行。
+### 安全特性
+- **HTTPS强制** - 所有API调用使用安全连接
+- **输入验证** - 严格的Cookie格式验证
+- **错误隔离** - 详细的错误分类和处理
+- **会话管理** - 自动过期和清理机制
 
-### 4. 配置CORS（如果需要）
-如果前端和后端在不同域名，可能需要配置CORS。`verify_cookie.php` 已包含基本的CORS头设置。
+## 🧪 测试Cookie登录
 
-## 🔧 功能工作流程
+### 获取Cookie
+1. 在浏览器中登录 [Giffgaff官网](https://www.giffgaff.com)
+2. 打开开发者工具 (F12)
+3. 切换到 `Application` 或 `Storage` 标签
+4. 选择 `Cookies` → `https://www.giffgaff.com`
+5. 复制所有Cookie值（格式：`name1=value1; name2=value2; ...`）
 
-### Cookie登录流程
-```
-1. 用户选择"Cookie登录"
-   ↓
-2. 用户输入从giffgaff.com获取的Cookie
-   ↓
-3. 前端调用 verify_cookie.php
-   ↓
-4. PHP验证Cookie有效性
-   ↓
-5. 返回Access Token或错误信息
-   ↓
-6. 前端继续eSIM操作流程
-```
+### 验证流程
+1. 在eSIM工具中选择 "Cookie登录"
+2. 粘贴Cookie字符串
+3. 点击 "验证Cookie"
+4. 系统自动验证并跳转到相应步骤
 
-### Cookie验证逻辑
-```php
-// verify_cookie.php 主要功能
-1. 解析Cookie字符串
-2. 提取认证相关的Cookie
-3. 调用Giffgaff API验证Cookie
-4. 返回Access Token或错误信息
-```
-
-## 📝 使用说明
-
-### 获取Cookie的步骤
-1. **访问 giffgaff.com** 并完成登录
-2. **打开开发者工具**（F12）
-3. **切换到"应用程序"标签页**（Chrome）或"存储"标签页（Firefox）
-4. **选择Cookie** → `https://www.giffgaff.com`
-5. **复制所有Cookie** 或重要的认证Cookie
-6. **粘贴到工具中** 并点击验证
-
-### Cookie格式示例
-```
-session_token=abc123; user_id=456789; auth_token=xyz789; _ga=GA1.2.123456789; ...
-```
-
-## ⚠️ 重要说明
-
-### 安全考虑
-1. **Cookie包含敏感信息** - 请勿在不安全的网络环境下使用
-2. **定期更新Cookie** - Cookie会过期，需要重新获取
-3. **服务器日志** - 后端会记录验证请求，但不记录完整Cookie内容
-
-### 限制和注意事项
-1. **需要后端支持** - 纯静态部署无法使用Cookie登录
-2. **Cookie有效期** - Giffgaff Cookie通常有时间限制
-3. **API变化** - Giffgaff API变化可能影响Cookie验证逻辑
-
-## 🛠️ 故障排除
+## 🐛 故障排除
 
 ### 常见问题
 
-#### 1. "后端服务不可用"错误
-**原因**: `verify_cookie.php` 文件未正确部署
-**解决方案**:
-- 检查文件是否上传到正确位置
-- 确认Web服务器支持PHP
-- 检查文件权限设置
+**Q: Cookie验证失败怎么办？**
+A: 
+- 确保Cookie是从已登录的Giffgaff网站获取
+- 检查Cookie格式是否完整
+- 尝试重新登录Giffgaff网站获取新Cookie
 
-#### 2. "Cookie验证失败"错误
-**原因**: Cookie无效或已过期
-**解决方案**:
-- 重新从giffgaff.com获取Cookie
-- 确认Cookie格式正确
-- 检查Cookie是否包含必要的认证信息
+**Q: 显示"服务器错误"？**
+A: 
+- 检查网络连接
+- 查看浏览器控制台是否有详细错误信息
+- 尝试使用OAuth登录作为备选方案
 
-#### 3. CORS错误
-**原因**: 跨域请求被阻止
-**解决方案**:
-- 确保前端和后端在同一域名
-- 或配置正确的CORS头（已在PHP文件中包含）
+**Q: 本地开发时Cookie登录不工作？**
+A: 
+- 确保已运行 `npm run dev`
+- 检查端口3000是否被占用
+- 查看终端输出的错误信息
 
-#### 4. 403/401错误
-**原因**: Cookie无效或Giffgaff API拒绝请求
-**解决方案**:
-- 检查Cookie是否来自正确的域名
-- 确认Cookie未过期
-- 尝试重新登录giffgaff.com
+### 调试信息
+开发环境下，所有API调用都会在浏览器控制台和Node.js终端输出详细日志，便于调试。
 
-## 🔄 替代方案
+## 📚 相关文档
 
-### 如果Cookie登录不可用
-推荐使用 **OAuth 2.0登录方式**：
+- [主要README](../README.md) - 项目总览
+- [部署指南](./DEPLOYMENT_GUIDE.md) - 详细部署说明
+- [前后端架构分析](./FRONTEND_VS_BACKEND_ANALYSIS.md) - 技术架构详解
 
-#### 优势
-- ✅ 无需后端支持
-- ✅ 更安全的认证方式
-- ✅ 标准化流程
-- ✅ 功能完整
+## 🔄 从PHP版本迁移
 
-#### 使用方法
-1. 选择"OAuth 2.0登录"
-2. 按照指引完成认证
-3. 享受完整的eSIM管理功能
+如果您之前使用PHP版本的Cookie登录：
 
-## 📊 功能对比
+1. **无需手动迁移** - 前端代码已自动适配
+2. **移除PHP文件** - `verify_cookie.php`不再需要（但保留在仓库中）
+3. **重新部署** - 使用新的Netlify Functions架构
+4. **测试功能** - 验证Cookie登录是否正常工作
 
-| 特性 | Cookie登录 | OAuth 2.0登录 |
-|------|------------|---------------|
-| 后端需求 | ✅ 需要 | ❌ 不需要 |
-| 安全性 | 🟡 中等 | 🟢 高 |
-| 设置复杂度 | 🟡 中等 | 🟢 简单 |
-| 用户体验 | 🟢 快速 | 🟡 标准 |
-| 维护成本 | 🟡 中等 | 🟢 低 |
-
-## 💡 建议
-
-### 推荐部署策略
-1. **优先OAuth** - 主推OAuth 2.0登录方式
-2. **Cookie作为补充** - 为高级用户提供Cookie选项
-3. **清晰提示** - 明确告知用户两种方式的区别
-
-### 最佳实践
-1. **定期测试** - 确保Cookie验证逻辑正常工作
-2. **监控日志** - 关注验证失败的情况
-3. **用户教育** - 提供清晰的使用说明
-4. **安全更新** - 定期更新验证逻辑以适应API变化
-
----
-
-**注意**: Cookie登录功能为可选功能。如果您不需要此功能，可以专注于OAuth 2.0登录方式，它提供完整的功能且无需后端支持。
+新的Node.js架构提供了更好的性能、可靠性和可维护性。
