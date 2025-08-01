@@ -334,6 +334,86 @@
             to { opacity: 1; transform: translateX(0); }
         }
         
+        /* 状态显示面板 */
+        .status-panel {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .status-panel h3 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .status-label {
+            font-weight: 500;
+            color: #6c757d;
+        }
+
+        .status-value {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #495057;
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .status-value.connected {
+            color: #28a745;
+            font-weight: 500;
+        }
+
+        .status-value.disconnected {
+            color: #dc3545;
+            font-weight: 500;
+        }
+
+        .clear-session-btn {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .clear-session-btn:hover {
+            background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
+            transform: translateY(-1px);
+        }
+
         /* 响应式设计 */
         @media (max-width: 768px) {
             .app-title {
@@ -346,6 +426,14 @@
             
             .step {
                 width: 80px;
+            }
+
+            .status-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .status-value {
+                max-width: 120px;
             }
             
             .step-number {
@@ -416,6 +504,40 @@
         <div class="page-title">
             <h1>Giffgaff eSIM 申请工具</h1>
             <p>将您的实体SIM卡无缝转换为eSIM</p>
+        </div>
+        
+        <!-- 状态显示面板 -->
+        <div class="status-panel">
+            <h3><i class="fas fa-info-circle"></i> 当前状态</h3>
+            <div class="status-grid">
+                <div class="status-item">
+                    <span class="status-label">Access Token:</span>
+                    <span id="statusAccessToken" class="status-value disconnected">未登录</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">MFA 签名:</span>
+                    <span id="statusMfaSignature" class="status-value disconnected">未验证</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">会员ID:</span>
+                    <span id="statusMemberId" class="status-value disconnected">未获取</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">eSIM状态:</span>
+                    <span id="statusEsimStatus" class="status-value disconnected">未申请</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">激活码:</span>
+                    <span id="statusActivationCode" class="status-value disconnected">未获取</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">LPA字符串:</span>
+                    <span id="statusLpaString" class="status-value disconnected">未生成</span>
+                </div>
+            </div>
+            <button id="clearSessionBtn" class="clear-session-btn">
+                <i class="fas fa-trash-alt"></i> 清除会话
+            </button>
         </div>
         
         <!-- 步骤指示器 -->
@@ -747,7 +869,7 @@
         const apiEndpoints = {
             mfaChallenge: isNetlify ? "/.netlify/functions/giffgaff-mfa-challenge" : "https://id.giffgaff.com/v4/mfa/challenge/me",
             mfaValidation: isNetlify ? "/.netlify/functions/giffgaff-mfa-validation" : "https://id.giffgaff.com/v4/mfa/validation",
-            graphql: isNetlify ? "/api/giffgaff-public/gateway/graphql" : "https://publicapi.giffgaff.com/gateway/graphql",
+            graphql: isNetlify ? "/.netlify/functions/giffgaff-graphql" : "https://publicapi.giffgaff.com/gateway/graphql",
             cookieVerify: isNetlify ? "/.netlify/functions/verify-cookie" : "verify_cookie.php",
             qrcode: "https://qrcode.show/"
         };
@@ -756,6 +878,15 @@
         const elements = {
             steps: document.querySelectorAll('.step'),
             sections: document.querySelectorAll('.section'),
+            
+            // 状态显示元素
+            statusAccessToken: document.getElementById('statusAccessToken'),
+            statusMfaSignature: document.getElementById('statusMfaSignature'),
+            statusMemberId: document.getElementById('statusMemberId'),
+            statusEsimStatus: document.getElementById('statusEsimStatus'),
+            statusActivationCode: document.getElementById('statusActivationCode'),
+            statusLpaString: document.getElementById('statusLpaString'),
+            clearSessionBtn: document.getElementById('clearSessionBtn'),
             
             // Step 1 - 登录方式选择
             loginMethodStatus: document.getElementById('loginMethodStatus'),
@@ -841,6 +972,113 @@
         
         function eraseCookie(name) {
             document.cookie = `${name}=; Max-Age=-99999999; path=/`;
+        }
+
+        // 状态管理函数
+        function updateStatus() {
+            // 更新Access Token状态
+            if (appState.accessToken) {
+                elements.statusAccessToken.textContent = `${appState.accessToken.substring(0, 20)}...`;
+                elements.statusAccessToken.className = 'status-value connected';
+            } else {
+                elements.statusAccessToken.textContent = '未登录';
+                elements.statusAccessToken.className = 'status-value disconnected';
+            }
+
+            // 更新MFA签名状态
+            if (appState.emailSignature) {
+                elements.statusMfaSignature.textContent = `${appState.emailSignature.substring(0, 20)}...`;
+                elements.statusMfaSignature.className = 'status-value connected';
+            } else {
+                elements.statusMfaSignature.textContent = '未验证';
+                elements.statusMfaSignature.className = 'status-value disconnected';
+            }
+
+            // 更新会员ID状态
+            if (appState.memberId) {
+                elements.statusMemberId.textContent = appState.memberId;
+                elements.statusMemberId.className = 'status-value connected';
+            } else {
+                elements.statusMemberId.textContent = '未获取';
+                elements.statusMemberId.className = 'status-value disconnected';
+            }
+
+            // 更新eSIM状态
+            if (appState.esimSSN) {
+                elements.statusEsimStatus.textContent = '已申请';
+                elements.statusEsimStatus.className = 'status-value connected';
+            } else {
+                elements.statusEsimStatus.textContent = '未申请';
+                elements.statusEsimStatus.className = 'status-value disconnected';
+            }
+
+            // 更新激活码状态
+            if (appState.esimActivationCode) {
+                elements.statusActivationCode.textContent = `${appState.esimActivationCode.substring(0, 15)}...`;
+                elements.statusActivationCode.className = 'status-value connected';
+            } else {
+                elements.statusActivationCode.textContent = '未获取';
+                elements.statusActivationCode.className = 'status-value disconnected';
+            }
+
+            // 更新LPA字符串状态
+            if (appState.lpaString) {
+                elements.statusLpaString.textContent = `${appState.lpaString.substring(0, 15)}...`;
+                elements.statusLpaString.className = 'status-value connected';
+            } else {
+                elements.statusLpaString.textContent = '未生成';
+                elements.statusLpaString.className = 'status-value disconnected';
+            }
+        }
+
+        function clearSession() {
+            if (confirm('确定要清除所有会话数据吗？这将重置所有进度。')) {
+                // 清除应用状态
+                appState.accessToken = "";
+                appState.emailCodeRef = "";
+                appState.emailSignature = "";
+                appState.memberId = "";
+                appState.memberName = "";
+                appState.phoneNumber = "";
+                appState.esimSSN = "";
+                appState.esimActivationCode = "";
+                appState.lpaString = "";
+                appState.currentStep = 1;
+
+                // 清除Cookie
+                eraseCookie('giffgaff_access_token');
+                eraseCookie('giffgaff_session');
+
+                // 更新状态显示
+                updateStatus();
+
+                // 重置UI
+                showSection(1);
+                updateSteps(1);
+
+                // 重置所有表单
+                document.querySelectorAll('input').forEach(input => {
+                    if (input.type !== 'radio' && input.type !== 'checkbox') {
+                        input.value = '';
+                    }
+                });
+
+                // 重置所有状态显示
+                document.querySelectorAll('.status').forEach(status => {
+                    status.innerHTML = '';
+                    status.className = 'status';
+                });
+
+                // 重置按钮状态
+                document.querySelectorAll('button').forEach(btn => {
+                    if (!btn.id.includes('clearSession') && !btn.onclick) {
+                        btn.disabled = false;
+                        btn.innerHTML = btn.innerHTML.replace(/<span class="loading"><\/span>.*/, btn.textContent);
+                    }
+                });
+
+                showStatus(elements.loginMethodStatus, "会话已清除，请重新开始", "success");
+            }
         }
 
         function updateSteps(currentStep) {
@@ -932,6 +1170,7 @@
                 if (result.success) {
                     appState.accessToken = result.accessToken;
                     showStatus(elements.cookieStatus, "Cookie验证成功！已获取Access Token", "success");
+                    updateStatus(); // 更新状态显示
                     
                     // 跳过邮件验证，直接进入第三步
                     setTimeout(() => {
@@ -1054,6 +1293,7 @@
                 appState.accessToken = tokenData.access_token;
                 
                 showStatus(elements.callbackStatus, "OAuth登录成功！", "success");
+                updateStatus(); // 更新状态显示
                 
                 // 进入下一步
                 setTimeout(() => {
@@ -1146,6 +1386,7 @@
                 
                 console.log('邮件验证成功，获得签名:', appState.emailSignature);
                 showStatus(elements.emailVerifyStatus, "邮件验证码验证成功！", "success");
+                updateStatus(); // 更新状态显示
                 
                 // 进入下一步
                 setTimeout(() => {
@@ -1180,11 +1421,11 @@
                 const response = await fetch(apiEndpoints.graphql, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${appState.accessToken}`,
-                        'X-MFA-Signature': appState.emailSignature  // 添加MFA签名
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
+                        accessToken: appState.accessToken,
+                        mfaSignature: appState.emailSignature,
                         query: `query getMemberProfileAndSim {
                             memberProfile {
                                 id
@@ -1196,7 +1437,8 @@
                                 status
                                 __typename
                             }
-                        }`
+                        }`,
+                        operationName: 'getMemberProfileAndSim'
                     })
                 });
                 
@@ -1218,6 +1460,7 @@
                 appState.phoneNumber = data.data.sim.phoneNumber;
                 
                 showStatus(elements.memberStatus, "会员信息获取成功！", "success");
+                updateStatus(); // 更新状态显示
                 
                 // 显示会员信息
                 elements.memberInfo.innerHTML = `
@@ -1256,17 +1499,11 @@
                 const response = await fetch(apiEndpoints.graphql, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${appState.accessToken}`,
-                        'X-MFA-Signature': appState.emailSignature,
-                        'x-gg-app-os': 'Android',
-                        'x-gg-app-os-version': '14',
-                        'x-gg-app-build-number': '763',
-                        'x-gg-app-device-manufacturer': 'Google',
-                        'x-gg-app-device-model': 'Pixel8',
-                        'x-gg-app-version': '14.0.8'
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
+                        accessToken: appState.accessToken,
+                        mfaSignature: appState.emailSignature,
                         query: `mutation reserveESim($input: ESimReservationInput!) {
                             reserveESim: reserveESim(input: $input) {
                                 id
@@ -1289,7 +1526,8 @@
                                 memberId: appState.memberId,
                                 userIntent: "SWITCH"
                             }
-                        }
+                        },
+                        operationName: 'reserveESim'
                     })
                 });
                 
@@ -1310,6 +1548,7 @@
                 appState.esimActivationCode = data.data.reserveESim.esim.activationCode;
                 
                 showStatus(elements.esimReserveStatus, "eSIM预订成功！", "success");
+                updateStatus(); // 更新状态显示
                 elements.swapSimBtn.disabled = false;
                 
             } catch (error) {
@@ -1331,17 +1570,11 @@
                 const response = await fetch(apiEndpoints.graphql, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${appState.accessToken}`,
-                        'X-MFA-Signature': appState.emailSignature,
-                        'x-gg-app-os': 'iOS',
-                        'x-gg-app-os-version': '14',
-                        'x-gg-app-build-number': '722',
-                        'x-gg-app-device-manufacturer': 'apple',
-                        'x-gg-app-device-model': 'iphone15',
-                        'x-gg-app-version': '13.21.2'
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
+                        accessToken: appState.accessToken,
+                        mfaSignature: appState.emailSignature,
                         query: `mutation SwapSim($activationCode: String!, $mfaSignature: String!) {
                             swapSim(activationCode: $activationCode, mfaSignature: $mfaSignature) {
                                 old {
@@ -1360,7 +1593,8 @@
                         variables: {
                             activationCode: appState.esimActivationCode,
                             mfaSignature: appState.emailSignature
-                        }
+                        },
+                        operationName: 'SwapSim'
                     })
                 });
                 
@@ -1403,17 +1637,11 @@
                 const response = await fetch(apiEndpoints.graphql, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${appState.accessToken}`,
-                        'X-MFA-Signature': appState.emailSignature,
-                        'x-gg-app-os': 'iOS',
-                        'x-gg-app-os-version': '14',
-                        'x-gg-app-build-number': '722',
-                        'x-gg-app-device-manufacturer': 'apple',
-                        'x-gg-app-device-model': 'iphone15',
-                        'x-gg-app-version': '13.21.2'
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
+                        accessToken: appState.accessToken,
+                        mfaSignature: appState.emailSignature,
                         query: `query eSimDownloadToken($ssn: String!) {
                             eSimDownloadToken(ssn: $ssn) {
                                 id
@@ -1425,7 +1653,8 @@
                         }`,
                         variables: {
                             ssn: appState.esimSSN
-                        }
+                        },
+                        operationName: 'eSimDownloadToken'
                     })
                 });
                 
@@ -1445,6 +1674,7 @@
                 appState.lpaString = data.data.eSimDownloadToken.lpaString;
                 
                 showStatus(elements.tokenStatus, "eSIM下载代码获取成功！", "success");
+                updateStatus(); // 更新状态显示
                 
                 // 显示结果
                 showESimResult();
@@ -1609,10 +1839,14 @@
         `;
         document.head.appendChild(toastStyle);
 
+        // 清除会话按钮事件监听器
+        elements.clearSessionBtn.addEventListener('click', clearSession);
+
         // 页面加载完成后的初始化
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Giffgaff eSIM申请工具已加载');
             showSection(1);
+            updateStatus(); // 初始化状态显示
         });
     </script>
 </body>

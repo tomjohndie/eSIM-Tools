@@ -19,11 +19,7 @@
   to = "/src/simyo/simyo_complete_esim.html"
   status = 200
 
-[[redirects]]
-  # Simyo eSIM页面（静态版本）
-  from = "/simyo-static"
-  to = "/src/simyo/simyo_static.html"
-  status = 200
+
 
 [[redirects]]
   # 根路径重定向到选择页面
