@@ -529,14 +529,16 @@
                     <div id="cookieLoginSection" class="mt-4" style="display: none;">
                         <h5 class="mb-3">Cookie 登录</h5>
                         
-                        <div class="alert alert-warning mb-4">
-                            <h6><i class="fas fa-exclamation-triangle me-2"></i>功能状态说明：</h6>
-                            <p class="mb-2">Cookie登录功能需要后端服务支持。如果您看到"后端服务不可用"的错误，请：</p>
+                        <div class="alert alert-danger mb-4">
+                            <h6><i class="fas fa-times-circle me-2"></i>功能暂不可用：</h6>
+                            <p class="mb-2">Cookie登录功能需要PHP后端支持，但当前Netlify部署环境不支持PHP。</p>
+                            <p class="mb-2"><strong>建议使用OAuth 2.0登录</strong>：</p>
                             <ul class="mb-2">
-                                <li>使用<strong>OAuth 2.0登录</strong>（推荐，功能完整）</li>
-                                <li>或部署提供的 <code>verify_cookie.php</code> 文件到您的服务器</li>
+                                <li>✅ <strong>完全支持</strong> - 无需后端，功能完整</li>
+                                <li>✅ <strong>更安全</strong> - 标准OAuth 2.0协议</li>
+                                <li>✅ <strong>稳定可靠</strong> - 不依赖第三方服务</li>
                             </ul>
-                            <p class="mb-0"><small class="text-muted">💡 OAuth 2.0登录无需后端，功能完整且更安全</small></p>
+                            <p class="mb-0"><small class="text-muted">💡 如需部署Cookie功能，请使用支持PHP的服务器</small></p>
                         </div>
                         
                         <div class="alert alert-info mb-4">
@@ -904,47 +906,12 @@
                 
                 showStatus(elements.cookieStatus, "正在验证Cookie...", "success");
                 
-                // 调用Cookie验证API
-                const response = await fetch('verify_cookie.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        cookie: cookie
-                    })
-                });
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`验证失败: ${response.status} - ${errorText}`);
-                }
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    appState.accessToken = result.accessToken;
-                    showStatus(elements.cookieStatus, "Cookie验证成功！已获取Access Token", "success");
-                    
-                    // 跳过邮件验证，直接进入第三步
-                    setTimeout(() => {
-                        showSection(3);
-                    }, 2000);
-                } else {
-                    throw new Error(result.message || "Cookie验证失败");
-                }
+                // Netlify不支持PHP，显示功能不可用提示
+                throw new Error("Cookie登录功能需要PHP后端支持，当前部署环境不支持此功能。请使用OAuth 2.0登录方式。");
                 
             } catch (error) {
                 console.error('Cookie验证详细错误:', error);
-                
-                // 检查是否是网络错误或后端不可用
-                if (error.message.includes('fetch') || error.message.includes('404') || error.message.includes('500')) {
-                    showStatus(elements.cookieStatus, 
-                        "Cookie登录功能需要后端支持。当前后端服务不可用，请使用OAuth 2.0登录方式。", 
-                        "error");
-                } else {
-                    showStatus(elements.cookieStatus, "Cookie验证失败：" + error.message, "error");
-                }
+                showStatus(elements.cookieStatus, error.message, "error");
             } finally {
                 elements.verifyCookieBtn.innerHTML = '<i class="fas fa-check-circle me-2"></i> 验证Cookie';
                 elements.verifyCookieBtn.disabled = false;
@@ -1082,10 +1049,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${appState.accessToken}`,
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                        'Accept': 'application/json',
-                        'Origin': 'https://www.giffgaff.com',
-                        'Referer': 'https://www.giffgaff.com/'
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify({
                         source: "esim",
@@ -1135,10 +1099,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${appState.accessToken}`,
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                        'Accept': 'application/json',
-                        'Origin': 'https://www.giffgaff.com',
-                        'Referer': 'https://www.giffgaff.com/'
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify({
                         ref: appState.emailCodeRef,
