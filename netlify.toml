@@ -1,8 +1,10 @@
 [build]
-  # 构建命令（对于静态文件不需要）
-  command = "echo 'No build needed for static files'"
+  # 构建命令
+  command = "npm install"
   # 发布目录
   publish = "."
+  # Functions目录
+  functions = "netlify/functions"
   
 # 重定向和重写规则
 [[redirects]]
