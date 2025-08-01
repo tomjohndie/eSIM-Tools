@@ -1045,9 +1045,10 @@
                 appState.lpaString = "";
                 appState.currentStep = 1;
 
-                // 清除Cookie
+                // 清除Cookie和持久化存储
                 eraseCookie('giffgaff_access_token');
                 eraseCookie('giffgaff_session');
+                localStorage.removeItem('giffgaff_session');
 
                 // 更新状态显示
                 updateStatus();
@@ -1079,6 +1080,63 @@
 
                 showStatus(elements.loginMethodStatus, "会话已清除，请重新开始", "success");
             }
+        }
+
+        // 持久化存储函数
+        function saveSession() {
+            const sessionData = {
+                accessToken: appState.accessToken,
+                emailSignature: appState.emailSignature,
+                memberId: appState.memberId,
+                memberName: appState.memberName,
+                phoneNumber: appState.phoneNumber,
+                currentStep: appState.currentStep,
+                timestamp: Date.now()
+            };
+            localStorage.setItem('giffgaff_session', JSON.stringify(sessionData));
+        }
+
+        function loadSession() {
+            try {
+                const sessionData = localStorage.getItem('giffgaff_session');
+                if (sessionData) {
+                    const data = JSON.parse(sessionData);
+                    const now = Date.now();
+                    const twoHours = 2 * 60 * 60 * 1000; // 2小时的毫秒数
+                    
+                    // 检查是否超过2小时
+                    if (now - data.timestamp < twoHours) {
+                        appState.accessToken = data.accessToken || "";
+                        appState.emailSignature = data.emailSignature || "";
+                        appState.memberId = data.memberId || "";
+                        appState.memberName = data.memberName || "";
+                        appState.phoneNumber = data.phoneNumber || "";
+                        appState.currentStep = data.currentStep || 1;
+                        
+                        // 恢复UI状态
+                        if (appState.accessToken) {
+                            // 根据已有的数据决定跳转到合适的步骤
+                            let targetStep = 1;
+                            if (appState.emailSignature) {
+                                targetStep = 3; // 跳到会员信息步骤
+                            } else if (appState.accessToken) {
+                                targetStep = 2; // 跳到邮件验证步骤
+                            }
+                            showSection(Math.max(targetStep, appState.currentStep));
+                        }
+                        
+                        updateStatus();
+                        return true;
+                    } else {
+                        // 超时，清除存储
+                        localStorage.removeItem('giffgaff_session');
+                    }
+                }
+            } catch (error) {
+                console.error('恢复会话失败:', error);
+                localStorage.removeItem('giffgaff_session');
+            }
+            return false;
         }
 
         function updateSteps(currentStep) {
@@ -1171,6 +1229,7 @@
                     appState.accessToken = result.accessToken;
                     showStatus(elements.cookieStatus, "Cookie验证成功！已获取Access Token", "success");
                     updateStatus(); // 更新状态显示
+                    saveSession(); // 保存会话
                     
                     // 跳过邮件验证，直接进入第三步
                     setTimeout(() => {
@@ -1294,6 +1353,7 @@
                 
                 showStatus(elements.callbackStatus, "OAuth登录成功！", "success");
                 updateStatus(); // 更新状态显示
+                saveSession(); // 保存会话
                 
                 // 进入下一步
                 setTimeout(() => {
@@ -1387,6 +1447,7 @@
                 console.log('邮件验证成功，获得签名:', appState.emailSignature);
                 showStatus(elements.emailVerifyStatus, "邮件验证码验证成功！", "success");
                 updateStatus(); // 更新状态显示
+                saveSession(); // 保存会话
                 
                 // 进入下一步
                 setTimeout(() => {
@@ -1461,6 +1522,7 @@
                 
                 showStatus(elements.memberStatus, "会员信息获取成功！", "success");
                 updateStatus(); // 更新状态显示
+                saveSession(); // 保存会话
                 
                 // 显示会员信息
                 elements.memberInfo.innerHTML = `
@@ -1845,7 +1907,14 @@
         // 页面加载完成后的初始化
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Giffgaff eSIM申请工具已加载');
-            showSection(1);
+            
+            // 尝试恢复之前的会话
+            const sessionRestored = loadSession();
+            
+            if (!sessionRestored) {
+                showSection(1);
+            }
+            
             updateStatus(); // 初始化状态显示
         });
     </script>
