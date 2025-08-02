@@ -829,8 +829,12 @@
                                 
                                 <div class="manual-activation-guide">
                                     <h5 class="text-primary mb-3">
-                                        <i class="fas fa-hand-point-right me-2"></i>下一步：手动激活eSIM
+                                        <i class="fas fa-hand-point-right me-2"></i>下一步：激活eSIM
                                     </h5>
+                                    <div class="alert alert-info mb-3">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <strong>自动激活说明：</strong>自动激活会验证激活码，但可能需要手动确认替换SIM。如果自动激活失败，请使用手动激活。
+                                    </div>
                                     <ol class="list-group list-group-numbered">
                                         <li class="list-group-item">
                                             前往 Giffgaff 激活页面：
@@ -856,9 +860,15 @@
                                     </ol>
                                     
                                     <div class="mt-4">
-                                        <button id="confirmActivationBtn" class="btn btn-success btn-lg">
-                                            <i class="fas fa-check-circle me-2"></i>我已完成手动激活，继续下一步
-                                        </button>
+                                        <div class="btn-group" role="group">
+                                            <button id="autoActivateBtn" class="btn btn-primary btn-lg me-2">
+                                                <i class="fas fa-magic me-2"></i>自动激活eSIM
+                                            </button>
+                                            <button id="confirmActivationBtn" class="btn btn-success btn-lg">
+                                                <i class="fas fa-check-circle me-2"></i>我已完成手动激活，继续下一步
+                                            </button>
+                                        </div>
+                                        <div id="autoActivateStatus" class="status mt-3"></div>
                                     </div>
                                 </div>
                             </div>
@@ -953,6 +963,7 @@
             mfaValidation: isNetlify ? "/.netlify/functions/giffgaff-mfa-validation" : "https://id.giffgaff.com/v4/mfa/validation",
             graphql: isNetlify ? "/.netlify/functions/giffgaff-graphql" : "https://publicapi.giffgaff.com/gateway/graphql",
             cookieVerify: isNetlify ? "/.netlify/functions/verify-cookie" : "verify_cookie.php",
+            autoActivate: isNetlify ? "/.netlify/functions/auto-activate-esim" : "auto_activate_esim.php",
             qrcode: "https://qrcode.show/"
         };
 
@@ -1010,7 +1021,11 @@
             tokenStatus: document.getElementById('tokenStatus'),
             resultContainer: document.getElementById('resultContainer'),
             qrcode: document.getElementById('qrcode'),
-            esimInfo: document.getElementById('esimInfo')
+            esimInfo: document.getElementById('esimInfo'),
+            
+            // Auto activation
+            autoActivateBtn: document.getElementById('autoActivateBtn'),
+            autoActivateStatus: document.getElementById('autoActivateStatus')
         };
 
         // 工具函数
@@ -1733,13 +1748,19 @@
                 // 显示信息区域
                 esimInfoDisplay.style.display = 'block';
                 
-                // 重新绑定确认按钮事件（因为DOM可能已重新创建）
+                // 重新绑定按钮事件（因为DOM可能已重新创建）
                 const confirmBtn = document.getElementById('confirmActivationBtn');
+                const autoActivateBtn = document.getElementById('autoActivateBtn');
+                
                 if (confirmBtn) {
                     confirmBtn.addEventListener('click', function() {
                         // 用户确认已手动激活完成，跳转到第五步
                         showSection(5);
                     });
+                }
+                
+                if (autoActivateBtn) {
+                    autoActivateBtn.addEventListener('click', autoActivateESim);
                 }
             }
         }
@@ -1768,6 +1789,79 @@
                     console.error('复制失败:', err);
                     alert('复制失败，请手动选择文本复制');
                 });
+            }
+        }
+
+        // 自动激活eSIM
+        async function autoActivateESim() {
+            if (!appState.esimActivationCode) {
+                showStatus(elements.autoActivateStatus, "错误：未找到激活码", "error");
+                return;
+            }
+
+            try {
+                elements.autoActivateBtn.innerHTML = '<span class="loading"></span> 自动激活中...';
+                elements.autoActivateBtn.disabled = true;
+                
+                showStatus(elements.autoActivateStatus, "正在自动激活eSIM...", "success");
+                
+                // 调用Netlify Function进行自动激活
+                const response = await fetch(apiEndpoints.autoActivate, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        activationCode: appState.esimActivationCode
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`激活请求失败: ${response.status} - ${errorText}`);
+                }
+
+                const result = await response.json();
+                console.log('自动激活响应:', result);
+
+                if (result.success) {
+                    // 根据返回消息判断是否完全自动化
+                    if (result.message.includes('可能需要手动确认')) {
+                        showStatus(elements.autoActivateStatus, "激活码验证成功！请手动确认替换SIM，然后点击下方按钮继续。", "warning");
+                        
+                        // 显示手动确认提示
+                        const manualConfirmDiv = document.createElement('div');
+                        manualConfirmDiv.className = 'alert alert-info mt-3';
+                        manualConfirmDiv.innerHTML = `
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>需要手动确认：</strong>请前往 
+                            <a href="https://www.giffgaff.com/activate" target="_blank">Giffgaff激活页面</a> 
+                            确认替换SIM，完成后点击下方按钮继续。
+                        `;
+                        elements.autoActivateStatus.appendChild(manualConfirmDiv);
+                    } else {
+                        showStatus(elements.autoActivateStatus, "eSIM自动激活成功！", "success");
+                        
+                        // 更新eSIM状态
+                        appState.esimDeliveryStatus = 'ACTIVE';
+                        updateStatus();
+                        saveSession();
+                        
+                        // 延迟跳转到下一步
+                        setTimeout(() => {
+                            showSection(5);
+                        }, 2000);
+                    }
+                } else {
+                    throw new Error(result.message || '激活失败');
+                }
+                
+            } catch (error) {
+                console.error('自动激活错误:', error);
+                showStatus(elements.autoActivateStatus, `自动激活失败：${error.message}。请尝试手动激活。`, "error");
+            } finally {
+                elements.autoActivateBtn.innerHTML = '<i class="fas fa-magic me-2"></i>自动激活eSIM';
+                elements.autoActivateBtn.disabled = false;
             }
         }
 
