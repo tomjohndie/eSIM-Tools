@@ -212,7 +212,7 @@ esim-tools/
 
 ### CORS解决方案
 静态部署环境下通过以下方式解决跨域问题：
-1. **推荐**: 使用公共服务 [esim.cosr.eu.org](https://esim.cosr.eu.org)
+1. **推荐**: 使用公共服务 [https://esim.cosr.eu.org](https://esim.cosr.eu.org)
 2. **Netlify代理重定向**: 自动代理API请求
 3. **本地代理服务器**: 运行Node.js代理
 4. **浏览器插件**: 临时解决方案
@@ -261,6 +261,37 @@ open tests/test_simyo_esim.html
 - 提交 [GitHub Issue](https://github.com/Silentely/esim-tools/issues)
 - 查看 [常见问题解答](./docs/guides/DEPLOYMENT_GUIDE.md#故障排除)
 - 参考详细文档和使用指南
+
+## 📋 TODO列表
+
+### 🔄 Giffgaff eSIM激活流程自动化
+- [ ] **网络抓包分析**: 在 `https://www.giffgaff.com/activate` 页面进行完整的网络请求抓包
+  - [ ] 输入第四步获得的activationCode
+  - [ ] 点击"Activate your SIM"按钮
+  - [ ] 记录跳转后的页面URL和参数
+  - [ ] 点击"Yes, I want to replace my SIM"按钮
+  - [ ] 分析所有相关的API调用和请求参数
+  - [ ] 记录认证token、session信息等关键参数
+  - [ ] 整理完整的请求流程和参数映射
+- [ ] **自动化脚本开发**: 基于抓包结果开发自动化激活脚本
+  - [X] 实现自动输入activationCode
+  - [X] 实现自动点击激活按钮(完成待实卡测试)
+  - [ ] 实现自动确认SIM替换
+  - [ ] 集成到现有的eSIM申请流程中
+- [ ] **测试验证**: 验证自动化流程的稳定性和准确性
+  - [ ] 多环境测试（不同浏览器、网络环境）
+  - [ ] 错误处理和异常情况处理
+  - [ ] 用户友好的进度提示和状态反馈
+
+### 🛠️ 技术改进
+- [ ] **错误处理优化**: 改进第五步"申請交換eSIM Swap SIM"的400错误处理
+- [ ] **用户体验优化**: 优化前端显示activationCode、ssn等信息的方式
+- [ ] **流程引导优化**: 改进用户手动激活的引导流程
+
+### 📚 文档完善
+- [ ] **API文档**: 完善Giffgaff激活流程的API调用文档
+- [ ] **用户指南**: 更新用户使用指南，包含新的自动化流程
+- [ ] **开发文档**: 添加自动化脚本的开发说明
 
 ## 免责声明
 
