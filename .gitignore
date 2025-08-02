@@ -103,7 +103,6 @@ dist/
 .env.local
 .env.development
 .env.test
-Giffgaff-swap-esim.json
-giffgaff.html
-Simyo-swap-esim.json
-simyo.html
+
+# Postman
+postman/

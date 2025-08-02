@@ -10,7 +10,7 @@
 - ✅ OAuth 2.0 PKCE 认证流程
 - ✅ 邮件验证码(MFA)验证
 - ✅ GraphQL API 完整集成
-- ✅ eSIM 预订和SIM卡交换
+- ✅ eSIM 预订和手动激活指导
 - ✅ eSIM 下载码生成和二维码显示
 - ✅ 响应式设计，支持移动设备
 - ✅ 完整的错误处理和用户体验优化
@@ -69,8 +69,13 @@ const apiEndpoints = {
 2. 系统将显示您的Giffgaff账户详情
 
 ### 步骤4: 申请eSIM
-1. 点击"预订eSIM"获取新的eSIM
-2. 点击"交换SIM卡"完成从物理SIM到eSIM的转换
+1. 点击"预订eSIM"获取新的eSIM（状态：RESERVED）
+2. **重要：请保持网页开启状态，不要关闭或刷新页面**
+3. 复制显示的激活码(Activation Code)
+4. 前往 [Giffgaff激活页面](https://www.giffgaff.com/activate) 手动激活eSIM
+5. 在激活页面输入激活码并点击"Activate your SIM"
+6. 核对信息无误后点击"Yes, I want to replace my SIM"
+7. 激活成功后返回本工具，点击"我已完成手动激活，继续下一步"
 
 ### 步骤5: 获取二维码
 1. 点击"获取eSIM Token"
