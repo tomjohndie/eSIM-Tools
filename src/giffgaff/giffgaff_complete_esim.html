@@ -805,7 +805,7 @@
                                     <strong>请保持此网页开启状态，不要关闭或刷新页面！</strong>
                                 </div>
                                 
-                                <h5 class="text-success mb-3">您的eSIM信息（状态：RESERVED）</h5>
+                                <h5 class="text-success mb-3" id="esimStatusTitle">您的eSIM信息（状态：RESERVED）</h5>
                                 <div class="row">
                                     <div class="col-md-6">
                                         <p><strong>激活码 (Activation Code):</strong></p>
@@ -927,6 +927,7 @@
             // eSIM相关
             esimSSN: "",
             esimActivationCode: "",
+            esimDeliveryStatus: "",
             lpaString: "",
             
             // 步骤控制
@@ -1169,6 +1170,10 @@
                 memberId: appState.memberId,
                 memberName: appState.memberName,
                 phoneNumber: appState.phoneNumber,
+                esimSSN: appState.esimSSN,
+                esimActivationCode: appState.esimActivationCode,
+                esimDeliveryStatus: appState.esimDeliveryStatus,
+                lpaString: appState.lpaString,
                 currentStep: appState.currentStep,
                 timestamp: Date.now()
             };
@@ -1190,6 +1195,10 @@
                         appState.memberId = data.memberId || "";
                         appState.memberName = data.memberName || "";
                         appState.phoneNumber = data.phoneNumber || "";
+                        appState.esimSSN = data.esimSSN || "";
+                        appState.esimActivationCode = data.esimActivationCode || "";
+                        appState.esimDeliveryStatus = data.esimDeliveryStatus || "";
+                        appState.lpaString = data.lpaString || "";
                         appState.currentStep = data.currentStep || 1;
                         
                         // 恢复UI状态
@@ -1687,8 +1696,9 @@
                 
                 appState.esimSSN = data.data.reserveESim.esim.ssn;
                 appState.esimActivationCode = data.data.reserveESim.esim.activationCode;
+                appState.esimDeliveryStatus = data.data.reserveESim.esim.deliveryStatus;
                 
-                showStatus(elements.esimReserveStatus, "eSIM预订成功！状态：RESERVED", "success");
+                showStatus(elements.esimReserveStatus, `eSIM预订成功！状态：${appState.esimDeliveryStatus || 'RESERVED'}`, "success");
                 updateStatus(); // 更新状态显示
                 
                 // 显示eSIM信息和手动激活指导
@@ -1707,11 +1717,18 @@
             const esimInfoDisplay = document.getElementById('esimInfoDisplay');
             const displayActivationCode = document.getElementById('displayActivationCode');
             const displaySSN = document.getElementById('displaySSN');
+            const esimStatusTitle = document.getElementById('esimStatusTitle');
             
             if (esimInfoDisplay && displayActivationCode && displaySSN) {
                 // 显示激活码和SSN
                 displayActivationCode.textContent = appState.esimActivationCode || '未获取';
                 displaySSN.textContent = appState.esimSSN || '未获取';
+                
+                // 更新eSIM状态标题
+                if (esimStatusTitle) {
+                    const deliveryStatus = appState.esimDeliveryStatus || 'RESERVED';
+                    esimStatusTitle.textContent = `您的eSIM信息（状态：${deliveryStatus}）`;
+                }
                 
                 // 显示信息区域
                 esimInfoDisplay.style.display = 'block';
