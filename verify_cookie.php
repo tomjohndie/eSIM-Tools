@@ -188,15 +188,26 @@ function callGiffgaffAPI($cookies) {
     // 尝试调用Giffgaff API验证Cookie
     $ch = curl_init();
     curl_setopt_array($ch, [
-        CURLOPT_URL => 'https://www.giffgaff.com/api/user/profile',
+        CURLOPT_URL => 'https://www.giffgaff.com/dashboard',
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_FOLLOWLOCATION => true,
         CURLOPT_TIMEOUT => 30,
         CURLOPT_HTTPHEADER => [
             'Cookie: ' . $cookieHeader,
-            'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'Accept: application/json',
-            'Referer: https://www.giffgaff.com/'
+            'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0',
+            'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+            'Accept-Language: zh-CN,zh-HK;q=0.9,zh;q=0.8,en;q=0.7,en-GB;q=0.6,en-US;q=0.5',
+            'Referer: https://www.giffgaff.com/auth/login/challenge',
+            'Cache-Control: max-age=0',
+            'DNT: 1',
+            'Sec-Ch-Ua: "Not)A;Brand";v="8", "Chromium";v="138", "Microsoft Edge";v="138"',
+            'Sec-Ch-Ua-Mobile: ?0',
+            'Sec-Ch-Ua-Platform: "macOS"',
+            'Sec-Fetch-Dest: document',
+            'Sec-Fetch-Mode: navigate',
+            'Sec-Fetch-Site: same-origin',
+            'Sec-Fetch-User: ?1',
+            'Upgrade-Insecure-Requests: 1'
         ]
     ]);
     
@@ -205,29 +216,51 @@ function callGiffgaffAPI($cookies) {
     curl_close($ch);
     
     if ($httpCode === 200 && $response) {
-        $data = json_decode($response, true);
-        if ($data && isset($data['user'])) {
-            // Cookie有效，生成或提取Access Token
-            // 这里需要根据实际的Giffgaff API响应来提取或生成token
+        $htmlContent = $response;
+        
+        // 检查页面是否包含登录成功的标识
+        $isLoggedIn = strpos($htmlContent, 'dashboard') !== false || 
+                     strpos($htmlContent, 'account') !== false ||
+                     strpos($htmlContent, 'profile') !== false ||
+                     strpos($htmlContent, 'logout') !== false ||
+                     strpos($htmlContent, 'login') === false;
+        
+        if ($isLoggedIn) {
+            // Cookie有效，检查是否有关键的认证Cookie
+            error_log('Cookie validation: Dashboard access successful');
             
-            // 方法1: 如果API返回token
-            if (isset($data['access_token'])) {
-                return $data['access_token'];
+            // 查找关键的认证Cookie
+            $authCookies = ['GGUID', 'giffgaff', 'JSESSIONID', 'XSRF-TOKEN'];
+            $foundAuthCookie = null;
+            
+            foreach ($authCookies as $cookieName) {
+                if (isset($cookies[$cookieName])) {
+                    $foundAuthCookie = $cookies[$cookieName];
+                    error_log("Found auth cookie: $cookieName");
+                    break;
+                }
             }
             
-            // 方法2: 使用Cookie中的token
+            // 如果找到认证Cookie，使用它作为token
+            if ($foundAuthCookie && strlen($foundAuthCookie) > 20) {
+                return $foundAuthCookie;
+            }
+            
+            // 使用任何包含token的Cookie
             foreach ($cookies as $name => $value) {
                 if (strpos(strtolower($name), 'token') !== false && strlen($value) > 20) {
                     return $value;
                 }
             }
             
-            // 方法3: 生成基于用户信息的临时token（不推荐用于生产）
+            // 生成基于Cookie的临时token
             return base64_encode(json_encode([
-                'user_id' => $data['user']['id'] ?? 'unknown',
+                'cookies_hash' => md5(json_encode($cookies)),
                 'timestamp' => time(),
                 'source' => 'cookie_validation'
             ]));
+        } else {
+            error_log('Cookie validation: Dashboard access failed - redirected to login');
         }
     }
     

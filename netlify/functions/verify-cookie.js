@@ -209,47 +209,82 @@ async function callGiffgaffAPI(cookies) {
             .map(([name, value]) => `${name}=${value}`)
             .join('; ');
 
-        // 尝试调用Giffgaff API验证Cookie
+        // 尝试调用Giffgaff Dashboard验证Cookie
         const response = await axios.get(
-            'https://www.giffgaff.com/api/user/profile',
+            'https://www.giffgaff.com/dashboard',
             {
                 headers: {
                     'Cookie': cookieHeader,
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                    'Accept': 'application/json',
-                    'Referer': 'https://www.giffgaff.com/',
-                    'Accept-Language': 'en-US,en;q=0.9'
+                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                    'Accept-Language': 'zh-CN,zh-HK;q=0.9,zh;q=0.8,en;q=0.7,en-GB;q=0.6,en-US;q=0.5',
+                    'Referer': 'https://www.giffgaff.com/auth/login/challenge',
+                    'Cache-Control': 'max-age=0',
+                    'DNT': '1',
+                    'Sec-Ch-Ua': '"Not)A;Brand";v="8", "Chromium";v="138", "Microsoft Edge";v="138"',
+                    'Sec-Ch-Ua-Mobile': '?0',
+                    'Sec-Ch-Ua-Platform': '"macOS"',
+                    'Sec-Fetch-Dest': 'document',
+                    'Sec-Fetch-Mode': 'navigate',
+                    'Sec-Fetch-Site': 'same-origin',
+                    'Sec-Fetch-User': '?1',
+                    'Upgrade-Insecure-Requests': '1'
                 },
-                timeout: 30000
+                timeout: 30000,
+                maxRedirects: 5
             }
         );
 
         if (response.status === 200 && response.data) {
-            const data = response.data;
+            const htmlContent = response.data;
             
-            if (data && data.user) {
-                // Cookie有效，生成或提取Access Token
+            // 检查页面是否包含登录成功的标识
+            // 如果是登录页面，通常包含login/auth相关内容
+            // 如果是dashboard，应该包含用户相关内容
+            const isLoggedIn = htmlContent.includes('dashboard') || 
+                              htmlContent.includes('account') ||
+                              htmlContent.includes('profile') ||
+                              htmlContent.includes('logout') ||
+                              !htmlContent.includes('login');
+            
+            if (isLoggedIn) {
+                // Cookie有效，检查是否有关键的认证Cookie
+                console.log('Cookie validation: Dashboard access successful');
                 
-                // 方法1: 如果API返回token
-                if (data.access_token) {
-                    return data.access_token;
+                // 查找关键的认证Cookie
+                const authCookies = ['GGUID', 'giffgaff', 'JSESSIONID', 'XSRF-TOKEN'];
+                let foundAuthCookie = null;
+                
+                for (const cookieName of authCookies) {
+                    if (cookies[cookieName]) {
+                        foundAuthCookie = cookies[cookieName];
+                        console.log(`Found auth cookie: ${cookieName}`);
+                        break;
+                    }
                 }
                 
-                // 方法2: 使用Cookie中的token
+                // 如果找到认证Cookie，使用它作为token
+                if (foundAuthCookie && foundAuthCookie.length > 20) {
+                    return foundAuthCookie;
+                }
+                
+                // 使用任何包含token的Cookie
                 for (const [name, value] of Object.entries(cookies)) {
                     if (name.toLowerCase().includes('token') && value.length > 20) {
                         return value;
                     }
                 }
                 
-                // 方法3: 生成基于用户信息的临时token（仅用于演示）
+                // 生成基于Cookie的临时token
                 const tokenData = {
-                    user_id: data.user.id || 'unknown',
+                    cookies_hash: require('crypto').createHash('md5').update(JSON.stringify(cookies)).digest('hex'),
                     timestamp: Date.now(),
                     source: 'cookie_validation'
                 };
                 
                 return Buffer.from(JSON.stringify(tokenData)).toString('base64');
+            } else {
+                console.log('Cookie validation: Dashboard access failed - redirected to login');
             }
         }
 
