@@ -615,16 +615,8 @@
                     <!-- OAuth登录区域 -->
                     <div id="oauthLoginSection" class="mt-4" style="display: none;">
                         <h5 class="mb-3">OAuth 2.0 登录</h5>
-                        <div class="btn-group">
-                            <button id="oauthLoginBtn" class="btn btn-primary">
-                                <i class="fas fa-sign-in-alt me-2"></i> 开始OAuth登录
-                            </button>
-                        </div>
-                    
-                    <div id="oauthStatus" class="status"></div>
-                    
-                    <!-- OAuth回调处理区域 -->
-                    <div id="oauthCallbackSection" class="verification-section">
+                        
+                        <!-- OAuth说明区域 -->
                         <div class="alert alert-warning mb-4">
                             <h6><i class="fas fa-exclamation-triangle me-2"></i>如何获取回调URL：</h6>
                             <ol class="mb-2">
@@ -644,6 +636,16 @@
                             <p class="mb-0"><small class="text-muted">确保URL包含 <code>code</code> 和 <code>state</code> 参数</small></p>
                         </div>
                         
+                        <div class="btn-group">
+                            <button id="oauthLoginBtn" class="btn btn-primary">
+                                <i class="fas fa-sign-in-alt me-2"></i> 开始OAuth登录
+                            </button>
+                        </div>
+                    
+                    <div id="oauthStatus" class="status"></div>
+                    
+                    <!-- OAuth回调处理区域 -->
+                    <div id="oauthCallbackSection" class="verification-section">
                         <div class="mb-4">
                             <label for="callbackUrl" class="form-label">回调URL：</label>
                             <textarea id="callbackUrl" class="form-control" placeholder="例如：giffgaff://auth/callback/?code=EDXgE_Uq5Q96LT5s&state=7piz0IXfUIHHoxMURfaboQ" rows="3"></textarea>
@@ -662,22 +664,6 @@
                     <!-- Cookie登录区域 -->
                     <div id="cookieLoginSection" class="mt-4" style="display: none;">
                         <h5 class="mb-3">Cookie 登录</h5>
-                        
-                        <div class="alert alert-success mb-4">
-                            <h6><i class="fas fa-check-circle me-2"></i>Cookie登录说明：</h6>
-                            <p class="mb-2">Cookie登录功能现已升级为Node.js后端，支持所有现代部署环境：</p>
-                            <ul class="mb-2">
-                                <li>✅ <strong>Netlify Functions</strong>：完全支持，无需额外配置</li>
-                                <li>✅ <strong>Vercel Functions</strong>：兼容支持</li>
-                                <li>✅ <strong>传统服务器</strong>：支持PHP和Node.js双重部署</li>
-                            </ul>
-                            <p class="mb-2"><strong>两种登录方式任选</strong>：</p>
-                            <ul class="mb-2">
-                                <li>🍪 <strong>Cookie登录</strong> - 快速便捷，使用已有登录状态</li>
-                                <li>🔐 <strong>OAuth 2.0登录</strong> - 标准安全，官方推荐方式</li>
-                            </ul>
-                            <p class="mb-0"><small class="text-muted">💡 两种方式功能完全相同，请根据个人喜好选择</small></p>
-                        </div>
                         
                         <div class="alert alert-info mb-4">
                             <h6><i class="fas fa-info-circle me-2"></i>如何获取Cookie：</h6>
@@ -1384,7 +1370,7 @@
                 
                 // 显示回调处理区域
                 elements.oauthCallbackSection.classList.add('active');
-                showStatus(elements.oauthStatus, "请在新页面完成登录，然后复制回调URL到下方", "success");
+                showStatus(elements.oauthStatus, "登录页面已打开，请完成登录后复制回调URL", "success");
                 
             } catch (error) {
                 showStatus(elements.oauthStatus, "OAuth登录准备失败：" + error.message, "error");
