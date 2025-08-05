@@ -1,0 +1,252 @@
+/* 微交互动画和触摸反馈 */
+
+/* 基础动画变量 */
+:root {
+  --transition-fast: 0.15s ease-out;
+  --transition-normal: 0.3s ease-out;
+  --transition-slow: 0.5s ease-out;
+  --bounce-ease: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --smooth-ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 按钮点击反馈动画 */
+.btn {
+  position: relative;
+  overflow: hidden;
+  transition: all var(--transition-normal) var(--smooth-ease);
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+.btn:active {
+  transform: scale(0.95) translateZ(0);
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn:active::before {
+  width: 300px;
+  height: 300px;
+}
+
+/* 卡片悬停效果 */
+.card {
+  transition: all var(--transition-normal) var(--smooth-ease);
+  transform: translateZ(0);
+  will-change: transform, box-shadow;
+}
+
+.card:hover {
+  transform: translateY(-2px) translateZ(0);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.card:active {
+  transform: translateY(0) translateZ(0);
+}
+
+/* 输入框焦点动画 */
+.form-control {
+  transition: all var(--transition-normal) var(--smooth-ease);
+  transform: translateZ(0);
+}
+
+.form-control:focus {
+  transform: scale(1.02) translateZ(0);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+/* 加载状态指示器 */
+.loading-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 脉冲动画 */
+.pulse {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+/* 淡入动画 */
+.fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 滑入动画 */
+.slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+/* 弹跳动画 */
+.bounce-in {
+  animation: bounceIn 0.6s var(--bounce-ease);
+}
+
+@keyframes bounceIn {
+  0% { transform: scale(0.3); opacity: 0; }
+  50% { transform: scale(1.05); }
+  70% { transform: scale(0.9); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* 移动端触摸反馈 */
+@media (hover: none) and (pointer: coarse) {
+  .btn {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  
+  .btn:active {
+    transform: scale(0.98);
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+  
+  .card:active {
+    transform: scale(0.98);
+  }
+  
+  .form-control:focus {
+    transform: none;
+  }
+}
+
+/* 滚动优化 */
+.smooth-scroll {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 减少动画（用户偏好） */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 加载状态遮罩 */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  visibility: hidden;
+  transition: all var(--transition-normal);
+}
+
+.loading-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* 进度条动画 */
+.progress-bar {
+  height: 4px;
+  background: linear-gradient(90deg, #007bff, #28a745);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* 工具提示动画优化 */
+.tooltip {
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+  transform: scale(0.9);
+  transform-origin: center bottom;
+}
+
+.tooltip.show {
+  transform: scale(1);
+}
+
+/* 状态切换动画 */
+.status-transition {
+  transition: all var(--transition-normal) var(--smooth-ease);
+}
+
+.status-transition.connected {
+  color: #28a745;
+  transform: scale(1.05);
+}
+
+.status-transition.disconnected {
+  color: #dc3545;
+  transform: scale(0.95);
+}
+
+/* 响应式动画调整 */
+@media (max-width: 768px) {
+  .btn:active {
+    transform: scale(0.96);
+  }
+  
+  .card:hover {
+    transform: none;
+  }
+  
+  .form-control:focus {
+    transform: none;
+  }
+} 

@@ -29,14 +29,13 @@
   - 无CORS限制，完整API功能
   - 支持所有eSIM操作
   - 定期更新维护
+  - 性能优化，支持离线使用
 
-### 📱 静态部署版本
-- **工具选择页面**: [https://esim.cosr.eu.org/](https://esim.cosr.eu.org/)
-- **Giffgaff工具**: [https://esim.cosr.eu.org/giffgaff](https://esim.cosr.eu.org/giffgaff)
-- **Simyo工具**: [https://esim.cosr.eu.org/simyo](https://esim.cosr.eu.org/simyo)
-
-### 💰 优惠信息
+### 🎁 Simyo邀请奖励
 新用户开卡可享受**额外5欧元话费赠送**！[立即开卡](https://vriendendeal.simyo.nl/prepaid/AZzwPzb)
+
+### 🎁 Giffgaff邀请奖励
+新用户开卡可享受**额外5英镑话费赠送**！[立即开卡](https://www.giffgaff.com/orders/affiliate/mowal44_1653194386268)
 
 ## 🚀 本地部署
 
@@ -73,19 +72,21 @@
 ### 环境要求
 
 #### 生产环境
-- **无特殊要求** - 纯静态部署 + Netlify Functions
+- **无特殊要求** - 现代化Web应用 + Netlify Functions
 - **现代浏览器** - Chrome 80+, Firefox 75+, Safari 13+, Edge 80+
+- **性能优化** - Service Worker离线支持，资源压缩
 
 #### 开发环境
 - **Node.js** >= 18.0.0 (仅本地开发需要)
 - **npm** >= 8.0.0 (仅本地开发需要)
 
 ### 技术架构
-- **前端**: 纯HTML/CSS/JavaScript，无框架依赖，会话持久化
+- **前端**: 现代化Web应用，性能优化，微交互动画
 - **后端**: Netlify Functions（生产）+ Node.js Express（开发）
 - **部署**: 完全无服务器架构
 - **API代理**: 统一CORS处理，完整日志记录
 - **安全**: Helmet.js安全头，CORS配置
+- **性能**: Service Worker离线支持，资源压缩，图片优化
 
 ## 📦 Netlify部署
 
@@ -107,10 +108,22 @@
 ## 🔧 技术架构
 
 ### 前端技术栈
-- **HTML5/CSS3** - 响应式设计
+- **HTML5/CSS3** - 响应式设计，微交互动画
 - **JavaScript ES6+** - 现代JavaScript特性
 - **Bootstrap 5** - UI框架
 - **Font Awesome** - 图标库
+- **Service Worker** - 离线支持
+- **WebP图片优化** - 自动格式检测和压缩
+
+### 🚀 性能优化特性
+- **资源压缩**: Webpack + TerserPlugin，压缩率可达65%+
+- **Service Worker**: 离线缓存，网络状态监控
+- **微交互动画**: 按钮反馈，加载状态，触摸优化
+- **图片优化**: WebP格式支持，懒加载，自动压缩
+- **代码分割**: 自动分离第三方库，减少初始加载时间
+- **缓存策略**: 智能缓存API请求和静态资源
+
+详细性能优化说明请参考 [PERFORMANCE.md](./PERFORMANCE.md)
 
 ### 后端架构
 - **Netlify Functions** - 无服务器函数处理API代理
@@ -119,10 +132,11 @@
 - **会话持久化** - LocalStorage + 2小时自动过期
 
 ### 部署平台
-- **Netlify** - 静态站点托管 + 无服务器函数
+- **Netlify** - 现代化Web应用托管 + 无服务器函数
 - **GitHub Actions** - 自动化部署（可选）
 - **CDN加速** - 全球内容分发网络
 - **自定义域名** - 支持HTTPS
+- **性能优化** - 自动资源压缩和缓存策略
 
 ## 📋 使用指南
 
@@ -143,6 +157,7 @@
 详细使用说明：
 - [Giffgaff工具说明](./README_giffgaff_esim.md)
 - [Simyo工具说明](./README_simyo_esim.md)
+- [性能优化指南](./PERFORMANCE.md)
 
 ## ⚠️ 重要说明
 
@@ -158,9 +173,9 @@
 ### 使用方式说明
 
 #### 🌟 推荐方式：在线服务 ([https://esim.cosr.eu.org](https://esim.cosr.eu.org))
-- **优势**: 无需部署，即开即用，无CORS限制
+- **优势**: 无需部署，即开即用，无CORS限制，性能优化
 - **适用**: 普通用户日常使用
-- **特点**: 定期维护更新，稳定可靠，完整功能
+- **特点**: 定期维护更新，稳定可靠，完整功能，离线支持
 
 #### 🔧 自建部署：本地/私有服务
 - **文件**: `giffgaff_complete_esim.html` + `simyo_complete_esim.html`
@@ -211,7 +226,7 @@ esim-tools/
 ```
 
 ### CORS解决方案
-静态部署环境下通过以下方式解决跨域问题：
+现代化Web应用环境下通过以下方式解决跨域问题：
 1. **推荐**: 使用公共服务 [https://esim.cosr.eu.org](https://esim.cosr.eu.org)
 2. **Netlify代理重定向**: 自动代理API请求
 3. **本地代理服务器**: 运行Node.js代理
@@ -284,11 +299,14 @@ open tests/test_simyo_esim.html
   - [ ] 用户友好的进度提示和状态反馈
 
 ### 🛠️ 技术改进
+- [X] **悬浮框优化**: 只有被截断才显示悬浮框，空值时不显示鼠标问号
+- [X] **性能优化**: 添加Service Worker离线支持，资源压缩，微交互动画
 - [ ] **错误处理优化**: 改进第五步"申請交換eSIM Swap SIM"的400错误处理
 - [ ] **用户体验优化**: 优化前端显示activationCode、ssn等信息的方式
 - [ ] **流程引导优化**: 改进用户手动激活的引导流程
 
 ### 📚 文档完善
+- [X] **性能优化文档**: 添加PERFORMANCE.md详细说明
 - [ ] **API文档**: 完善Giffgaff激活流程的API调用文档
 - [ ] **用户指南**: 更新用户使用指南，包含新的自动化流程
 - [ ] **开发文档**: 添加自动化脚本的开发说明
