@@ -14,7 +14,7 @@
   status = 200
 
 [[redirects]]
-  # Simyo eSIM页面（完整版本）
+  # Simyo eSIM页面
   from = "/simyo"
   to = "/src/simyo/simyo_complete_esim.html"
   status = 200

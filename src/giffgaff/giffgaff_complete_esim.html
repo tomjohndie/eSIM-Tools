@@ -38,6 +38,12 @@
             align-items: center;
             padding: 15px 0;
         }
+
+        .header-buttons {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
         
         .logo-container {
             display: flex;
@@ -83,6 +89,33 @@
             transform: translateY(-2px);
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
             border-color: rgba(255, 204, 0, 0.5);
+        }
+
+        .github-btn {
+            background: linear-gradient(to right, #333333, #666666);
+            border: none;
+            font-size: 16px;
+            color: #ffffff;
+            cursor: pointer;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 30px;
+            transition: all 0.3s;
+            gap: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-decoration: none;
+            border: 1px solid rgba(51, 51, 51, 0.3);
+            margin-left: 10px;
+        }
+        
+        .github-btn:hover {
+            background: linear-gradient(to right, #666666, #333333);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+            border-color: rgba(51, 51, 51, 0.5);
+            color: #ffffff;
         }
         
         .page-title {
@@ -519,6 +552,15 @@
                 padding: 14px;
                 font-size: 16px;
             }
+
+            .header-buttons {
+                gap: 8px;
+            }
+
+            .login-btn, .github-btn {
+                padding: 8px 16px;
+                font-size: 14px;
+            }
         }
         
         @media (max-width: 480px) {
@@ -550,9 +592,14 @@
                 <i class="fas fa-sim-card app-icon"></i>
                 <div class="app-title">Giffgaff eSIM工具</div>
             </div>
-            <button class="login-btn" onclick="openTutorial()">
-                <i class="fas fa-book"></i> 查看教程
-            </button>
+            <div class="header-buttons">
+                <button class="login-btn" onclick="openTutorial()">
+                    <i class="fas fa-book"></i> 查看教程
+                </button>
+                <a href="https://github.com/Silentely/esim-tools" target="_blank" class="github-btn">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+            </div>
         </div>
         
         <!-- 开卡推广 -->
