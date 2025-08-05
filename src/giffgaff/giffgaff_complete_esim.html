@@ -676,8 +676,8 @@
                     <span id="statusLpaString" class="status-value disconnected">未生成</span>
                 </div>
             </div>
-            <button id="clearSessionBtn" class="clear-session-btn">
-                <i class="fas fa-trash-alt"></i> 清除会话
+            <button id="clearSessionBtn" class="clear-session-btn" aria-label="清除会话并重置所有进度">
+                <i class="fas fa-trash-alt" aria-hidden="true"></i> 清除会话
             </button>
         </div>
         
@@ -1190,25 +1190,25 @@
 
         // 状态管理函数
         function updateStatus() {
-            // 更新Access Token状态
+            // 更新访问令牌状态 - 显示完整值而不是截断
             if (appState.accessToken) {
-                elements.statusAccessToken.textContent = `${appState.accessToken.substring(0, 20)}...`;
+                elements.statusAccessToken.textContent = appState.accessToken;
                 elements.statusAccessToken.className = 'status-value connected';
             } else {
                 elements.statusAccessToken.textContent = '未登录';
                 elements.statusAccessToken.className = 'status-value disconnected';
             }
-
-            // 更新MFA签名状态
+            
+            // 更新MFA签名状态 - 显示完整值而不是截断
             if (appState.emailSignature) {
-                elements.statusMfaSignature.textContent = `${appState.emailSignature.substring(0, 20)}...`;
+                elements.statusMfaSignature.textContent = appState.emailSignature;
                 elements.statusMfaSignature.className = 'status-value connected';
             } else {
                 elements.statusMfaSignature.textContent = '未验证';
                 elements.statusMfaSignature.className = 'status-value disconnected';
             }
-
-            // 更新会员ID状态
+            
+            // 更新会员ID状态 - 显示完整值而不是截断
             if (appState.memberId) {
                 elements.statusMemberId.textContent = appState.memberId;
                 elements.statusMemberId.className = 'status-value connected';
@@ -1216,28 +1216,23 @@
                 elements.statusMemberId.textContent = '未获取';
                 elements.statusMemberId.className = 'status-value disconnected';
             }
-
+            
             // 更新eSIM状态
-            if (appState.esimSSN) {
-                elements.statusEsimStatus.textContent = '已申请';
-                elements.statusEsimStatus.className = 'status-value connected';
-            } else {
-                elements.statusEsimStatus.textContent = '未申请';
-                elements.statusEsimStatus.className = 'status-value disconnected';
-            }
-
-            // 更新激活码状态
+            elements.statusEsimStatus.textContent = appState.esimActivationCode ? '已获取' : '未申请';
+            elements.statusEsimStatus.className = appState.esimActivationCode ? 'status-value connected' : 'status-value disconnected';
+            
+            // 更新激活码状态 - 显示完整值而不是截断
             if (appState.esimActivationCode) {
-                elements.statusActivationCode.textContent = `${appState.esimActivationCode.substring(0, 15)}...`;
+                elements.statusActivationCode.textContent = appState.esimActivationCode;
                 elements.statusActivationCode.className = 'status-value connected';
             } else {
                 elements.statusActivationCode.textContent = '未获取';
                 elements.statusActivationCode.className = 'status-value disconnected';
             }
-
-            // 更新LPA字符串状态
+            
+            // 更新LPA字符串状态 - 显示完整值而不是截断
             if (appState.lpaString) {
-                elements.statusLpaString.textContent = `${appState.lpaString.substring(0, 15)}...`;
+                elements.statusLpaString.textContent = appState.lpaString;
                 elements.statusLpaString.className = 'status-value connected';
             } else {
                 elements.statusLpaString.textContent = '未生成';
@@ -2100,8 +2095,6 @@
             const img = document.createElement('img');
             img.src = qrUrl;
             img.alt = "eSIM二维码";
-            img.setAttribute('role', 'img');
-            img.setAttribute('aria-label', 'eSIM 安装二维码');
             img.className = 'img-fluid';
             img.style.border = '5px solid white';
             img.style.borderRadius = '12px';
