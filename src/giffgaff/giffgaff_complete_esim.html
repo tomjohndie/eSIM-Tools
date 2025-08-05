@@ -725,28 +725,32 @@
             <p>将您的实体SIM卡无缝转换为eSIM</p>
         </div>
         
-        <!-- 服务时间提示 -->
-        <div id="serviceTimeAlert" class="alert mb-4">
-            <div class="service-time-container">
-                <div class="service-time-content">
-                    <div class="service-time-header">
-                        <i id="serviceTimeIcon" class="fas" style="font-size: 2.5em;"></i>
-                        <strong>服务时间提醒</strong>
-                    </div>
-                    <div class="service-time-message">
-                        <span id="serviceTimeMessage"></span>
-                    </div>
-                    <div id="actionMessage" class="service-time-action"></div>
-                </div>
-                <div class="current-time-display">
-                    <i class="fas fa-clock me-2" style="color: #6366f1; font-size: 2.5em;"></i>
-                    <div class="time-label-container">
-                        <span class="time-label-line1">当前</span>
-                        <span class="time-label-line2">时间：</span>
-                    </div>
-                    <span id="currentTime" class="time-value"></span>
-                </div>
+        <!-- 服务时间提示（优化布局） -->
+        <div id="serviceTimeAlert" class="alert mb-4 service-time-alert">
+          <div class="service-time-grid">
+            <!-- 左侧：提示内容 -->
+            <div class="service-time-left">
+              <div class="service-time-head">
+                <i id="serviceTimeIcon" class="fas" aria-hidden="true"></i>
+                <div class="service-time-title">服务时间提醒</div>
+              </div>
+              <div class="service-time-body">
+                <div id="serviceTimeMessage" class="service-time-message"></div>
+                <div id="actionMessage" class="service-time-action"></div>
+              </div>
             </div>
+
+            <!-- 右侧：当前时间卡片 -->
+            <div class="current-time-card" aria-label="当前时间">
+              <div class="time-card-icon">
+                <i class="fas fa-clock" aria-hidden="true"></i>
+              </div>
+              <div class="time-card-text">
+                <div class="time-card-label">当前时间</div>
+                <div id="currentTime" class="time-card-value">--:--</div>
+              </div>
+            </div>
+          </div>
         </div>
         
         <!-- 状态显示面板 -->
@@ -2581,88 +2585,176 @@
             font-weight: 500;
         }
         
-        /* 服务时间提醒样式 */
-        .service-time-container {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 20px;
+        /* ===== 服务时间提醒：新版布局与美化 ===== */
+        :root {
+          --st-gap: 20px;
+          --st-radius: 16px;
+          --st-card-radius: 18px;
+          --st-card-shadow: 0 8px 28px rgba(20, 20, 43, 0.12);
+          --st-soft-shadow: 0 2px 8px rgba(0,0,0,0.08);
+          --st-border: 1px solid rgba(0,0,0,0.06);
+          --st-muted: #64748b;
+          --st-strong: #0f172a;
+          --st-accent: #6366f1;
         }
-        
-        .service-time-content {
-            flex: 1;
-            text-align: center;
+
+        .service-time-alert {
+          padding: 0;
+          border: none;
+          background: transparent;
         }
-        
-        .service-time-header {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 8px;
-            font-size: 1.1em;
-            position: relative;
-            min-height: 80px;
+
+        .service-time-grid {
+          display: grid;
+          grid-template-columns: 1.3fr 0.9fr;
+          gap: var(--st-gap);
+          padding: 18px;
+          border-radius: var(--st-radius);
+          background: linear-gradient(135deg, #f6f8fb 0%, #eef2f7 100%);
+          border: var(--st-border);
+          box-shadow: var(--st-soft-shadow);
         }
-        
-        .service-time-header i {
-            position: absolute;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
+
+        /* 左侧内容 */
+        .service-time-left {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          padding: 14px 16px;
+          border-radius: 14px;
+          background: #ffffff;
+          border: var(--st-border);
+          box-shadow: var(--st-soft-shadow);
         }
-        
+
+        .service-time-head {
+          display: grid;
+          grid-template-columns: 44px 1fr;
+          align-items: center;
+          gap: 10px;
+          min-height: 44px;
+        }
+
+        #serviceTimeIcon {
+          width: 44px;
+          height: 44px;
+          display: grid;
+          place-items: center;
+          border-radius: 50%;
+          background: #eef2ff;
+          color: var(--st-accent);
+          font-size: 20px;
+        }
+
+        .service-time-title {
+          font-weight: 700;
+          font-size: 18px;
+          color: var(--st-strong);
+          letter-spacing: 0.2px;
+        }
+
+        .service-time-body {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
         .service-time-message {
-            margin-bottom: 8px;
-            line-height: 1.5;
-            word-wrap: break-word;
+          color: #334155;
+          line-height: 1.6;
         }
-        
+
         .service-time-action {
-            font-weight: 700;
-            font-size: 1.1em;
-            margin-top: 8px;
+          font-weight: 700;
+          font-size: 15px;
         }
-        
-        .current-time-display {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-            padding: 12px 20px;
-            border-radius: 20px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            animation: pulse-glow 2s ease-in-out infinite;
-            min-width: 140px;
-            min-height: 80px;
-            text-align: center;
+
+        /* 右侧时间卡片 */
+        .current-time-card {
+          display: grid;
+          grid-template-columns: 64px 1fr;
+          align-items: center;
+          gap: 14px;
+          padding: 16px 18px;
+          border-radius: var(--st-card-radius);
+          background: radial-gradient(120% 120% at 10% 10%, #ffffff 0%, #f2f4f8 70%, #eaeef6 100%);
+          box-shadow: var(--st-card-shadow);
+          position: relative;
+          overflow: hidden;
+          isolation: isolate;
+          animation: pulse-glow 2s ease-in-out infinite;
         }
-        
-        .time-label-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-right: 8px;
+
+        .current-time-card::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0));
+          pointer-events: none;
+          z-index: -1;
         }
-        
-        .time-label-line1 {
-            font-size: 1em;
-            color: #64748b;
-            font-weight: 500;
-            line-height: 1.2;
+
+        .time-card-icon {
+          width: 64px;
+          height: 64px;
+          border-radius: 16px;
+          background: linear-gradient(135deg, #eaeaff, #e0e7ff);
+          display: grid;
+          place-items: center;
+          box-shadow: inset 0 0 0 1px rgba(99,102,241,0.2);
         }
-        
-        .time-label-line2 {
-            font-size: 1em;
-            color: #64748b;
-            font-weight: 500;
-            line-height: 1.2;
+
+        .time-card-icon i {
+          color: var(--st-accent);
+          font-size: 26px;
         }
-        
-        .time-value {
-            font-size: 1.3em;
-            font-weight: 700;
-            color: #1e293b;
-            animation: time-update 0.5s ease-out;
+
+        .time-card-text {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .time-card-label {
+          font-size: 13px;
+          color: var(--st-muted);
+          font-weight: 600;
+          letter-spacing: 0.3px;
+        }
+
+        .time-card-value {
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+          font-size: 28px;
+          font-weight: 800;
+          letter-spacing: 1px;
+          color: #0b1324;
+          text-shadow: 0 1px 0 rgba(255,255,255,0.6);
+          animation: time-breathe 3s ease-in-out infinite;
+        }
+
+        @keyframes time-breathe {
+          0%, 100% { transform: translateZ(0) scale(1); }
+          50% { transform: translateZ(0) scale(1.02); }
+        }
+
+        /* 自适应 */
+        @media (max-width: 992px) {
+          .service-time-grid {
+            grid-template-columns: 1fr;
+          }
+          .current-time-card {
+            grid-template-columns: 48px 1fr;
+            gap: 12px;
+          }
+          .time-card-icon { width: 48px; height: 48px; border-radius: 12px; }
+          .time-card-icon i { font-size: 20px; }
+          .time-card-value { font-size: 24px; }
+        }
+
+        @media (max-width: 480px) {
+          .service-time-grid { padding: 14px; }
+          .service-time-left { padding: 12px; }
+          .time-card-value { font-size: 22px; }
         }
         
         @keyframes pulse-glow {
