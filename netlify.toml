@@ -1,73 +1,88 @@
 [build]
-  # 构建命令
-  command = "npm install"
-  # 发布目录
+  # 发布目录（静态文件所在目录）
   publish = "."
-  # Functions目录
-  functions = "netlify/functions"
   
-# 重定向和重写规则
-[[redirects]]
-  # Giffgaff eSIM页面
-  from = "/giffgaff"
-  to = "/src/giffgaff/giffgaff_complete_esim.html"
-  status = 200
+  # 构建命令（如果需要构建）
+  # command = "npm run build"
+  
+  # 环境变量
+  [build.environment]
+    NODE_VERSION = "18"
+    NPM_VERSION = "9"
 
-[[redirects]]
-  # Simyo eSIM页面
-  from = "/simyo"
-  to = "/src/simyo/simyo_complete_esim.html"
-  status = 200
+[build.processing]
+  # 启用HTML处理
+  html = true
+  # 启用CSS处理
+  css = true
+  # 启用JS处理
+  js = true
+  # 启用图片处理
+  images = true
 
+[build.processing.html]
+  # HTML压缩
+  pretty_urls = true
 
+[build.processing.css]
+  # CSS压缩
+  bundle = true
+  # 自动添加浏览器前缀
+  autoprefixer = true
 
-[[redirects]]
-  # 根路径重定向到选择页面
-  from = "/"
-  to = "/index.html"
-  status = 200
+[build.processing.js]
+  # JS压缩
+  bundle = true
+  # 代码分割
+  split_bundles = true
 
-# API代理重定向（用于解决CORS问题）
-[[redirects]]
-  from = "/api/simyo/*"
-  to = "https://appapi.simyo.nl/simyoapi/api/v1/:splat"
-  status = 200
-  force = true
-  headers = {X-Forwarded-Host = "appapi.simyo.nl"}
+[build.processing.images]
+  # 图片优化
+  compress = true
 
-[[redirects]]
-  from = "/api/giffgaff/*"
-  to = "https://api.giffgaff.com/:splat"
-  status = 200
-  force = true
-  headers = {X-Forwarded-Host = "api.giffgaff.com"}
-
-[[redirects]]
-  from = "/api/giffgaff-id/*"
-  to = "https://id.giffgaff.com/:splat"
-  status = 200
-  force = true
-  headers = {X-Forwarded-Host = "id.giffgaff.com"}
-
-[[redirects]]
-  from = "/api/giffgaff-public/*"
-  to = "https://publicapi.giffgaff.com/:splat"
-  status = 200
-  force = true
-  headers = {X-Forwarded-Host = "publicapi.giffgaff.com"}
-
-# 处理SPA路由（如果需要）
+# 重定向规则
 [[redirects]]
   from = "/*"
   to = "/index.html"
-  status = 404
+  status = 200
 
-# 安全头部
+# 头部设置
 [[headers]]
   for = "/*"
   [headers.values]
+    # 安全头部
     X-Frame-Options = "DENY"
     X-XSS-Protection = "1; mode=block"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; img-src 'self' data: https: http:; connect-src 'self' https://api.qrserver.com https://appapi.simyo.nl https://api.giffgaff.com https://id.giffgaff.com https://publicapi.giffgaff.com; font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;"
+    
+    # 缓存控制
+    Cache-Control = "public, max-age=31536000"
+    
+    # 内容安全策略
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; font-src 'self' data:; connect-src 'self' https://api.qrserver.com https://appapi.simyo.nl https://api.giffgaff.com https://id.giffgaff.com https://publicapi.giffgaff.com; img-src 'self' data: https:; frame-src 'none';"
+
+# 特定文件的头部设置
+[[headers]]
+  for = "*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "*.woff2"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# 函数配置（如果需要）
+[functions]
+  directory = "netlify/functions"

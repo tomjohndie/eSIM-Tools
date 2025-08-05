@@ -1,0 +1,189 @@
+{
+  "timestamp": "2025-08-05T16:37:47.462Z",
+  "files": [
+    {
+      "path": ".gitignore",
+      "size": 1162,
+      "sizeFormatted": "1.13 KB"
+    },
+    {
+      "path": ".netlifyignore",
+      "size": 913,
+      "sizeFormatted": "913 Bytes"
+    },
+    {
+      "path": "DEPLOYMENT.md",
+      "size": 3559,
+      "sizeFormatted": "3.48 KB"
+    },
+    {
+      "path": "LICENSE",
+      "size": 1065,
+      "sizeFormatted": "1.04 KB"
+    },
+    {
+      "path": "README.md",
+      "size": 12547,
+      "sizeFormatted": "12.25 KB"
+    },
+    {
+      "path": "index.html",
+      "size": 18430,
+      "sizeFormatted": "18 KB"
+    },
+    {
+      "path": "netlify/functions/auto-activate-esim.js",
+      "size": 7590,
+      "sizeFormatted": "7.41 KB"
+    },
+    {
+      "path": "netlify/functions/giffgaff-graphql.js",
+      "size": 4254,
+      "sizeFormatted": "4.15 KB"
+    },
+    {
+      "path": "netlify/functions/giffgaff-mfa-challenge.js",
+      "size": 3582,
+      "sizeFormatted": "3.5 KB"
+    },
+    {
+      "path": "netlify/functions/giffgaff-mfa-validation.js",
+      "size": 3558,
+      "sizeFormatted": "3.47 KB"
+    },
+    {
+      "path": "netlify/functions/verify-cookie.js",
+      "size": 9755,
+      "sizeFormatted": "9.53 KB"
+    },
+    {
+      "path": "netlify.toml",
+      "size": 2122,
+      "sizeFormatted": "2.07 KB"
+    },
+    {
+      "path": "package-lock.json",
+      "size": 929042,
+      "sizeFormatted": "907.27 KB"
+    },
+    {
+      "path": "package.json",
+      "size": 2286,
+      "sizeFormatted": "2.23 KB"
+    },
+    {
+      "path": "postman/Giffgaff-swap-esim.json",
+      "size": 13290,
+      "sizeFormatted": "12.98 KB"
+    },
+    {
+      "path": "postman/Simyo-swap-esim.json",
+      "size": 6843,
+      "sizeFormatted": "6.68 KB"
+    },
+    {
+      "path": "postman/giffgaff.html",
+      "size": 43880,
+      "sizeFormatted": "42.85 KB"
+    },
+    {
+      "path": "postman/simyo.html",
+      "size": 15154,
+      "sizeFormatted": "14.8 KB"
+    },
+    {
+      "path": "server.js",
+      "size": 6148,
+      "sizeFormatted": "6 KB"
+    },
+    {
+      "path": "src/assets/fontawesome/all.min.css",
+      "size": 102809,
+      "sizeFormatted": "100.4 KB"
+    },
+    {
+      "path": "src/assets/fontawesome/fa-brands-400.woff2",
+      "size": 117852,
+      "sizeFormatted": "115.09 KB"
+    },
+    {
+      "path": "src/assets/fontawesome/fa-regular-400.woff2",
+      "size": 25392,
+      "sizeFormatted": "24.8 KB"
+    },
+    {
+      "path": "src/assets/fontawesome/fa-solid-900.woff2",
+      "size": 156400,
+      "sizeFormatted": "152.73 KB"
+    },
+    {
+      "path": "src/assets/images/example.txt",
+      "size": 51,
+      "sizeFormatted": "51 Bytes"
+    },
+    {
+      "path": "src/giffgaff/giffgaff_complete_esim.html",
+      "size": 114747,
+      "sizeFormatted": "112.06 KB"
+    },
+    {
+      "path": "src/js/giffgaff.js",
+      "size": 189,
+      "sizeFormatted": "189 Bytes"
+    },
+    {
+      "path": "src/js/main.js",
+      "size": 183,
+      "sizeFormatted": "183 Bytes"
+    },
+    {
+      "path": "src/js/performance.js",
+      "size": 8276,
+      "sizeFormatted": "8.08 KB"
+    },
+    {
+      "path": "src/js/simyo.js",
+      "size": 183,
+      "sizeFormatted": "183 Bytes"
+    },
+    {
+      "path": "src/simyo/simyo_complete_esim.html",
+      "size": 80118,
+      "sizeFormatted": "78.24 KB"
+    },
+    {
+      "path": "src/simyo/simyo_proxy_server.js",
+      "size": 14720,
+      "sizeFormatted": "14.38 KB"
+    },
+    {
+      "path": "src/styles/animations.css",
+      "size": 4789,
+      "sizeFormatted": "4.68 KB"
+    },
+    {
+      "path": "src/styles/design-system.css",
+      "size": 7630,
+      "sizeFormatted": "7.45 KB"
+    },
+    {
+      "path": "src/sw.js",
+      "size": 3786,
+      "sizeFormatted": "3.7 KB"
+    },
+    {
+      "path": "test-icons.html",
+      "size": 5896,
+      "sizeFormatted": "5.76 KB"
+    },
+    {
+      "path": "verify_cookie.php",
+      "size": 8209,
+      "sizeFormatted": "8.02 KB"
+    }
+  ],
+  "stats": {
+    "totalFiles": 36,
+    "totalSize": 1736410
+  }
+}
