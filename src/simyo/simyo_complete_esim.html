@@ -1,8 +1,12 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- A11y/UX 微调：预连接与元信息（去重规范化） -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <title>Simyo NL eSIM 申请工具</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -442,6 +446,19 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
+        /* 全局可见焦点样式 */
+        :focus-visible {
+            outline: 2px solid #4c9aff;
+            outline-offset: 2px;
+        }
+        a:focus-visible,
+        button:focus-visible,
+        .btn:focus-visible,
+        input:focus-visible,
+        textarea:focus-visible {
+            box-shadow: 0 0 0 3px rgba(76,154,255,0.35);
+        }
+
         .status-panel h3 {
             color: #495057;
             margin-bottom: 15px;
@@ -579,15 +596,15 @@
         <!-- 应用头部 -->
         <div class="app-header">
             <div class="logo-container">
-                <i class="fas fa-sim-card app-icon"></i>
+                <i class="fas fa-sim-card app-icon" aria-hidden="true"></i>
                 <div class="app-title">Simyo eSIM工具</div>
             </div>
             <div class="header-buttons">
-                <button class="help-btn" onclick="openHelp()">
-                    <i class="fas fa-question-circle"></i> 使用帮助
+                <button class="help-btn" onclick="openHelp()" aria-label="打开使用帮助">
+                    <i class="fas fa-question-circle" aria-hidden="true"></i> 使用帮助
                 </button>
-                <a href="https://github.com/Silentely/esim-tools" target="_blank" class="github-btn">
-                    <i class="fab fa-github"></i> GitHub
+                <a href="https://github.com/Silentely/esim-tools" target="_blank" class="github-btn" aria-label="打开GitHub仓库">
+                    <i class="fab fa-github" aria-hidden="true"></i> GitHub
                 </a>
             </div>
         </div>
@@ -595,7 +612,7 @@
         <!-- 开卡推广 -->
         <div class="promo-banner">
             <div class="promo-content">
-                <i class="fas fa-gift promo-icon"></i>
+                <i class="fas fa-gift promo-icon" aria-hidden="true"></i>
                 <span class="promo-text">
                     如果您还没有开卡，可以<a href="https://vriendendeal.simyo.nl/prepaid/AZzwPzb" target="_blank" class="promo-link">点击这里开卡</a>，享受额外5欧元话费赠送！
                 </span>
@@ -609,8 +626,8 @@
         </div>
         
         <!-- 状态显示面板 -->
-        <div class="status-panel">
-            <h3><i class="fas fa-info-circle"></i> 当前状态</h3>
+        <div class="status-panel" role="status" aria-live="polite">
+            <h3><i class="fas fa-info-circle" aria-hidden="true"></i> 当前状态</h3>
             <div class="status-grid">
                 <div class="status-item">
                     <span class="status-label">Session Token:</span>
@@ -629,14 +646,14 @@
                     <span id="statusActivationCode" class="status-value disconnected">未获取</span>
                 </div>
             </div>
-            <button id="clearSessionBtn" class="clear-session-btn">
-                <i class="fas fa-trash-alt"></i> 清除会话
+            <button id="clearSessionBtn" class="clear-session-btn" aria-label="清除会话并重置所有进度">
+                <i class="fas fa-trash-alt" aria-hidden="true"></i> 清除会话
             </button>
         </div>
         
         <!-- 使用说明 -->
         <div class="info-card">
-            <h6><i class="fas fa-info-circle"></i> 使用说明</h6>
+            <h6><i class="fas fa-info-circle" aria-hidden="true"></i> 使用说明</h6>
             <p><strong>初次注册并安装：</strong>直接使用步骤1-3即可完成</p>
             <p><strong>更换设备：</strong>在APP中申请更换设备后，使用本工具生成二维码，新设备扫码安装</p>
             <p><strong>保号服务：</strong>向IBAN:NL19INGB0007811670转账0.01欧元，备注您的Simyo号码</p>
@@ -675,12 +692,14 @@
                     
                     <div class="mb-4">
                         <label for="phoneNumber" class="form-label">手机号码：</label>
-                        <input type="text" id="phoneNumber" class="form-control" placeholder="例如: 0613123712" maxlength="15">
+                        <input type="text" id="phoneNumber" class="form-control" placeholder="例如: 0613123712" maxlength="15" aria-describedby="phoneHelp">
+                        <small id="phoneHelp" class="text-muted">荷兰手机号，06开头共10位数字</small>
                     </div>
                     
                     <div class="mb-4">
                         <label for="password" class="form-label">密码：</label>
-                        <input type="password" id="password" class="form-control" placeholder="输入您的Simyo密码">
+                        <input type="password" id="password" class="form-control" placeholder="输入您的Simyo密码" aria-describedby="pwdHelp">
+                        <small id="pwdHelp" class="text-muted">仅用于向官方接口鉴权，不会被本页面保存</small>
                     </div>
                     
                     <div class="btn-group">
@@ -702,7 +721,7 @@
                 </div>
                 <div class="card-body">
                     <div class="alert alert-info">
-                        <h5><i class="fas fa-info-circle me-2"></i>选择操作类型</h5>
+                        <h5><i class="fas fa-info-circle me-2" aria-hidden="true"></i>选择操作类型</h5>
                         <p>请选择您的需求：</p>
                     </div>
                     
@@ -710,7 +729,7 @@
                         <div class="col-md-6">
                             <div class="card h-100">
                                 <div class="card-body text-center">
-                                    <i class="fas fa-exchange-alt fa-3x text-warning mb-3"></i>
+                                    <i class="fas fa-exchange-alt fa-3x text-warning mb-3" aria-hidden="true"></i>
                                     <h5>更换设备</h5>
                                     <p class="text-muted">将eSIM转移到新设备</p>
                                     <button class="btn btn-warning w-100" onclick="startDeviceChange()">
@@ -722,7 +741,7 @@
                         <div class="col-md-6">
                             <div class="card h-100">
                                 <div class="card-body text-center">
-                                    <i class="fas fa-sim-card fa-3x text-success mb-3"></i>
+                                    <i class="fas fa-sim-card fa-3x text-success mb-3" aria-hidden="true"></i>
                                     <h5>直接获取eSIM</h5>
                                     <p class="text-muted">首次申请或当前设备使用</p>
                                     <button class="btn btn-success w-100" onclick="skipDeviceChange()">
@@ -740,11 +759,11 @@
         <div id="deviceChangeSteps" class="section" style="display: none;">
             <div class="card">
                 <div class="card-header">
-                    <i class="fas fa-exchange-alt"></i> 设备更换流程
+                    <i class="fas fa-exchange-alt" aria-hidden="true"></i> 设备更换流程
                 </div>
                 <div class="card-body">
                     <div class="alert alert-warning">
-                        <h5><i class="fas fa-exclamation-triangle me-2"></i>重要提示</h5>
+                        <h5><i class="fas fa-exclamation-triangle me-2" aria-hidden="true"></i>重要提示</h5>
                         <ul class="mb-0">
                             <li><strong>如果您的现有eSIM能接收短信：</strong>请按顺序执行申请新eSIM，然后发送验证码到短信</li>
                             <li><strong>如果您的现有eSIM无法接收短信：</strong>只执行申请新eSIM，然后联系Simyo客服索要验证码</li>
@@ -828,7 +847,7 @@
         <div id="step3" class="section">
             <div class="card">
                 <div class="card-header">
-                    <i class="fas fa-qrcode"></i> 第三步：生成eSIM二维码
+                    <i class="fas fa-qrcode" aria-hidden="true"></i> 第三步：生成eSIM二维码
                 </div>
                 <div class="card-body">
                     <p class="mb-4" style="font-size: 17px; color: #212529;">
@@ -847,7 +866,7 @@
                     <div id="resultContainer" class="mt-4">
                         <div class="card">
                             <div class="card-header">
-                                <i class="fas fa-qrcode me-2"></i> 您的eSIM二维码
+                                <i class="fas fa-qrcode me-2" aria-hidden="true"></i> 您的eSIM二维码
                             </div>
                             <div class="card-body text-center">
                                 <div id="qrcode" class="mt-4"></div>
@@ -863,7 +882,7 @@
         <div id="step4" class="section">
             <div class="card">
                 <div class="card-header">
-                    <i class="fas fa-check-circle"></i> 第四步：确认安装（可选）
+                    <i class="fas fa-check-circle" aria-hidden="true"></i> 第四步：确认安装（可选）
                 </div>
                 <div class="card-body">
                     <p class="mb-4" style="font-size: 17px; color: #212529;">
@@ -871,7 +890,7 @@
                     </p>
                     
                     <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>
+                        <i class="fas fa-info-circle me-2" aria-hidden="true"></i>
                         <strong>说明：</strong>此步骤适用于更换设备或APP登录异常的情况
                     </div>
                     
@@ -959,6 +978,8 @@
         function showStatus(element, message, type) {
             element.textContent = message;
             element.className = `status active ${type}`;
+            element.setAttribute('role', type === 'error' ? 'alert' : 'status');
+            element.setAttribute('aria-live', type === 'error' ? 'assertive' : 'polite');
             element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
 
@@ -1416,6 +1437,8 @@
             const img = document.createElement('img');
             img.src = qrUrl;
             img.alt = "eSIM二维码";
+            img.setAttribute('role', 'img');
+            img.setAttribute('aria-label', 'eSIM 安装二维码');
             img.className = 'img-fluid';
             img.style.border = '5px solid white';
             img.style.borderRadius = '12px';
@@ -1452,7 +1475,7 @@
             toast.className = 'toast-notification';
             toast.innerHTML = `
                 <div class="toast-content">
-                    <i class="fas fa-check-circle me-2"></i>
+                    <i class="fas fa-check-circle me-2" aria-hidden="true"></i>
                     ${message}
                 </div>
             `;
