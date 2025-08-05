@@ -5,33 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>eSIM工具 - Giffgaff & Simyo</title>
 
-    <!-- 预连接以提升 CDN 首包性能 -->
+    <!-- 性能优化：预连接与预加载关键资源 -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-oqVuAfXRKap7fdgcCY5uykM6+R9GqQ8K/uxcKQpDkK2Zz9xvXkqf2gJ3zV3lZ9E2" crossorigin="anonymous">
-    <!-- Font Awesome：切换到稳定的 jsDelivr 官方包，确保图标正常加载 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css" crossorigin="anonymous">
+    <!-- 关键CSS优先：preload 后备 rel=stylesheet -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" onload="this.rel='stylesheet'">
+    <noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous"></noscript>
+    <!-- Font Awesome 延迟加载：首次渲染后再加载，降低首屏阻塞 -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css" as="style" onload="this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css" crossorigin="anonymous"></noscript>
 
     <style>
+        /* Design System: 语义化令牌与统一规范 */
         :root{
-            --bg-grad-start:#667eea;
-            --bg-grad-end:#764ba2;
-            --text-primary:#2c3e50;
-            --text-secondary:#5a6c7d;
-            --text-muted:#7f8c8d;
-            --card-bg:#ffffff;
-            --card-radius:18px;
+            /* Brand */
+            --brand-start:#6366f1; /* indigo-500 */
+            --brand-end:#8b5cf6;   /* violet-500 */
+            --accent-ok:#10b981;   /* emerald-500 */
+            --accent-warn:#f59e0b; /* amber-500 */
+            --accent-danger:#ef4444; /* red-500 */
+
+            /* Surface & Text */
+            --bg-grad-start:var(--brand-start);
+            --bg-grad-end:var(--brand-end);
+            --surface:#ffffff;
+            --surface-alpha:92%;
+            --text-primary:#1f2937;   /* slate-800 */
+            --text-secondary:#374151; /* gray-700 */
+            --text-muted:#6b7280;     /* gray-500 */
+
+            /* Radius & Elevation & Spacing */
+            --radius-lg:18px;
             --shadow-sm:0 4px 10px rgba(0,0,0,.08);
             --shadow-md:0 10px 30px rgba(0,0,0,.10);
             --shadow-lg:0 18px 40px rgba(0,0,0,.15);
-            --focus-ring:0 0 0 3px rgba(100,149,237,.35);
-            --space-1:8px;
-            --space-2:12px;
-            --space-3:16px;
-            --space-4:20px;
-            --space-5:24px;
-            --space-6:32px;
+            --ring:0 0 0 3px rgba(99,102,241,.35);
+
+            --s1:8px; --s2:12px; --s3:16px; --s4:20px; --s5:24px; --s6:32px;
+
+            /* Motion */
+            --ease-standard:cubic-bezier(.2,.8,.2,1);
+            --duration-fast:.18s;
+            --duration-normal:.28s;
         }
 
         *{margin:0;padding:0;box-sizing:border-box}
@@ -43,32 +60,34 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: var(--space-5);
+            padding: var(--s5);
             color: var(--text-primary);
         }
 
         .main-container{
-            background: color-mix(in oklab, white 92%, transparent);
-            -webkit-backdrop-filter: blur(10px);
-            backdrop-filter: blur(10px);
-            border-radius: var(--card-radius);
+            background: color-mix(in oklab, white var(--surface-alpha), transparent);
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+            border-radius: var(--radius-lg);
             padding: clamp(20px, 4vw, 40px);
             box-shadow: var(--shadow-lg);
-            max-width: 900px;
+            max-width: 960px;
             width: 100%;
             text-align: center;
+            border: 1px solid color-mix(in oklab, white 70%, transparent);
         }
 
-        .header{ margin-bottom: var(--space-6); }
+        .header{ margin-bottom: var(--s6); }
         .header h1{
-            font-size: clamp(1.8rem, 2.8vw, 2.4rem);
+            font-size: clamp(1.9rem, 3vw, 2.6rem);
             font-weight: 800;
             color: var(--text-primary);
-            margin-bottom: var(--space-2);
-            letter-spacing: .3px;
+            margin-bottom: var(--s2);
+            letter-spacing: .2px;
+            display:flex;align-items:center;justify-content:center;gap:10px;
         }
         .header .subtitle{
-            font-size: clamp(.95rem, 1.8vw, 1.1rem);
+            font-size: clamp(.95rem, 1.9vw, 1.12rem);
             color: var(--text-muted);
             margin: 0;
         }
@@ -84,72 +103,75 @@
             align-items:center;
             justify-content:center;
             border-radius: 999px;
-            transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+            transition: transform var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard), background var(--duration-fast) var(--ease-standard);
             gap: 8px;
             box-shadow: var(--shadow-sm);
             text-decoration: none;
-            margin-top: var(--space-3);
+            margin-top: var(--s3);
             outline: none;
+            will-change: transform;
         }
         .github-btn:hover{ transform: translateY(-1px); box-shadow: var(--shadow-md); text-decoration: none; color:#fff; background:#111; }
-        .github-btn:focus-visible{ outline: none; box-shadow: var(--focus-ring); }
+        .github-btn:focus-visible{ outline: none; box-shadow: var(--ring); }
 
         .tools-grid{
             display:grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: clamp(16px, 3vw, 28px);
-            margin-top: var(--space-6);
+            margin-top: var(--s6);
         }
         @media (max-width: 720px){ .tools-grid{ grid-template-columns: 1fr; } }
 
         .tool-card{
-            background: var(--card-bg);
-            border-radius: var(--card-radius);
+            background: var(--surface);
+            border-radius: var(--radius-lg);
             padding: clamp(20px, 3.2vw, 28px);
             box-shadow: var(--shadow-md);
-            transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+            transition: transform var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard);
             border: 2px solid transparent;
             position: relative;
             overflow: hidden;
+            will-change: transform, box-shadow;
         }
         .tool-card::before{
             content: '';
             position: absolute;
             inset: 0 0 auto 0;
             height: 4px;
-            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
         }
         .tool-card:hover{
             transform: translateY(-6px);
             box-shadow: var(--shadow-lg);
-            border-color: color-mix(in oklab, var(--primary-color) 40%, transparent);
+            border-color: color-mix(in oklab, var(--primary) 40%, transparent);
         }
-        .tool-card:focus-within{ box-shadow: var(--focus-ring); }
+        .tool-card:focus-within{ box-shadow: var(--ring); }
 
-        .giffgaff-card{ --primary-color:#ff6b00; --secondary-color:#ff8c42; }
-        .simyo-card{ --primary-color:#e74c3c; --secondary-color:#c0392b; }
+        /* 品牌色注入 */
+        .giffgaff-card{ --primary:#ff6b00; --secondary:#ff8c42; }
+        .simyo-card{ --primary:#e74c3c; --secondary:#c0392b; }
 
         .tool-icon{
             font-size: clamp(2.2rem, 3.2vw, 2.8rem);
-            color: var(--primary-color);
-            margin-bottom: var(--space-3);
+            color: var(--primary);
+            margin-bottom: var(--s3);
         }
         .tool-title{
             font-size: clamp(1.2rem, 2.2vw, 1.4rem);
-            font-weight: 700;
+            font-weight: 800;
             color: var(--text-primary);
-            margin-bottom: var(--space-2);
+            margin-bottom: var(--s2);
         }
         .tool-description{
             color: var(--text-muted);
-            margin-bottom: var(--space-4);
+            margin-bottom: var(--s4);
             line-height: 1.65;
         }
 
         .tool-features{
             list-style: none;
             padding: 0;
-            margin-bottom: var(--space-4);
+            margin-bottom: var(--s4);
             text-align: left;
         }
         .tool-features li{
@@ -159,41 +181,48 @@
             padding: 6px 0;
             color: var(--text-secondary);
         }
-        .tool-features li i{ color: var(--primary-color); flex: 0 0 auto; }
+        .tool-features li i{ color: var(--primary); flex: 0 0 auto; }
         .tool-features li span{ flex: 1 1 auto; }
 
         .tool-btn{
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: #fff;
             border: none;
             padding: 12px 22px;
             border-radius: 999px;
             font-size: 1rem;
-            font-weight: 700;
+            font-weight: 800;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
             gap: 10px;
-            transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
-            box-shadow: 0 6px 16px color-mix(in oklab, var(--primary-color) 35%, transparent);
+            transition: transform var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard), filter var(--duration-fast) var(--ease-standard);
+            box-shadow: 0 6px 16px color-mix(in oklab, var(--primary) 35%, transparent);
             outline: none;
+            will-change: transform, filter;
         }
         .tool-btn:hover{ transform: translateY(-2px); text-decoration: none; color: #fff; filter: brightness(1.03); }
-        .tool-btn:focus-visible{ box-shadow: var(--focus-ring); }
+        .tool-btn:focus-visible{ box-shadow: var(--ring); }
 
         .footer{
-            margin-top: var(--space-6);
-            padding-top: var(--space-5);
-            border-top: 1px solid #ecf0f1;
-            color: #95a5a6;
-            font-size: .92rem;
+            margin-top: var(--s6);
+            padding-top: var(--s5);
+            border-top: 1px solid color-mix(in oklab, #ecf0f1 85%, transparent);
+            color: #6b7280;
+            font-size: .94rem;
             line-height: 1.6;
-            text-align: center; /* 居中底部提醒 */
+            text-align: center;
         }
 
-        /* 入场动画：使用类控制，避免闪烁 */
-        .reveal{ opacity: 0; transform: translateY(12px); transition: opacity .5s ease, transform .5s ease; will-change: opacity, transform; }
+        /* 入场动画：IntersectionObserver 触发，避免 setTimeout 抖动 */
+        .reveal{ opacity: 0; transform: translateY(12px); transition: opacity .5s var(--ease-standard), transform .5s var(--ease-standard); will-change: opacity, transform; }
         .reveal.show{ opacity: 1; transform: translateY(0); }
+
+        /* 降低动效：尊重用户的减少动态偏好 */
+        @media (prefers-reduced-motion: reduce){
+            .reveal{ transition: none; transform: none; opacity: 1; }
+            .tool-card, .github-btn, .tool-btn{ transition: none!important; }
+        }
 
         /* 小屏进一步优化 */
         @media (max-width: 360px){
@@ -201,19 +230,22 @@
             .tool-btn{ padding: 10px 18px; font-size: .95rem; }
         }
     </style>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-HGX38HMNL1"></script>
+
+    <!-- Google tag (gtag.js) 延迟加载 -->
+    <script defer src="https://www.googletagmanager.com/gtag/js?id=G-HGX38HMNL1"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-HGX38HMNL1');
+      window.addEventListener('load', function(){
+        gtag('js', new Date());
+        gtag('config', 'G-HGX38HMNL1');
+      });
     </script>
 </head>
 <body>
     <div class="main-container" role="region" aria-label="eSIM 工具选择">
         <div class="header">
-            <h1><i class="fas fa-sim-card me-2" aria-hidden="true"></i>eSIM 工具集</h1>
+            <h1><i class="fas fa-sim-card" aria-hidden="true"></i> eSIM 工具集</h1>
             <p class="subtitle">轻松管理您的 Giffgaff 与 Simyo eSIM 配置</p>
             <a href="https://github.com/Silentely/esim-tools" target="_blank" rel="noopener noreferrer" class="github-btn" aria-label="在新窗口打开 GitHub 仓库">
                 <i class="fab fa-github" aria-hidden="true"></i> GitHub
@@ -274,18 +306,26 @@
         </footer>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- 将 bootstrap 脚本 defer，减少阻塞 -->
+    <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
     <script>
-        // 入场动画：避免初始样式闪烁，统一以类控制
+        // IntersectionObserver 触发入场动画，避免 setTimeout 导致的潜在回流
         document.addEventListener('DOMContentLoaded', () => {
-            const cards = document.querySelectorAll('.reveal');
-            // 强制回流，确保动画从初始状态开始
-            cards.forEach(card => { void card.offsetHeight; });
-            cards.forEach((card, index) => {
-                setTimeout(() => card.classList.add('show'), 120 + index * 120);
+            const observer = ('IntersectionObserver' in window) ? new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('show');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { rootMargin: '0px 0px -10% 0px', threshold: 0.1 }) : null;
+
+            document.querySelectorAll('.reveal').forEach(el => {
+                if (observer) observer.observe(el);
+                else el.classList.add('show'); // 回退策略
             });
 
-            // 点击跟踪（可选，保留占位）
+            // 点击跟踪（可选）
             document.querySelectorAll('.tool-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const isGiffgaff = btn.getAttribute('aria-describedby') === 'giffgaff-desc';

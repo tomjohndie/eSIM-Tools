@@ -10,6 +10,9 @@
     <title>Simyo NL eSIM 申请工具</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- 共享设计系统：预加载并在加载完成后切换为样式表，noscript 提供回退 -->
+    <link rel="preload" href="/src/styles/design-system.css" as="style" onload="this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/src/styles/design-system.css"></noscript>
     <style>
         :root {
             --primary: #ff6b00;        /* Simyo橙色 */
@@ -645,7 +648,7 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="container main-container">
         <!-- 应用头部 -->
         <div class="app-header">
             <div class="logo-container">
@@ -663,7 +666,7 @@
         </div>
 
         <!-- 开卡推广 -->
-        <div class="promo-banner">
+        <div class="promo-banner reveal">
             <div class="promo-content">
                 <i class="fas fa-gift promo-icon" aria-hidden="true"></i>
                 <span class="promo-text">
@@ -673,13 +676,13 @@
         </div>
         
         <!-- 页面标题 -->
-        <div class="page-title">
+        <div class="page-title reveal">
             <h1>Simyo NL eSIM 申请工具</h1>
             <p>轻松管理您的Simyo eSIM配置</p>
         </div>
         
         <!-- 状态显示面板 -->
-        <div class="status-panel" role="status" aria-live="polite">
+        <div class="status-panel card-elevated reveal" role="status" aria-live="polite">
             <h3><i class="fas fa-info-circle" aria-hidden="true"></i> 当前状态</h3>
             <div class="status-grid">
                 <div class="status-item">
@@ -713,11 +716,11 @@
         </div>
         
         <!-- 步骤指示器 -->
-        <div class="step-indicator">
-            <div class="step active">
-                <div class="step-number">1</div>
-                <div class="step-text">账户登录</div>
-            </div>
+        <div class="step-indicator reveal" role="list" aria-label="进度步骤">
+          <div class="step active" role="listitem" aria-current="step">
+            <div class="step-number" aria-hidden="true">1</div>
+            <div class="step-text">账户登录</div>
+          </div>
             <div class="step">
                 <div class="step-number">2</div>
                 <div class="step-text">获取eSIM</div>
@@ -733,8 +736,8 @@
         </div>
         
         <!-- 步骤1: 账户登录 -->
-        <div id="step1" class="section active">
-            <div class="card">
+        <div id="step1" class="section active reveal">
+            <div class="card card-elevated">
                 <div class="card-header">
                     <i class="fas fa-sign-in-alt"></i> 第一步：登录Simyo账户
                 </div>
@@ -761,14 +764,14 @@
                         </button>
                     </div>
                     
-                    <div id="loginStatus" class="status"></div>
+                    <div id="loginStatus" class="status" role="status" aria-live="polite"></div>
                 </div>
             </div>
         </div>
         
         <!-- 设备更换选项 -->
-        <div id="deviceChangeOption" class="section" style="display: none;">
-            <div class="card">
+        <div id="deviceChangeOption" class="section reveal" style="display: none;">
+            <div class="card card-elevated">
                 <div class="card-header">
                     <i class="fas fa-mobile-alt"></i> 设备更换选项
                 </div>
@@ -785,7 +788,7 @@
                                     <i class="fas fa-exchange-alt fa-3x text-warning mb-3" aria-hidden="true"></i>
                                     <h5>更换设备</h5>
                                     <p class="text-muted">将eSIM转移到新设备</p>
-                                    <button class="btn btn-warning w-100" onclick="startDeviceChange()">
+                                    <button class="btn btn-warning w-100 btn-base" onclick="startDeviceChange()">
                                         选择此选项
                                     </button>
                                 </div>
@@ -797,7 +800,7 @@
                                     <i class="fas fa-sim-card fa-3x text-success mb-3" aria-hidden="true"></i>
                                     <h5>直接获取eSIM</h5>
                                     <p class="text-muted">首次申请或当前设备使用</p>
-                                    <button class="btn btn-success w-100" onclick="skipDeviceChange()">
+                                    <button class="btn btn-success w-100 btn-base" onclick="skipDeviceChange()">
                                         选择此选项
                                     </button>
                                 </div>
@@ -809,8 +812,8 @@
         </div>
 
         <!-- 设备更换流程 -->
-        <div id="deviceChangeSteps" class="section" style="display: none;">
-            <div class="card">
+        <div id="deviceChangeSteps" class="section reveal" style="display: none;">
+            <div class="card card-elevated">
                 <div class="card-header">
                     <i class="fas fa-exchange-alt" aria-hidden="true"></i> 设备更换流程
                 </div>
@@ -832,7 +835,7 @@
                                 <i class="fas fa-plus me-2"></i>申请新eSIM
                             </button>
                         </div>
-                        <div id="applyNewEsimStatus" class="status"></div>
+                        <div id="applyNewEsimStatus" class="status" role="status" aria-live="polite"></div>
                     </div>
 
                     <!-- Step 2.2: 发送验证码 -->
@@ -844,7 +847,7 @@
                                 <i class="fas fa-sms me-2"></i>发送验证码到短信
                             </button>
                         </div>
-                        <div id="sendSmsStatus" class="status"></div>
+                        <div id="sendSmsStatus" class="status" role="status" aria-live="polite"></div>
                     </div>
 
                     <!-- Step 2.3: 验证验证码 -->
@@ -861,7 +864,7 @@
                                 <i class="fas fa-check me-2"></i>确认验证码
                             </button>
                         </div>
-                        <div id="verifyCodeStatus" class="status"></div>
+                        <div id="verifyCodeStatus" class="status" role="status" aria-live="polite"></div>
                     </div>
 
                     <div class="text-center mt-4">
@@ -874,8 +877,8 @@
         </div>
         
         <!-- 步骤2: 获取eSIM -->
-        <div id="step2" class="section">
-            <div class="card">
+        <div id="step2" class="section reveal">
+            <div class="card card-elevated">
                 <div class="card-header">
                     <i class="fas fa-download"></i> 第二步：获取eSIM信息
                 </div>
@@ -885,20 +888,20 @@
                     </p>
                     
                     <div class="btn-group">
-                        <button id="getEsimBtn" class="btn btn-primary">
+                        <button id="getEsimBtn" class="btn btn-primary btn-base btn-primary-gradient">
                             <i class="fas fa-sim-card me-2"></i> 获取eSIM
                         </button>
                     </div>
                     
-                    <div id="esimStatus" class="status"></div>
+                    <div id="esimStatus" class="status" role="status" aria-live="polite"></div>
                     <div id="esimInfo" class="mt-4"></div>
                 </div>
             </div>
         </div>
         
         <!-- 步骤3: 生成二维码 -->
-        <div id="step3" class="section">
-            <div class="card">
+        <div id="step3" class="section reveal">
+            <div class="card card-elevated">
                 <div class="card-header">
                     <i class="fas fa-qrcode" aria-hidden="true"></i> 第三步：生成eSIM二维码
                 </div>
@@ -908,12 +911,12 @@
                     </p>
                     
                     <div class="btn-group">
-                        <button id="generateQrBtn" class="btn btn-primary">
+                        <button id="generateQrBtn" class="btn btn-primary btn-base btn-primary-gradient">
                             <i class="fas fa-qrcode me-2"></i> 生成二维码
                         </button>
                     </div>
                     
-                    <div id="qrStatus" class="status"></div>
+                    <div id="qrStatus" class="status" role="status" aria-live="polite"></div>
                     
                     <!-- eSIM二维码显示 -->
                     <div id="resultContainer" class="mt-4">
@@ -932,8 +935,8 @@
         </div>
         
         <!-- 步骤4: 确认安装 -->
-        <div id="step4" class="section">
-            <div class="card">
+        <div id="step4" class="section reveal">
+            <div class="card card-elevated">
                 <div class="card-header">
                     <i class="fas fa-check-circle" aria-hidden="true"></i> 第四步：确认安装（可选）
                 </div>
@@ -948,18 +951,45 @@
                     </div>
                     
                     <div class="btn-group">
-                        <button id="confirmInstallBtn" class="btn btn-primary">
+                        <button id="confirmInstallBtn" class="btn btn-primary btn-base btn-primary-gradient">
                             <i class="fas fa-check me-2"></i> 确认安装
                         </button>
                     </div>
                     
-                    <div id="confirmStatus" class="status"></div>
+                    <div id="confirmStatus" class="status" role="status" aria-live="polite"></div>
                 </div>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- 入场动效：与首页一致的 IntersectionObserver reveal（当前页面可按需为元素添加 .reveal 类启用） -->
+    <script>
+      (function(){
+        const initReveal = () => {
+          const nodes = document.querySelectorAll('.reveal');
+          if (!nodes.length) return;
+          if ('IntersectionObserver' in window) {
+            const io = new IntersectionObserver((entries) => {
+              entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                  entry.target.classList.add('show');
+                  io.unobserve(entry.target);
+                }
+              });
+            }, { rootMargin: '0px 0px -10% 0px', threshold: 0.1 });
+            nodes.forEach(el => io.observe(el));
+          } else {
+            nodes.forEach(el => el.classList.add('show'));
+          }
+        };
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', initReveal, { once: true });
+        } else {
+          initReveal();
+        }
+      })();
+    </script>
     <script>
         // 全局状态管理
         const appState = {
@@ -1581,6 +1611,7 @@
             img.style.border = '5px solid white';
             img.style.borderRadius = '12px';
             img.style.maxWidth = '300px';
+            img.setAttribute('loading','lazy');
             
             // 创建大号二维码悬浮提示
             const tooltip = document.createElement('div');
@@ -1588,6 +1619,7 @@
             tooltip.style.padding = '0';
             tooltip.style.background = 'none';
             tooltip.style.boxShadow = 'none';
+            tooltip.style.willChange = 'transform';
             tooltip.innerHTML = `<img src='${qrUrl.replace('300x300','400x400')}' style='width:400px;height:400px;display:block;border-radius:16px;border:8px solid #fff;box-shadow:0 8px 32px rgba(0,0,0,0.25);'>`;
             
             // 添加鼠标事件

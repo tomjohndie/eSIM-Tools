@@ -1,0 +1,302 @@
+/* Design System: tokens, utilities, base components
+   Scope: shared across brand pages. Brands override --primary/--secondary in page-level :root.
+*/
+
+/* 1) Tokens */
+:root {
+  /* Palette (brand-neutral defaults; pages override) */
+  --primary: #0d6efd;
+  --secondary: #ffffff;
+  --text: #212529;
+  --muted: #6c757d;
+  --bg: #f8f9fa;
+
+  /* Elevation */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 18px rgba(0,0,0,0.12);
+  --shadow-lg: 0 8px 28px rgba(0,0,0,0.18);
+
+  /* Motion */
+  --ease-out: cubic-bezier(.22,.61,.36,1);
+  --ease-in: cubic-bezier(.55,.085,.68,.53);
+  --transition-fast: 120ms var(--ease-out);
+  --transition-base: 200ms var(--ease-out);
+  --transition-slow: 320ms var(--ease-out);
+
+  /* Focus ring */
+  --ring-color: rgba(76,154,255,.35);
+  --ring-outline: #4c9aff;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+}
+
+/* 2) Accessibility and base resets */
+:focus-visible {
+  outline: 2px solid var(--ring-outline);
+  outline-offset: 2px;
+}
+a:focus-visible,
+button:focus-visible,
+.btn:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  box-shadow: 0 0 0 3px var(--ring-color);
+}
+
+/* Reduce motion global switch and aria-live helpers */
+@media (prefers-reduced-motion: reduce) {
+  html:focus-within { scroll-behavior: auto !important; }
+}
+[aria-live="polite"], [aria-live="assertive"] {
+  /* prevent layout shift from status text changes */
+  min-height: 1.25em;
+}
+[role="status"], [role="alert"] {
+  /* ensure SR picks up updates consistently */
+  aria-atomic: true;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  clip: rect(1px,1px,1px,1px);
+  padding: 0 !important;
+  border: 0 !important;
+  height: 1px !important;
+  width: 1px !important;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* 3) Utilities */
+.main-container {
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Reveal-on-scroll animation */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity var(--transition-base), transform var(--transition-base);
+  will-change: opacity, transform;
+}
+.reveal.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal.show,
+  .card-elevated,
+  .btn-base,
+  .btn-primary-gradient {
+    transition: none !important;
+    animation: none !important;
+  }
+  /* Ensure reveal elements render immediately without motion */
+  .reveal { opacity: 1 !important; transform: none !important; }
+  .reveal.show { opacity: 1 !important; transform: none !important; }
+  * { scroll-behavior: auto !important; }
+}
+
+/* Fine-tune reveal transition to be lightweight and smooth */
+.reveal { will-change: opacity, transform; }
+.reveal.show { transition: transform var(--transition-base), opacity var(--transition-base); }
+
+/* 4) Components */
+.card-elevated {
+  background: rgba(255,255,255,0.9);
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
+}
+.card-elevated:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: rgba(0,0,0,0.12);
+}
+
+.card-header-soft {
+  background: color-mix(in srgb, var(--primary) 12%, #ffffff);
+  padding: 20px 24px;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid color-mix(in srgb, var(--primary) 20%, #ffffff);
+}
+.card-header-soft i {
+  margin-right: 12px;
+  font-size: 1.4rem;
+  color: var(--primary);
+}
+
+.btn-base {
+  padding: 14px 22px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-base), color var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.btn-base:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+.btn-primary-gradient {
+  background: linear-gradient(to right, var(--primary), var(--secondary));
+  color: #212529;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
+}
+.btn-primary-gradient:hover {
+  background: linear-gradient(to right, var(--secondary), var(--primary));
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.btn-dark-gradient {
+  background: linear-gradient(to right, #333, #666);
+  color: #fff;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(51,51,51,.3);
+}
+.btn-dark-gradient:hover {
+  background: linear-gradient(to right, #666, #333);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Status panel */
+.status-panel {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 1px solid #dee2e6;
+  border-radius: var(--radius-md);
+  padding: 20px;
+  margin: 20px 0;
+  box-shadow: var(--shadow-sm);
+}
+.status-panel h3 {
+  color: #495057;
+  margin-bottom: 15px;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
+  margin-bottom: 15px;
+}
+.status-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  min-height: 40px;
+}
+.status-label {
+  font-weight: 500;
+  color: var(--muted);
+  min-width: 100px;
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+.status-value {
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  color: #495057;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+  text-align: right;
+  position: relative;
+}
+.status-value.connected { color: #28a745; font-weight: 500; }
+.status-value.disconnected { color: #dc3545; font-weight: 500; }
+
+/* Tooltip (generic) */
+.tooltip {
+  position: absolute;
+  background: rgba(0,0,0,0.9);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: 'Courier New', monospace;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-width: 400px;
+  z-index: 1000;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--transition-base);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.tooltip.show { opacity: 1; }
+
+/* Promo banner */
+.promo-banner {
+  border-radius: var(--radius-md);
+  margin: 20px 0;
+  padding: 16px 20px;
+  box-shadow: 0 4px 15px color-mix(in srgb, var(--primary) 30%, transparent);
+  animation: subtle-pulse 3s ease-in-out infinite;
+}
+@keyframes subtle-pulse {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+/* Reveal helpers for QR preview hovers may reuse .tooltip from above */
+
+/* 5) Responsive tweaks */
+@media (max-width: 768px) {
+  .main-container { padding-left: 12px; padding-right: 12px; }
+  .status-grid { grid-template-columns: 1fr; }
+  .status-value { max-width: 150px; }
+}
+
+/* Keyboard focus visibility for custom buttons built on <a> */
+a.btn-base, a.btn-primary-gradient {
+  text-decoration: none;
+}
+a.btn-base:focus-visible, a.btn-primary-gradient:focus-visible {
+  box-shadow: 0 0 0 3px var(--ring-color);
+  outline: 2px solid var(--ring-outline);
+  outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+  .status-value { max-width: 120px; }
+}
