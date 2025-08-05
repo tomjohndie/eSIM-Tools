@@ -14,7 +14,8 @@
     "netlify-dev": "netlify dev",
     "deploy": "npm run build && netlify deploy --prod",
     "optimize-images": "node scripts/optimize-images.js",
-    "compress": "node scripts/compress.js"
+    "compress": "node scripts/compress.js",
+    "security-check": "node scripts/security-check.js"
   },
   "keywords": [
     "esim",
@@ -47,12 +48,16 @@
     "core-js": "^3.45.0",
     "css-loader": "^6.8.1",
     "cssnano": "^6.0.1",
+    "esbuild": "^0.25.8",
+    "got": "^14.4.7",
+    "http-proxy-middleware": "^3.0.5",
     "imagemin": "^8.0.1",
     "imagemin-mozjpeg": "^10.0.0",
     "imagemin-pngquant": "^9.0.2",
     "imagemin-webp": "^8.0.0",
     "netlify-cli": "^17.10.1",
     "nodemon": "^3.0.2",
+    "on-headers": "^1.1.0",
     "postcss": "^8.4.31",
     "postcss-cli": "^11.0.1",
     "postcss-loader": "^7.3.3",
