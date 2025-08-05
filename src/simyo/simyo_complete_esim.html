@@ -479,26 +479,73 @@
         .status-item {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             padding: 8px 12px;
             background: white;
             border-radius: 8px;
             border: 1px solid #e9ecef;
+            flex-wrap: wrap;
+            gap: 8px;
         }
 
         .status-label {
             font-weight: 500;
             color: #6c757d;
+            min-width: 80px;
+            flex-shrink: 0;
         }
 
         .status-value {
             font-family: 'Courier New', monospace;
             font-size: 14px;
             color: #495057;
-            max-width: 150px;
+            max-width: 200px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            flex: 1;
+            min-width: 0;
+            cursor: help;
+            position: relative;
+        }
+
+        .status-value:hover {
+            background-color: rgba(255, 107, 0, 0.1);
+            border-radius: 4px;
+        }
+
+        /* 悬浮提示框样式 */
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-width: 400px;
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .tooltip.show {
+            opacity: 1;
+        }
+
+        /* 二维码容器样式 */
+        .qrcode-container {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+        }
+
+        .qrcode-container:hover .tooltip {
+            opacity: 1;
         }
 
         .status-value.connected {
@@ -578,7 +625,7 @@
             }
 
             .status-value {
-                max-width: 120px;
+                max-width: 150px;
             }
 
             .header-buttons {
@@ -1010,11 +1057,13 @@
         function updateStatus() {
             // 更新Session Token状态
             if (appState.sessionToken) {
-                elements.statusSessionToken.textContent = `${appState.sessionToken.substring(0, 20)}...`;
+                elements.statusSessionToken.textContent = appState.sessionToken;
                 elements.statusSessionToken.className = 'status-value connected';
+                addTooltip(elements.statusSessionToken, appState.sessionToken);
             } else {
                 elements.statusSessionToken.textContent = '未登录';
                 elements.statusSessionToken.className = 'status-value disconnected';
+                removeTooltip(elements.statusSessionToken);
             }
 
             // 更新验证码状态
@@ -1037,12 +1086,89 @@
 
             // 更新激活码状态
             if (appState.activationCode) {
-                elements.statusActivationCode.textContent = `${appState.activationCode.substring(0, 15)}...`;
+                elements.statusActivationCode.textContent = appState.activationCode;
                 elements.statusActivationCode.className = 'status-value connected';
+                addTooltip(elements.statusActivationCode, appState.activationCode);
             } else {
                 elements.statusActivationCode.textContent = '未获取';
                 elements.statusActivationCode.className = 'status-value disconnected';
+                removeTooltip(elements.statusActivationCode);
             }
+        }
+
+        // 添加悬浮提示功能
+        function addTooltip(element, fullText) {
+            if (!element || !fullText) return;
+            
+            // 移除现有的提示框
+            removeTooltip(element);
+            
+            // 创建提示框
+            const tooltip = document.createElement('div');
+            tooltip.className = 'tooltip';
+            tooltip.textContent = fullText;
+            tooltip.setAttribute('role', 'tooltip');
+            tooltip.setAttribute('aria-hidden', 'true');
+            
+            // 添加鼠标事件
+            element.addEventListener('mouseenter', function(e) {
+                showTooltip(tooltip, e);
+            });
+            
+            element.addEventListener('mouseleave', function() {
+                hideTooltip(tooltip);
+            });
+            
+            // 存储提示框引用
+            element.tooltip = tooltip;
+        }
+
+        function removeTooltip(element) {
+            if (element.tooltip) {
+                element.tooltip.remove();
+                element.tooltip = null;
+            }
+        }
+
+        function showTooltip(tooltip, event) {
+            if (!tooltip) return;
+            
+            // 将提示框添加到body
+            document.body.appendChild(tooltip);
+            
+            // 计算位置
+            const rect = event.target.getBoundingClientRect();
+            const tooltipRect = tooltip.getBoundingClientRect();
+            
+            let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+            let top = rect.bottom + 8;
+            
+            // 确保提示框不超出视窗
+            if (left < 10) left = 10;
+            if (left + tooltipRect.width > window.innerWidth - 10) {
+                left = window.innerWidth - tooltipRect.width - 10;
+            }
+            if (top + tooltipRect.height > window.innerHeight - 10) {
+                top = rect.top - tooltipRect.height - 8;
+            }
+            
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = top + 'px';
+            
+            // 显示提示框
+            setTimeout(() => {
+                tooltip.classList.add('show');
+            }, 100);
+        }
+
+        function hideTooltip(tooltip) {
+            if (!tooltip) return;
+            tooltip.classList.remove('show');
+            setTimeout(() => {
+                if (tooltip.parentNode) {
+                    tooltip.parentNode.removeChild(tooltip);
+                }
+            }, 300);
         }
 
         function clearSession() {
@@ -1435,6 +1561,12 @@
             const qrSize = 300;
             const qrUrl = `${apiEndpoints.qrcode}?data=${encodeURIComponent(data)}&size=${qrSize}x${qrSize}`;
             
+            // 创建二维码容器
+            const container = document.createElement('div');
+            container.className = 'qrcode-container';
+            container.style.position = 'relative';
+            container.style.display = 'inline-block';
+            
             const img = document.createElement('img');
             img.src = qrUrl;
             img.alt = "eSIM二维码";
@@ -1445,8 +1577,28 @@
             img.style.borderRadius = '12px';
             img.style.maxWidth = '300px';
             
+            // 创建悬浮提示框
+            const tooltip = document.createElement('div');
+            tooltip.className = 'tooltip';
+            tooltip.textContent = data;
+            tooltip.setAttribute('role', 'tooltip');
+            tooltip.setAttribute('aria-hidden', 'true');
+            tooltip.style.maxWidth = '500px';
+            
+            // 添加鼠标事件
+            container.addEventListener('mouseenter', function(e) {
+                showTooltip(tooltip, e);
+            });
+            
+            container.addEventListener('mouseleave', function() {
+                hideTooltip(tooltip);
+            });
+            
+            container.appendChild(img);
+            container.appendChild(tooltip);
+            
             elements.qrcode.innerHTML = '';
-            elements.qrcode.appendChild(img);
+            elements.qrcode.appendChild(container);
         }
 
         // 复制到剪贴板
