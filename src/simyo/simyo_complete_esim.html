@@ -479,20 +479,20 @@
         .status-item {
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
+            align-items: center;
             padding: 8px 12px;
             background: white;
             border-radius: 8px;
             border: 1px solid #e9ecef;
-            flex-wrap: wrap;
-            gap: 8px;
+            min-height: 40px;
         }
 
         .status-label {
             font-weight: 500;
             color: #6c757d;
-            min-width: 80px;
+            min-width: 100px;
             flex-shrink: 0;
+            margin-right: 12px;
         }
 
         .status-value {
@@ -505,8 +505,9 @@
             white-space: nowrap;
             flex: 1;
             min-width: 0;
-            cursor: help;
+            cursor: default;
             position: relative;
+            text-align: right;
         }
 
         .status-value:hover {
@@ -625,7 +626,11 @@
             }
 
             .status-value {
-                max-width: 150px;
+                max-width: 120px;
+            }
+            
+            .status-label {
+                min-width: 80px;
             }
 
             .header-buttons {
@@ -1577,13 +1582,13 @@
             img.style.borderRadius = '12px';
             img.style.maxWidth = '300px';
             
-            // 创建悬浮提示框
+            // 创建大号二维码悬浮提示
             const tooltip = document.createElement('div');
             tooltip.className = 'tooltip';
-            tooltip.textContent = data;
-            tooltip.setAttribute('role', 'tooltip');
-            tooltip.setAttribute('aria-hidden', 'true');
-            tooltip.style.maxWidth = '500px';
+            tooltip.style.padding = '0';
+            tooltip.style.background = 'none';
+            tooltip.style.boxShadow = 'none';
+            tooltip.innerHTML = `<img src='${qrUrl.replace('300x300','400x400')}' style='width:400px;height:400px;display:block;border-radius:16px;border:8px solid #fff;box-shadow:0 8px 32px rgba(0,0,0,0.25);'>`;
             
             // 添加鼠标事件
             container.addEventListener('mouseenter', function(e) {
