@@ -1336,6 +1336,12 @@
         function addTooltip(element, fullText) {
             if (!element || !fullText) return;
             
+            // 检查文本是否被截断
+            const isTruncated = element.scrollWidth > element.clientWidth;
+            
+            // 只有被截断才添加悬浮框
+            if (!isTruncated) return;
+            
             // 移除现有的提示框
             removeTooltip(element);
             
@@ -1355,6 +1361,9 @@
                 hideTooltip(tooltip);
             });
             
+            // 设置光标样式为help，表示有悬浮框
+            element.style.cursor = 'help';
+            
             // 存储提示框引用
             element.tooltip = tooltip;
         }
@@ -1364,6 +1373,8 @@
                 element.tooltip.remove();
                 element.tooltip = null;
             }
+            // 恢复默认光标样式
+            element.style.cursor = 'default';
         }
 
         function showTooltip(tooltip, event) {
