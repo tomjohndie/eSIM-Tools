@@ -17,7 +17,8 @@
     "compress": "node scripts/compress.js",
     "security-check": "node scripts/security-check.js",
     "deploy-prepare": "node scripts/deploy-prepare.js",
-    "deploy-analyze": "node scripts/deploy-prepare.js"
+    "deploy-analyze": "node scripts/deploy-prepare.js",
+    "deploy-test": "node scripts/test-deploy-config.js"
   },
   "keywords": [
     "esim",

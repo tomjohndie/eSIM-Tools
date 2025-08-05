@@ -736,7 +736,7 @@
               </div>
               <div class="service-time-body">
                 <div id="serviceTimeMessage" class="service-time-message"></div>
-                <div id="actionMessage" class="service-time-action"></div>
+                <div id="actionMessage" class="service-time-action center-action"></div>
               </div>
             </div>
 
@@ -2629,8 +2629,10 @@
 
         .service-time-head {
           display: grid;
-          grid-template-columns: 44px 1fr;
+          grid-template-columns: 1fr;
           align-items: center;
+          justify-items: center;
+          text-align: center;
           gap: 10px;
           min-height: 44px;
         }
@@ -2640,6 +2642,7 @@
           height: 44px;
           display: grid;
           place-items: center;
+          margin: 0 auto;
           border-radius: 50%;
           background: #eef2ff;
           color: var(--st-accent);
@@ -2651,11 +2654,14 @@
           font-size: 18px;
           color: var(--st-strong);
           letter-spacing: 0.2px;
+          text-align: center;
         }
 
         .service-time-body {
           display: flex;
           flex-direction: column;
+          align-items: center;
+          text-align: center;
           gap: 6px;
         }
 
@@ -2668,12 +2674,18 @@
           font-weight: 700;
           font-size: 15px;
         }
+        .center-action {
+          display: inline-block;
+          text-align: center;
+        }
 
         /* 右侧时间卡片 */
         .current-time-card {
           display: grid;
           grid-template-columns: 64px 1fr;
           align-items: center;
+          justify-items: center;
+          text-align: center;
           gap: 14px;
           padding: 16px 18px;
           border-radius: var(--st-card-radius);
