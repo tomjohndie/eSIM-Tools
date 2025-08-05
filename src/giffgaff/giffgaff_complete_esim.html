@@ -2638,15 +2638,16 @@
         }
 
         #serviceTimeIcon {
-          width: 44px;
-          height: 44px;
+          width: 56px;
+          height: 56px;
           display: grid;
           place-items: center;
           margin: 0 auto;
           border-radius: 50%;
-          background: #eef2ff;
-          color: var(--st-accent);
-          font-size: 20px;
+          background: #e6f6ee; /* 成功态底色 */
+          color: #10b981;      /* 成功态主色，失败态会被脚本覆盖图标class但尺寸保持 */
+          font-size: 26px;     /* 图标更大一号 */
+          box-shadow: inset 0 0 0 2px rgba(16,185,129,0.15);
         }
 
         .service-time-title {
@@ -2671,8 +2672,9 @@
         }
 
         .service-time-action {
-          font-weight: 700;
-          font-size: 15px;
+          font-weight: 800;
+          font-size: 18px; /* “✅ 可以申请eSIM/⚠️ 不能申请eSIM”更大一号 */
+          line-height: 1.3;
         }
         .center-action {
           display: inline-block;
@@ -2707,18 +2709,18 @@
         }
 
         .time-card-icon {
-          width: 64px;
-          height: 64px;
-          border-radius: 16px;
+          width: 78px;   /* 大一号 */
+          height: 78px;  /* 大一号 */
+          border-radius: 18px;
           background: linear-gradient(135deg, #eaeaff, #e0e7ff);
           display: grid;
           place-items: center;
-          box-shadow: inset 0 0 0 1px rgba(99,102,241,0.2);
+          box-shadow: inset 0 0 0 1px rgba(99,102,241,0.22);
         }
 
         .time-card-icon i {
           color: var(--st-accent);
-          font-size: 26px;
+          font-size: 32px; /* 图标更大一号 */
         }
 
         .time-card-text {
@@ -2736,9 +2738,9 @@
 
         .time-card-value {
           font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-          font-size: 28px;
-          font-weight: 800;
-          letter-spacing: 1px;
+          font-size: 34px; /* 时间大一号 */
+          font-weight: 900;
+          letter-spacing: 1.2px;
           color: #0b1324;
           text-shadow: 0 1px 0 rgba(255,255,255,0.6);
           animation: time-breathe 3s ease-in-out infinite;
@@ -2755,18 +2757,18 @@
             grid-template-columns: 1fr;
           }
           .current-time-card {
-            grid-template-columns: 48px 1fr;
+            grid-template-columns: 56px 1fr; /* 同步放大后的移动态尺寸 */
             gap: 12px;
           }
-          .time-card-icon { width: 48px; height: 48px; border-radius: 12px; }
-          .time-card-icon i { font-size: 20px; }
-          .time-card-value { font-size: 24px; }
+          .time-card-icon { width: 56px; height: 56px; border-radius: 14px; }
+          .time-card-icon i { font-size: 24px; }
+          .time-card-value { font-size: 26px; }
         }
 
         @media (max-width: 480px) {
           .service-time-grid { padding: 14px; }
           .service-time-left { padding: 12px; }
-          .time-card-value { font-size: 22px; }
+          .time-card-value { font-size: 24px; } /* 保持相对更醒目 */
         }
         
         @keyframes pulse-glow {
