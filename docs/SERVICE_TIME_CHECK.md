@@ -7,7 +7,7 @@
 
 ### 时间逻辑
 - **服务时间外**：凌晨04:30至12:30（Giffgaff官方不提供SIM卡交换服务）
-- **服务时间内**：其他时间段（可以申请eSIM）
+- **服务时间内**：其他时间段（当前时间可以申请eSIM）
 
 ### 显示效果
 
@@ -17,15 +17,15 @@
 - **消息**：提醒用户不要在此时间段操作申请eSIM
 - **颜色**：橙色警告色 (`#f59e0b`)
 - **动画**：警告脉冲动画 (`warning-pulse`)
-- **操作提示**：红色"⚠️ 不能申请eSIM"
+- **操作提示**：红色"⚠️ 当前时间不能申请eSIM"
 
 #### 服务时间内（其他时间段）
 - **样式**：绿色成功框 (`alert-success`)
 - **图标**：放大成功圆圈 (`fa-check-circle`，1.8em)
-- **消息**：提醒用户当前可以申请eSIM
+- **消息**：提醒用户当前当前时间可以申请eSIM
 - **颜色**：绿色成功色 (`#10b981`)
 - **动画**：成功弹跳动画 (`success-bounce`)
-- **操作提示**：绿色"✅ 可以申请eSIM"
+- **操作提示**：绿色"✅ 当前时间可以申请eSIM"
 
 #### 时间显示
 - **位置**：右侧独立显示区域
@@ -153,14 +153,14 @@ function checkServiceTime() {
         iconElement.className = 'fas fa-exclamation-triangle me-3';
         iconElement.style.color = '#f59e0b';
         messageElement.innerHTML = 'Giffgaff官方在<strong>凌晨04:30至12:30</strong>之间不提供SIM卡交换服务。';
-        actionMessageElement.innerHTML = '<span style="color: #dc2626; font-weight: 700;">⚠️ 不能申请eSIM</span>';
+        actionMessageElement.innerHTML = '<span style="color: #dc2626; font-weight: 700;">⚠️ 当前时间不能申请eSIM</span>';
     } else {
         // 在服务时间内，显示成功提示
         alertElement.className = 'alert alert-success mb-4';
         iconElement.className = 'fas fa-check-circle me-3';
         iconElement.style.color = '#10b981';
         messageElement.innerHTML = '当前时间在服务时间内，Giffgaff官方在<strong>凌晨04:30至12:30</strong>之间不提供服务。';
-        actionMessageElement.innerHTML = '<span style="color: #059669; font-weight: 700;">✅ 可以申请eSIM</span>';
+        actionMessageElement.innerHTML = '<span style="color: #059669; font-weight: 700;">✅ 当前时间可以申请eSIM</span>';
     }
 }
 ```
@@ -179,7 +179,7 @@ document.addEventListener('DOMContentLoaded', function() {
 ## 用户体验
 
 ### 优势
-1. **实时反馈**：用户立即知道当前是否可以申请eSIM
+1. **实时反馈**：用户立即知道当前是否当前时间可以申请eSIM
 2. **清晰指示**：通过颜色和图标直观显示状态
 3. **自动更新**：无需刷新页面，时间状态自动更新
 4. **友好提醒**：明确告知服务时间和建议
