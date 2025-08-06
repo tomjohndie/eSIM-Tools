@@ -734,12 +734,12 @@
                 <div id="actionMessage" class="service-time-action-badge" style="display: none;"></div>
               </div>
               <div class="service-time-body">
+                <div class="service-time-header-row">
+                  <i id="serviceTimeIcon" class="fas" aria-hidden="true"></i>
+                  <div class="service-time-title">服务时间提醒：</div>
+                </div>
                 <div class="service-time-layout">
-                  <div class="service-time-icon-section">
-                    <i id="serviceTimeIcon" class="fas" aria-hidden="true"></i>
-                  </div>
                   <div class="service-time-content-section">
-                    <div class="service-time-title">服务时间提醒：</div>
                     <div id="serviceTimeMessage" class="service-time-message"></div>
                   </div>
                 </div>
@@ -2768,7 +2768,7 @@
 
         .service-time-grid {
           display: grid;
-          grid-template-columns: 1.3fr 0.9fr;
+          grid-template-columns: 2fr 0.8fr;
           gap: var(--st-gap);
           padding: 18px;
           border-radius: var(--st-radius);
@@ -2801,23 +2801,15 @@
         .service-time-layout {
           display: flex;
           align-items: flex-start;
-          gap: 20px;
           width: 100%;
-        }
-
-        .service-time-icon-section {
-          flex-shrink: 0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          min-height: 120px;
+          margin-top: 8px;
         }
 
         .service-time-content-section {
           flex: 1;
           display: flex;
           flex-direction: column;
-          gap: 8px;
+          gap: 0;
         }
 
         .service-time-action-badge {
@@ -2841,6 +2833,14 @@
           text-align: center;
         }
 
+        .service-time-header-row {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          margin-bottom: 12px;
+        }
+
         .service-time-title {
           font-weight: 700;
           font-size: 18px;
@@ -2855,7 +2855,7 @@
           flex-direction: column;
           align-items: center;
           text-align: center;
-          gap: 12px;
+          gap: 8px;
           width: 100%;
         }
 
@@ -2863,7 +2863,7 @@
           color: #334155;
           line-height: 1.6;
           text-align: center;
-          margin-top: 8px;
+          margin-top: 0;
           width: 100%;
         }
 
@@ -3000,13 +3000,24 @@
             align-items: center;
             gap: 10px;
           }
+          .service-time-header-row {
+            flex-direction: column;
+            gap: 8px;
+          }
+          .service-time-body {
+            align-items: center;
+            text-align: center;
+          }
+          .service-time-title {
+            text-align: center;
+          }
           .service-time-layout {
             flex-direction: column;
             align-items: center;
             gap: 15px;
           }
-          .service-time-icon-section {
-            min-height: auto;
+          .service-time-message {
+            text-align: center;
           }
           .service-time-action-badge {
             align-self: center;
@@ -3118,4 +3129,5 @@
         }
     </style>
 </body>
+</html>
 </html>
