@@ -2807,9 +2807,8 @@
 
         .service-time-icon-section {
           flex-shrink: 0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
+          display: grid;
+          place-items: center;
           width: 120px;
         }
 
@@ -2829,10 +2828,8 @@
         #serviceTimeIcon {
           width: 80px;
           height: 80px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin: 0 auto;
+          display: grid;
+          place-items: center;
           border-radius: 50%;
           background: #e6f6ee; /* 成功态底色 */
           color: #10b981;      /* 成功态主色，失败态会被脚本覆盖图标class但尺寸保持 */
