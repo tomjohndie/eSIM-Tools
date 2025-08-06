@@ -2798,17 +2798,28 @@
           width: 100%;
         }
 
-        .service-time-layout {
-          display: grid;
-          grid-template-columns: 78px 1fr;
-          align-items: center;
-          gap: 16px;
+        .service-time-body {
+          display: flex;
+          flex-direction: column;
+          align-items: stretch;
+          text-align: left;
+          gap: 8px;
           width: 100%;
+          padding: 0;
         }
-
+        
+        /* 新增：使图标在左侧垂直居中 */
+        .service-time-layout {
+          display: flex;
+          align-items: center;
+          gap: 24px;
+        }
+        
         .service-time-icon-section {
-          display: grid;
-          place-items: center;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding-top: 0;
         }
 
         .service-time-content-section {
