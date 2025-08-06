@@ -730,13 +730,15 @@
           <div class="service-time-grid">
             <!-- 左侧：提示内容 -->
             <div class="service-time-left">
-              <div class="service-time-head">
-                <i id="serviceTimeIcon" class="fas" aria-hidden="true"></i>
-                <div class="service-time-title">服务时间提醒</div>
+              <div class="service-time-header">
+                <div class="service-time-icon-title">
+                  <i id="serviceTimeIcon" class="fas" aria-hidden="true"></i>
+                  <div class="service-time-title">服务时间提醒</div>
+                </div>
+                <div id="actionMessage" class="service-time-action-badge"></div>
               </div>
               <div class="service-time-body">
                 <div id="serviceTimeMessage" class="service-time-message"></div>
-                <div id="actionMessage" class="service-time-action center-action"></div>
               </div>
             </div>
 
@@ -2480,17 +2482,17 @@
             if (isOutsideServiceTime) {
                 // 在服务时间外，显示警告
                 alertElement.className = 'alert alert-warning mb-4';
-                iconElement.className = 'fas fa-exclamation-triangle me-3';
-                iconElement.style.color = '#f59e0b';
+                iconElement.className = 'fas fa-exclamation-triangle';
                 messageElement.innerHTML = '当前时间在服务时间外，Giffgaff官方在<strong>凌晨04:30至12:30</strong>之间不提供SIM卡交换服务。';
-                actionMessageElement.innerHTML = '<span style="color: #dc2626; font-weight: 700;">⚠️ 不能申请eSIM</span>';
+                actionMessageElement.innerHTML = '⚠️ 不能申请eSIM';
+                actionMessageElement.className = 'service-time-action-badge warning';
             } else {
                 // 在服务时间内，显示成功提示
                 alertElement.className = 'alert alert-success mb-4';
-                iconElement.className = 'fas fa-check-circle me-3';
-                iconElement.style.color = '#10b981';
+                iconElement.className = 'fas fa-check-circle';
                 messageElement.innerHTML = '当前时间在服务时间内，Giffgaff官方在<strong>凌晨04:30至12:30</strong>之间不提供服务。';
-                actionMessageElement.innerHTML = '<span style="color: #059669; font-weight: 700;">✅ 可以申请eSIM</span>';
+                actionMessageElement.innerHTML = '✅ 可以申请eSIM';
+                actionMessageElement.className = 'service-time-action-badge success';
             }
         }
         
@@ -2627,27 +2629,35 @@
           box-shadow: var(--st-soft-shadow);
         }
 
-        .service-time-head {
-          display: grid;
-          grid-template-columns: 1fr;
+        .service-time-header {
+          display: flex;
           align-items: center;
-          justify-items: center;
-          text-align: center;
-          gap: 10px;
-          min-height: 44px;
+          justify-content: space-between;
+          gap: 15px;
+          margin-bottom: 12px;
+        }
+
+        .service-time-icon-title {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          flex: 1;
         }
 
         #serviceTimeIcon {
           width: 56px;
           height: 56px;
-          display: grid;
-          place-items: center;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           margin: 0 auto;
           border-radius: 50%;
           background: #e6f6ee; /* 成功态底色 */
           color: #10b981;      /* 成功态主色，失败态会被脚本覆盖图标class但尺寸保持 */
           font-size: 26px;     /* 图标更大一号 */
           box-shadow: inset 0 0 0 2px rgba(16,185,129,0.15);
+          line-height: 1;
+          text-align: center;
         }
 
         .service-time-title {
@@ -2679,6 +2689,34 @@
         .center-action {
           display: inline-block;
           text-align: center;
+        }
+
+        .service-time-action-badge {
+          padding: 8px 16px;
+          border-radius: 20px;
+          font-weight: 700;
+          font-size: 14px;
+          line-height: 1.2;
+          white-space: nowrap;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          transition: all 0.3s ease;
+        }
+
+        .service-time-action-badge.success {
+          background: linear-gradient(135deg, #10b981, #059669);
+          color: white;
+          border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .service-time-action-badge.warning {
+          background: linear-gradient(135deg, #f59e0b, #d97706);
+          color: white;
+          border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .service-time-action-badge:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         /* 右侧时间卡片 */
@@ -2756,6 +2794,18 @@
           .service-time-grid {
             grid-template-columns: 1fr;
           }
+          .service-time-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+          }
+          .service-time-icon-title {
+            width: 100%;
+            justify-content: center;
+          }
+          .service-time-action-badge {
+            align-self: center;
+          }
           .current-time-card {
             grid-template-columns: 56px 1fr; /* 同步放大后的移动态尺寸 */
             gap: 12px;
@@ -2768,6 +2818,13 @@
         @media (max-width: 480px) {
           .service-time-grid { padding: 14px; }
           .service-time-left { padding: 12px; }
+          .service-time-header {
+            gap: 8px;
+          }
+          .service-time-action-badge {
+            padding: 6px 12px;
+            font-size: 12px;
+          }
           .time-card-value { font-size: 24px; } /* 保持相对更醒目 */
         }
         
@@ -2804,6 +2861,9 @@
         /* 警告状态特殊样式 */
         .alert-warning #serviceTimeIcon {
             animation: warning-pulse 2s ease-in-out infinite;
+            background: #fef3c7; /* 警告态底色 */
+            color: #f59e0b;      /* 警告态主色 */
+            box-shadow: inset 0 0 0 2px rgba(245,158,11,0.15);
         }
         
         @keyframes warning-pulse {
@@ -2818,6 +2878,9 @@
         /* 成功状态特殊样式 */
         .alert-success #serviceTimeIcon {
             animation: success-bounce 3s ease-in-out infinite;
+            background: #e6f6ee; /* 成功态底色 */
+            color: #10b981;      /* 成功态主色 */
+            box-shadow: inset 0 0 0 2px rgba(16,185,129,0.15);
         }
         
         @keyframes success-bounce {
