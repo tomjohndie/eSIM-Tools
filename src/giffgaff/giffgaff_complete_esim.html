@@ -2799,25 +2799,22 @@
         }
 
         .service-time-layout {
-          display: flex;
+          display: grid;
+          grid-template-columns: 78px 1fr;
           align-items: center;
           gap: 16px;
           width: 100%;
         }
 
         .service-time-icon-section {
-          flex-shrink: 0;
           display: grid;
           place-items: center;
-          width: 78px;
         }
 
         .service-time-content-section {
-          flex: 1;
           display: flex;
           flex-direction: column;
           gap: 8px;
-          padding-left: 16px;
         }
 
         .service-time-action-badge {
