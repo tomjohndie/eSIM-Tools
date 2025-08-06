@@ -733,11 +733,11 @@
               <div class="service-time-header">
                 <div class="service-time-icon-title">
                   <i id="serviceTimeIcon" class="fas" aria-hidden="true"></i>
-                  <div class="service-time-title">服务时间提醒</div>
                 </div>
                 <div id="actionMessage" class="service-time-action-badge" style="display: none;"></div>
               </div>
               <div class="service-time-body">
+                <div class="service-time-title">服务时间提醒:</div>
                 <div id="serviceTimeMessage" class="service-time-message"></div>
               </div>
             </div>
@@ -2660,16 +2660,6 @@
             }
             
             updateStatus(); // 初始化状态显示
-            
-            // 调试：强制显示徽章以测试布局
-            setTimeout(() => {
-                const actionMessageElement = document.getElementById('actionMessage');
-                if (actionMessageElement) {
-                    actionMessageElement.style.display = 'block';
-                    actionMessageElement.innerHTML = '⚠️ 不能申请eSIM';
-                    actionMessageElement.className = 'service-time-action-badge warning';
-                }
-            }, 1000);
         });
     </script>
     
@@ -2797,7 +2787,7 @@
         .service-time-icon-title {
           display: flex;
           align-items: center;
-          gap: 12px;
+          justify-content: center;
           flex: 1;
         }
 
@@ -2827,20 +2817,22 @@
           font-size: 18px;
           color: var(--st-strong);
           letter-spacing: 0.2px;
-          text-align: center;
+          text-align: left;
+          margin-bottom: 4px;
         }
 
         .service-time-body {
           display: flex;
           flex-direction: column;
-          align-items: center;
-          text-align: center;
-          gap: 6px;
+          align-items: flex-start;
+          text-align: left;
+          gap: 8px;
         }
 
         .service-time-message {
           color: #334155;
           line-height: 1.6;
+          text-align: left;
         }
 
         .service-time-action {
@@ -2872,8 +2864,9 @@
 
         .service-time-action-badge.warning {
           background: linear-gradient(135deg, #f59e0b, #d97706);
-          color: white;
+          color: #dc2626;
           border: 1px solid rgba(245, 158, 11, 0.3);
+          font-weight: 800;
         }
 
         .service-time-action-badge:hover {
