@@ -734,12 +734,12 @@
                 <div id="actionMessage" class="service-time-action-badge" style="display: none;"></div>
               </div>
               <div class="service-time-body">
-                <div class="service-time-header-row">
-                  <i id="serviceTimeIcon" class="fas" aria-hidden="true"></i>
-                  <div class="service-time-title">服务时间提醒：</div>
-                </div>
                 <div class="service-time-layout">
+                  <div class="service-time-icon-section">
+                    <i id="serviceTimeIcon" class="fas" aria-hidden="true"></i>
+                  </div>
                   <div class="service-time-content-section">
+                    <div class="service-time-title">服务时间提醒：</div>
                     <div id="serviceTimeMessage" class="service-time-message"></div>
                   </div>
                 </div>
@@ -2800,16 +2800,23 @@
 
         .service-time-layout {
           display: flex;
-          align-items: flex-start;
+          align-items: center;
+          gap: 16px;
           width: 100%;
-          margin-top: 8px;
+        }
+
+        .service-time-icon-section {
+          flex-shrink: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
 
         .service-time-content-section {
           flex: 1;
           display: flex;
           flex-direction: column;
-          gap: 0;
+          gap: 8px;
         }
 
         .service-time-action-badge {
@@ -2831,14 +2838,7 @@
           box-shadow: inset 0 0 0 2px rgba(16,185,129,0.15);
           line-height: 1;
           text-align: center;
-        }
-
-        .service-time-header-row {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 12px;
-          margin-bottom: 12px;
+          animation: breathing-light-orange 2s ease-in-out infinite;
         }
 
         .service-time-title {
@@ -2846,15 +2846,15 @@
           font-size: 18px;
           color: var(--st-strong);
           letter-spacing: 0.2px;
-          text-align: center;
-          margin-bottom: 0;
+          text-align: left;
+          margin-bottom: 12px;
         }
 
         .service-time-body {
           display: flex;
           flex-direction: column;
-          align-items: center;
-          text-align: center;
+          align-items: stretch;
+          text-align: left;
           gap: 8px;
           width: 100%;
         }
@@ -2862,7 +2862,7 @@
         .service-time-message {
           color: #334155;
           line-height: 1.6;
-          text-align: center;
+          text-align: left;
           margin-top: 0;
           width: 100%;
         }
@@ -2915,6 +2915,17 @@
           }
         }
 
+        @keyframes breathing-light-orange {
+          0%, 100% {
+            box-shadow: 0 0 5px rgba(245, 158, 11, 0.3);
+            transform: scale(1);
+          }
+          50% {
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.6);
+            transform: scale(1.05);
+          }
+        }
+
         .service-time-action-badge:hover {
           transform: translateY(-1px);
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -2955,6 +2966,7 @@
           display: grid;
           place-items: center;
           box-shadow: inset 0 0 0 1px rgba(99,102,241,0.22);
+          animation: breathing-light-purple 2s ease-in-out infinite;
         }
 
         .time-card-icon i {
@@ -2990,6 +3002,17 @@
           50% { transform: translateZ(0) scale(1.02); }
         }
 
+        @keyframes breathing-light-purple {
+          0%, 100% {
+            box-shadow: 0 0 5px rgba(99, 102, 241, 0.3);
+            transform: scale(1);
+          }
+          50% {
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.6);
+            transform: scale(1.05);
+          }
+        }
+
         /* 自适应 */
         @media (max-width: 992px) {
           .service-time-grid {
@@ -2999,10 +3022,6 @@
             flex-direction: column;
             align-items: center;
             gap: 10px;
-          }
-          .service-time-header-row {
-            flex-direction: column;
-            gap: 8px;
           }
           .service-time-body {
             align-items: center;
@@ -3015,6 +3034,9 @@
             flex-direction: column;
             align-items: center;
             gap: 15px;
+          }
+          .service-time-icon-section {
+            padding-top: 0;
           }
           .service-time-message {
             text-align: center;
