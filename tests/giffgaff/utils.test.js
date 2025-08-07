@@ -37,24 +37,69 @@ describe('Giffgaff Utils', () => {
   });
 
   describe('isServiceTimeAvailable()', () => {
-    it('应该在服务时间内返回 true', () => {
-      // 模拟下午 2 点
-      const mockDate = new Date('2024-01-01T14:00:00');
-      jest.spyOn(global, 'Date').mockImplementation(() => mockDate);
-      
-      expect(Utils.isServiceTimeAvailable()).toBe(true);
-      
-      global.Date.mockRestore();
+    afterEach(() => {
+      jest.restoreAllMocks();
     });
 
-    it('应该在服务维护时间返回 false', () => {
-      // 模拟早上 8 点（在 04:30-12:30 维护时段）
-      const mockDate = new Date('2024-01-01T08:00:00');
-      jest.spyOn(global, 'Date').mockImplementation(() => mockDate);
-      
-      expect(Utils.isServiceTimeAvailable()).toBe(false);
-      
-      global.Date.mockRestore();
+    it('应该在服务时间内返回 true（服务可用）', () => {
+      // 测试服务可用的时间点
+      const availableTimes = [
+        new Date('2024-01-01T00:00:00'), // 午夜
+        new Date('2024-01-01T03:00:00'), // 凌晨3点
+        new Date('2024-01-01T04:00:00'), // 凌晨4点
+        new Date('2024-01-01T04:29:00'), // 4:29（服务停止前1分钟）
+        new Date('2024-01-01T12:31:00'), // 12:31（服务恢复后1分钟）
+        new Date('2024-01-01T13:00:00'), // 下午1点
+        new Date('2024-01-01T14:00:00'), // 下午2点
+        new Date('2024-01-01T18:00:00'), // 晚上6点
+        new Date('2024-01-01T22:40:00'), // 晚上10:40（用户报告的时间）
+        new Date('2024-01-01T23:59:59'), // 接近午夜
+      ];
+
+      availableTimes.forEach(time => {
+        jest.spyOn(global, 'Date').mockImplementation(() => time);
+        expect(Utils.isServiceTimeAvailable()).toBe(true);
+        jest.restoreAllMocks();
+      });
+    });
+
+    it('应该在服务维护时间返回 false（服务不可用）', () => {
+      // 测试服务不可用的时间点（04:30-12:30）
+      const unavailableTimes = [
+        new Date('2024-01-01T04:30:00'), // 4:30（维护开始）
+        new Date('2024-01-01T04:31:00'), // 4:31
+        new Date('2024-01-01T05:00:00'), // 早上5点
+        new Date('2024-01-01T06:00:00'), // 早上6点
+        new Date('2024-01-01T08:00:00'), // 早上8点
+        new Date('2024-01-01T10:00:00'), // 上午10点
+        new Date('2024-01-01T11:00:00'), // 上午11点
+        new Date('2024-01-01T12:00:00'), // 中午12点
+        new Date('2024-01-01T12:29:00'), // 12:29
+        new Date('2024-01-01T12:30:00'), // 12:30（维护结束）
+      ];
+
+      unavailableTimes.forEach(time => {
+        jest.spyOn(global, 'Date').mockImplementation(() => time);
+        expect(Utils.isServiceTimeAvailable()).toBe(false);
+        jest.restoreAllMocks();
+      });
+    });
+
+    it('应该正确处理边界情况', () => {
+      // 测试边界时间点
+      const boundaryTests = [
+        { time: new Date('2024-01-01T04:29:59'), expected: true },  // 4:29:59 - 服务可用
+        { time: new Date('2024-01-01T04:30:00'), expected: false }, // 4:30:00 - 服务不可用
+        { time: new Date('2024-01-01T12:30:00'), expected: false }, // 12:30:00 - 服务不可用
+        { time: new Date('2024-01-01T12:30:59'), expected: false }, // 12:30:59 - 服务不可用
+        { time: new Date('2024-01-01T12:31:00'), expected: true },  // 12:31:00 - 服务可用
+      ];
+
+      boundaryTests.forEach(({ time, expected }) => {
+        jest.spyOn(global, 'Date').mockImplementation(() => time);
+        expect(Utils.isServiceTimeAvailable()).toBe(expected);
+        jest.restoreAllMocks();
+      });
     });
   });
 

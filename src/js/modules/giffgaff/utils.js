@@ -28,6 +28,7 @@ class Utils {
 
   /**
    * 服务时间检查
+   * Giffgaff 在凌晨 04:30 至 12:30 之间不提供服务
    */
   isServiceTimeAvailable() {
     const now = new Date();
@@ -35,9 +36,11 @@ class Utils {
     const currentMinute = now.getMinutes();
     
     // 检查是否在服务时间外（凌晨04:30至12:30）
-    const isOutsideServiceTime = 
-      (currentHour > 4 || (currentHour === 4 && currentMinute >= 30)) &&
-      (currentHour < 12 || (currentHour === 12 && currentMinute <= 30));
+    // 服务不可用时间：04:30-12:30
+    const isOutsideServiceTime =
+      (currentHour === 4 && currentMinute >= 30) ||  // 4:30-4:59
+      (currentHour > 4 && currentHour < 12) ||        // 5:00-11:59
+      (currentHour === 12 && currentMinute <= 30);    // 12:00-12:30
     
     return !isOutsideServiceTime;
   }
