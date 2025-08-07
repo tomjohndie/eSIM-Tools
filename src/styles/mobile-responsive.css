@@ -1,0 +1,465 @@
+/**
+ * 移动端响应式优化样式
+ * 
+ * 解决的问题：
+ * 1. 触摸目标尺寸 (最小 44x44px)
+ * 2. 按钮间距优化
+ * 3. 小屏幕布局调整
+ * 4. 文本可读性
+ */
+
+/* ========================================
+   基础响应式设置
+   ======================================== */
+
+/* 确保所有按钮满足最小触摸目标尺寸 */
+.btn,
+button,
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+a.btn {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 12px 20px;
+  touch-action: manipulation; /* 防止双击缩放 */
+}
+
+/* 小按钮特殊处理 */
+.btn-sm {
+  min-height: 38px;
+  padding: 8px 16px;
+}
+
+/* 图标按钮 */
+.btn-icon {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 表单控件优化 */
+.form-control,
+.form-select,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="number"],
+textarea,
+select {
+  min-height: 44px;
+  padding: 10px 12px;
+  font-size: 16px; /* 防止iOS自动缩放 */
+  touch-action: manipulation;
+}
+
+/* 复选框和单选框 */
+input[type="checkbox"],
+input[type="radio"] {
+  min-width: 20px;
+  min-height: 20px;
+  margin: 12px;
+}
+
+/* 链接和可点击元素 */
+a:not(.btn) {
+  padding: 8px 4px;
+  margin: -8px -4px;
+  display: inline-block;
+}
+
+/* ========================================
+   移动端布局优化
+   ======================================== */
+
+/* 平板设备 (768px 及以下) */
+@media (max-width: 768px) {
+  /* 容器调整 */
+  .container {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+  
+  /* 卡片布局 */
+  .card {
+    margin-bottom: 20px;
+    border-radius: 12px;
+  }
+  
+  .card-body {
+    padding: 20px 15px;
+  }
+  
+  /* 步骤指示器 */
+  .steps-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 10px;
+  }
+  
+  .step {
+    min-width: 80px;
+    flex-shrink: 0;
+  }
+  
+  /* 按钮组 */
+  .btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .btn-group .btn {
+    width: 100%;
+    margin: 0 !important;
+  }
+  
+  /* 表格优化 */
+  table {
+    font-size: 14px;
+  }
+  
+  .table-responsive {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* 模态框 */
+  .modal-dialog {
+    margin: 10px;
+    max-width: calc(100% - 20px);
+  }
+  
+  /* 工具提示和弹出框 */
+  .tooltip,
+  .popover {
+    max-width: 280px;
+  }
+}
+
+/* 手机设备 (576px 及以下) */
+@media (max-width: 576px) {
+  /* 主容器 */
+  .main-container {
+    padding: 15px;
+    border-radius: 15px;
+    margin: 10px;
+  }
+  
+  /* 标题调整 */
+  h1 {
+    font-size: 1.75rem;
+    line-height: 1.3;
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+    line-height: 1.3;
+  }
+  
+  h3 {
+    font-size: 1.25rem;
+    line-height: 1.4;
+  }
+  
+  /* 按钮间距优化 */
+  .btn + .btn {
+    margin-left: 0;
+    margin-top: 10px;
+  }
+  
+  /* 内联按钮变块级 */
+  .btn-toolbar {
+    flex-direction: column;
+  }
+  
+  .btn-toolbar .btn {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+  
+  /* 表单布局 */
+  .form-row {
+    flex-direction: column;
+  }
+  
+  .col-form-label {
+    padding-top: 0;
+    padding-bottom: 5px;
+    text-align: left !important;
+  }
+  
+  /* 输入组 */
+  .input-group {
+    flex-direction: column;
+  }
+  
+  .input-group-text {
+    width: 100%;
+    border-radius: 8px 8px 0 0 !important;
+  }
+  
+  .input-group .form-control {
+    border-radius: 0 0 8px 8px !important;
+  }
+  
+  /* 警告框和通知 */
+  .alert {
+    padding: 12px;
+    font-size: 14px;
+  }
+  
+  .toast-notification {
+    width: calc(100% - 40px);
+    max-width: 320px;
+    font-size: 14px;
+  }
+  
+  /* 代码显示框 */
+  .code-display,
+  pre,
+  code {
+    font-size: 12px;
+    word-break: break-all;
+    overflow-x: auto;
+  }
+  
+  /* 二维码容器 */
+  .qrcode-container {
+    max-width: 280px;
+    margin: 0 auto;
+  }
+  
+  .qrcode-container img {
+    width: 100%;
+    height: auto;
+  }
+  
+  /* 信息显示 */
+  .info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 15px;
+  }
+  
+  .info-item strong {
+    font-size: 14px;
+  }
+  
+  .info-item span {
+    font-size: 14px;
+    word-break: break-all;
+  }
+  
+  /* 步骤内容 */
+  .section {
+    padding: 15px 0;
+  }
+  
+  /* 状态消息 */
+  .status-message {
+    font-size: 14px;
+    padding: 8px;
+    margin: 10px 0;
+  }
+  
+  /* 复制按钮优化 */
+  .copy-btn {
+    position: relative;
+    padding: 10px 15px;
+    width: 100%;
+    margin-top: 10px;
+  }
+  
+  /* 导航标签 */
+  .nav-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .nav-tabs .nav-link {
+    white-space: nowrap;
+    padding: 10px 15px;
+  }
+}
+
+/* 小手机设备 (360px 及以下) */
+@media (max-width: 360px) {
+  /* 进一步缩小字体 */
+  body {
+    font-size: 14px;
+  }
+  
+  h1 {
+    font-size: 1.5rem;
+  }
+  
+  h2 {
+    font-size: 1.25rem;
+  }
+  
+  h3 {
+    font-size: 1.1rem;
+  }
+  
+  /* 按钮文字 */
+  .btn {
+    font-size: 14px;
+    padding: 10px 15px;
+  }
+  
+  /* 表单元素 */
+  .form-control,
+  .form-select {
+    font-size: 14px;
+  }
+  
+  /* 小徽章 */
+  .badge {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+}
+
+/* ========================================
+   触摸优化
+   ======================================== */
+
+/* 禁用iOS的点击高亮 */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 优化滚动性能 */
+.scrollable {
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+}
+
+/* 防止文本选择 */
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* 触摸反馈 */
+.touchable {
+  transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
+}
+
+.touchable:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* ========================================
+   性能优化
+   ======================================== */
+
+/* GPU加速 */
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* 减少重绘 */
+.no-repaint {
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* ========================================
+   可访问性增强
+   ======================================== */
+
+/* 焦点指示器 */
+:focus-visible {
+  outline: 3px solid #007bff;
+  outline-offset: 2px;
+}
+
+/* 跳过链接 */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #000;
+  color: #fff;
+  padding: 8px;
+  text-decoration: none;
+  z-index: 100;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* 屏幕阅读器文本 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ========================================
+   深色模式支持
+   ======================================== */
+
+@media (prefers-color-scheme: dark) {
+  /* 深色模式调整 */
+  .form-control,
+  .form-select {
+    background-color: #2d3748;
+    color: #e2e8f0;
+    border-color: #4a5568;
+  }
+  
+  .btn-outline-primary {
+    color: #63b3ed;
+    border-color: #63b3ed;
+  }
+  
+  .btn-outline-primary:hover {
+    background-color: #63b3ed;
+    color: #1a202c;
+  }
+}
+
+/* ========================================
+   打印优化
+   ======================================== */
+
+@media print {
+  /* 隐藏不必要的元素 */
+  .btn,
+  .no-print,
+  nav,
+  .toast-notification,
+  .modal {
+    display: none !important;
+  }
+  
+  /* 优化打印布局 */
+  .container {
+    width: 100%;
+    max-width: none;
+  }
+  
+  /* 显示链接URL */
+  a[href]:after {
+    content: " (" attr(href) ")";
+  }
+}
