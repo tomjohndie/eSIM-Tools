@@ -2670,16 +2670,6 @@
             }
             
             updateStatus(); // 初始化状态显示
-            
-            // 测试：确保徽章正确显示
-            setTimeout(() => {
-                const actionMessageElement = document.getElementById('actionMessage');
-                if (actionMessageElement) {
-                    actionMessageElement.style.display = 'block';
-                    actionMessageElement.innerHTML = '❌ 当前时间不能申请eSIM';
-                    actionMessageElement.className = 'service-time-action-badge warning';
-                }
-            }, 500);
         });
     </script>
     
