@@ -1,7 +1,16 @@
-# eSIM工具集 🚀
-
-[![Netlify Status](https://api.netlify.com/api/v1/badges/8fc159e2-3996-4e1b-bf9d-1945a3474682/deploy-status)](https://app.netlify.com/projects/esim-tools/deploys)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+<div align="center">
+<h1 align="center">eSIM工具集 🚀<br><img align='middle' src='https://anay.cosr.eu.org/?text=@Silentely/bili-calendar'></img></h1>
+<img align='middle' src='https://anay.cosr.eu.org/?repo=Silentely/bili-calendar'></img>
+<br>
+<img src="https://img.shields.io/github/forks/Silentely/bili-calendar?color=orange" alt="GitHub forks">
+<img src="https://img.shields.io/github/issues/Silentely/bili-calendar?color=green" alt="GitHub issues">
+<br>
+<img src="https://img.shields.io/github/license/Silentely/bili-calendar?color=ff69b4" alt="License">
+<img src="https://img.shields.io/github/languages/code-size/Silentely/bili-calendar?color=blueviolet" alt="Code size">
+<img src="https://img.shields.io/github/last-commit/Silentely/bili-calendar/main?label=%E4%B8%8A%E6%AC%A1%E6%9B%B4%E6%96%B0&color=success" alt="Last commit">
+<img src="https://api.netlify.com/api/v1/badges/8fc159e2-3996-4e1b-bf9d-1945a3474682/deploy-status" alt="Netlify Status">
+<br>
+</div>
 
 专为Giffgaff和Simyo用户设计的eSIM管理工具集，支持完整的eSIM申请、设备更换和二维码生成流程。
 
