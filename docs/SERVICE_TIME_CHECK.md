@@ -5,13 +5,13 @@
 
 ## 实现细节
 
-### 时间逻辑
-- **服务时间外**：凌晨04:30至12:30（Giffgaff官方不提供SIM卡交换服务）
-- **服务时间内**：其他时间段（当前时间可以申请eSIM）
+### 时间逻辑（最新）
+- **服务窗口**：英国时间 04:30–21:30（SIM 交换服务可用）
+- **窗口外**：其余时间段（部分操作可能失败或不稳定）
 
 ### 显示效果
 
-#### 服务时间外（凌晨04:30至12:30）
+#### 服务时间外（窗口外）
 - **样式**：黄色警告框 (`alert-warning`)
 - **图标**：放大警告三角形 (`fa-exclamation-triangle`，1.8em)
 - **消息**：提醒用户不要在此时间段操作申请eSIM
@@ -138,9 +138,11 @@ function checkServiceTime() {
     timeElement.offsetHeight; // 触发重排
     timeElement.style.animation = 'time-update 0.5s ease-out';
     
-    // 检查是否在服务时间外（凌晨04:30至12:30）
-    const isOutsideServiceTime = (currentHour > 4 || (currentHour === 4 && currentMinute >= 30)) && 
-                               (currentHour < 12 || (currentHour === 12 && currentMinute <= 30));
+    // 服务窗口：英国时间 04:30–21:30
+    const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date());
+    const hour = Number(parts.find(p => p.type === 'hour')?.value || '0');
+    const minute = Number(parts.find(p => p.type === 'minute')?.value || '0');
+    const inWindow = (hour > 4 || (hour === 4 && minute >= 30)) && (hour < 21 || (hour === 21 && minute <= 30));
     
     const alertElement = document.getElementById('serviceTimeAlert');
     const iconElement = document.getElementById('serviceTimeIcon');

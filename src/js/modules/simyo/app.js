@@ -28,7 +28,7 @@ class SimyoApp {
       this.bindEventListeners();
       this.loadSession();
       this.initialized = true;
-      console.log('Simyo App 初始化完成');
+      // 初始化完成
     } catch (error) {
       console.error('初始化失败:', error);
     }

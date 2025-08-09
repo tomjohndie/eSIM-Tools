@@ -50,7 +50,7 @@ class GiffgaffApp {
       this.startServiceTimeCheck();
       
       this.initialized = true;
-      console.log('Giffgaff App 初始化完成');
+      // 初始化完成
       
     } catch (error) {
       console.error('初始化失败:', error);

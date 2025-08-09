@@ -5,5 +5,4 @@ import '../styles/mobile-responsive.css';
 
 // 初始化性能优化
 import './performance.js';
-
-console.log('eSIM Tools 已加载');
+// 入口脚本：避免冗余控制台输出

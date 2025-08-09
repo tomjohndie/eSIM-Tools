@@ -20,9 +20,7 @@ import giffgaffApp from './modules/giffgaff/app.js';
 window.giffgaffApp = giffgaffApp;
 window.app = giffgaffApp; // 简写别名
 
-// 日志输出
-console.log('Giffgaff eSIM 工具已加载');
-console.log('应用实例可通过 window.giffgaffApp 或 window.app 访问');
+// 生产环境不打印冗余日志
 
 // 导出应用实例
 export default giffgaffApp;

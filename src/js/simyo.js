@@ -19,9 +19,7 @@ import simyoApp from './modules/simyo/app.js';
 // 将应用实例暴露到全局（用于调试和某些内联事件处理）
 window.simyoApp = simyoApp;
 
-// 日志输出
-console.log('Simyo eSIM 工具已加载');
-console.log('应用实例可通过 window.simyoApp 访问');
+// 生产环境不打印冗余日志
 
 // 导出应用实例
 export default simyoApp;

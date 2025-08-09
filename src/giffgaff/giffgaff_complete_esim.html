@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://api.giffgaff.com" crossorigin>
     <link rel="preconnect" href="https://id.giffgaff.com" crossorigin>
     <link rel="preconnect" href="https://publicapi.giffgaff.com" crossorigin>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; connect-src 'self' https://api.qrserver.com https://appapi.simyo.nl https://api.giffgaff.com https://id.giffgaff.com https://publicapi.giffgaff.com; img-src 'self' data: https:; frame-src 'none';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; font-src 'self' data: https://cdnjs.cloudflare.com; connect-src 'self' https://api.qrserver.com https://appapi.simyo.nl https://api.giffgaff.com https://id.giffgaff.com https://publicapi.giffgaff.com; img-src 'self' data: https:; frame-src 'none';">
     <title>Giffgaff eSIM 申请工具</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/src/assets/fontawesome/all.min.css">
@@ -43,7 +43,8 @@
         }
         
         body {
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            /* 采用与 Simyo 相近的品牌暖色渐变，偏黄橙，保证对比度与可读性 */
+            background: linear-gradient(135deg, #fff7e6 0%, #ffefcc 40%, #ffe8b3 100%);
             color: #212529;
             min-height: 100vh;
             padding: 20px;
@@ -170,8 +171,13 @@
             justify-content: space-between;
             margin: 0 auto 40px;
             position: relative;
-            max-width: 700px;
+            max-width: 820px;
             counter-reset: step;
+            padding: 16px 24px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #f8fafc, #eef2f7);
+            border: 1px solid rgba(0,0,0,0.06);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.08);
         }
         
         .step {
@@ -184,10 +190,10 @@
         }
         
         .step-number {
-            width: 50px;
-            height: 50px;
+            width: 56px;
+            height: 56px;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.8);
+            background: #fffdf7;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -195,13 +201,15 @@
             margin-bottom: 10px;
             font-size: 20px;
             color: #212529;
-            border: 2px solid rgba(255, 204, 0, 0.5);
+            border: 2px solid rgba(255, 193, 7, 0.55);
+            box-shadow: inset 0 0 0 2px rgba(255, 193, 7, 0.18);
         }
         
         .step.active .step-number {
-            background: var(--primary);
+            background: linear-gradient(135deg, #ffcc00, #ffd84d);
             color: white;
-            box-shadow: 0 0 15px rgba(255, 204, 0, 0.6);
+            box-shadow: 0 6px 16px rgba(255, 193, 7, 0.45);
+            border-color: rgba(255, 193, 7, 0.8);
         }
         
         .step-text {
@@ -916,6 +924,25 @@
                                 <li>在左侧选择 <strong>Cookies</strong> → <code>https://www.giffgaff.com</code></li>
                                 <li>复制右侧所有条目，拼成 <code>name=value; name2=value2; ...</code> 格式</li>
                             </ol>
+                            <div class="mt-2">
+                              <strong>或</strong> 在已登录的 <code>giffgaff.com</code> 页签，打开控制台(Console)粘贴以下代码并回车，复制输出结果：
+                              <pre class="mt-2 p-2 bg-light border rounded" style="white-space:pre-wrap;word-break:break-all;">
+;(() => {
+  try {
+    const out = document.cookie.split('; ').filter(Boolean).join('; ');
+    console.log(out);
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(out)
+        .then(() => console.log('Cookie 已复制到剪贴板'))
+        .catch(() => {});
+    }
+  } catch (e) {
+    console.log('读取 Cookie 失败:', e);
+  }
+})();
+                              </pre>
+                              <small class="text-muted">仅在已登录的 <code>https://www.giffgaff.com</code> 页面执行。提示：控制台打印同时尝试复制到剪贴板。</small>
+                            </div>
                             <p class="mb-2"><small class="text-muted">💡 建议包含含有 <code>token</code>/<code>session</code>/<code>auth</code> 关键字的 Cookie。</small></p>
                             <div class="alert alert-warning p-2">
                                 <small>
@@ -1211,10 +1238,10 @@
         // OAuth 2.0 PKCE相关配置
         const oauthConfig = {
             clientId: "4a05bf219b3985647d9b9a3ba610a9ce",
-            clientSecret: "OQv4cfiyol8TvCW4yiLGj0c1AkTR3N2JfRzq7XGqMxk=",
             redirectUri: "giffgaff://auth/callback/",
             authUrl: "https://id.giffgaff.com/auth/oauth/authorize",
-            tokenUrl: isNetlify ? "/api/giffgaff-id/auth/oauth/token" : "https://id.giffgaff.com/auth/oauth/token",
+            // 前端不再保存/使用 clientSecret；令牌交换改由后端函数完成
+            tokenUrl: "/.netlify/functions/giffgaff-token-exchange",
             scope: "read"
         };
 
@@ -1223,8 +1250,8 @@
             mfaChallenge: isNetlify ? "/.netlify/functions/giffgaff-mfa-challenge" : "https://id.giffgaff.com/v4/mfa/challenge/me",
             mfaValidation: isNetlify ? "/.netlify/functions/giffgaff-mfa-validation" : "https://id.giffgaff.com/v4/mfa/validation",
             graphql: isNetlify ? "/.netlify/functions/giffgaff-graphql" : "https://publicapi.giffgaff.com/gateway/graphql",
-            cookieVerify: isNetlify ? "/.netlify/functions/verify-cookie" : "verify_cookie.php",
-            autoActivate: isNetlify ? "/.netlify/functions/auto-activate-esim" : "auto_activate_esim.php",
+            cookieVerify: "/.netlify/functions/verify-cookie",
+            autoActivate: "/.netlify/functions/auto-activate-esim",
             qrcode: "https://qrcode.show/"
         };
 
@@ -1916,16 +1943,11 @@
                 // 交换访问令牌
                 const tokenResponse = await fetch(oauthConfig.tokenUrl, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'Authorization': `Basic ${btoa(oauthConfig.clientId + ':' + oauthConfig.clientSecret)}`
-                    },
-                    body: new URLSearchParams({
-                        grant_type: 'authorization_code',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
                         code: code,
-                        redirect_uri: oauthConfig.redirectUri,
                         code_verifier: appState.codeVerifier,
-                        client_id: oauthConfig.clientId
+                        redirect_uri: oauthConfig.redirectUri
                     })
                 });
                 
@@ -2763,7 +2785,21 @@
         .service-time-alert {
           padding: 0;
           border: none;
+          /* 去除浅绿底，保持透明由内部卡片呈现 */
           background: transparent;
+        }
+
+        /* 彻底屏蔽 Bootstrap alert 变量导致的底色/边框（#C6DBD1 等浅绿） */
+        #serviceTimeAlert.alert,
+        #serviceTimeAlert.alert-success,
+        #serviceTimeAlert.alert-warning {
+          --bs-alert-bg: transparent;
+          --bs-alert-border-color: transparent;
+          --bs-alert-color: inherit;
+          background-color: transparent !important;
+          border-color: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
         }
 
         .service-time-grid {
@@ -2772,9 +2808,10 @@
           gap: var(--st-gap);
           padding: 18px;
           border-radius: var(--st-radius);
-          background: linear-gradient(135deg, #f6f8fb 0%, #eef2f7 100%);
-          border: var(--st-border);
-          box-shadow: var(--st-soft-shadow);
+          background: linear-gradient(135deg, #fffaf0 0%, #fff8e0 100%);
+          border: 1px solid rgba(255, 193, 7, 0.25);
+          /* 去除外围浅绿阴影，使用柔和的中性阴影 */
+          box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
         }
 
         /* 左侧内容 */
@@ -2784,9 +2821,10 @@
           gap: 10px;
           padding: 14px 16px;
           border-radius: 14px;
-          background: #ffffff;
-          border: var(--st-border);
-          box-shadow: var(--st-soft-shadow);
+          /* 与 current-time-card 一致的暖黄渐变与柔和阴影 */
+          background: linear-gradient(135deg, #fff3d6 60%, #fffaf0 0%);
+          border: 1px solid rgba(255, 193, 7, 0.25);
+          box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
           position: relative;
         }
 
@@ -2839,8 +2877,8 @@
           display: grid;
           place-items: center;
           border-radius: 50%;
-          background: #e6f6ee; /* 成功态底色 */
-          color: #10b981;      /* 成功态主色，失败态会被脚本覆盖图标class但尺寸保持 */
+          background: #e6f6ee; /* 浅绿色底色 */
+          color: #10b981;      /* 成功态主色（勾） */
           font-size: 36px;     /* 图标更大一号 */
           box-shadow: inset 0 0 0 2px rgba(16,185,129,0.15);
           line-height: 1;
@@ -2848,14 +2886,14 @@
         }
 
         #serviceTimeIcon.warning {
-          background: #fef3c7;
-          color: #f59e0b;
-          box-shadow: inset 0 0 0 2px rgba(245, 158, 11, 0.22);
-          animation: breathing-light-orange 2s ease-in-out infinite;
+          background: #e6f6ee; 
+          color: #10b981;
+          box-shadow: inset 0 0 0 2px rgba(16,185,129,0.15);
+          animation: breathing-light-green 2s ease-in-out infinite;
         }
 
         #serviceTimeIcon.success {
-          background: #e6f6ee;
+          background: #e6f6ee; /* 浅绿色底色 */
           color: #10b981;
           box-shadow: inset 0 0 0 2px rgba(16,185,129,0.15);
           animation: breathing-light-green 2s ease-in-out infinite;
@@ -2911,6 +2949,7 @@
         }
 
         .service-time-action-badge.success {
+          /* 还原绿色成功态与绿色呼吸效果 */
           background: #f0fdf4;
           color: #16a34a;
           border: 2px solid #16a34a;
@@ -2974,7 +3013,7 @@
           gap: 14px;
           padding: 16px 18px;
           border-radius: var(--st-card-radius);
-          background: radial-gradient(120% 120% at 10% 10%, #ffffff 0%, #f2f4f8 70%, #eaeef6 100%);
+          background: linear-gradient(225deg, #fff3d6 60%, #fffaf0 0%);
           box-shadow: var(--st-card-shadow);
           position: relative;
           overflow: hidden;
@@ -2995,10 +3034,10 @@
           width: 78px;   /* 大一号 */
           height: 78px;  /* 大一号 */
           border-radius: 18px;
-          background: linear-gradient(135deg, #eaeaff, #e0e7ff);
+          background: linear-gradient(135deg, #eaeaff, #e0e7ff); /* 恢复紫色背景 */
           display: grid;
           place-items: center;
-          box-shadow: inset 0 0 0 1px rgba(99,102,241,0.22);
+          box-shadow: inset 0 0 0 1px rgba(99,102,241,0.22); /* 紫色描边阴影 */
           animation: breathing-light-purple 2s ease-in-out infinite;
         }
 

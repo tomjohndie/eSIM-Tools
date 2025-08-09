@@ -23,11 +23,14 @@ function isRateLimited(ip) {
 exports.handler = async (event, context) => {
     // 设置CORS头
     const headers = {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': 'https://esim.cosr.eu.org',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
         'Content-Type': 'application/json'
     };
+
+    const allowedOrigin = 'https://esim.cosr.eu.org';
+    const reqOrigin = (event.headers && (event.headers.origin || event.headers.Origin)) || '';
 
     // 处理预检请求
     if (event.httpMethod === 'OPTIONS') {
@@ -35,6 +38,15 @@ exports.handler = async (event, context) => {
             statusCode: 200,
             headers,
             body: ''
+        };
+    }
+
+    // 校验请求来源
+    if (reqOrigin && reqOrigin !== allowedOrigin) {
+        return {
+            statusCode: 403,
+            headers,
+            body: JSON.stringify({ error: 'Forbidden', message: 'Origin not allowed' })
         };
     }
 

@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; connect-src 'self' https://api.qrserver.com https://appapi.simyo.nl https://api.giffgaff.com https://id.giffgaff.com https://publicapi.giffgaff.com; img-src 'self' data: https:; frame-src 'none';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; font-src 'self' data: https://cdnjs.cloudflare.com; connect-src 'self' https://api.qrserver.com https://appapi.simyo.nl https://api.giffgaff.com https://id.giffgaff.com https://publicapi.giffgaff.com; img-src 'self' data: https:; frame-src 'none';">
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <title>Simyo NL eSIM 申请工具</title>
@@ -16,18 +16,18 @@
     <noscript><link rel="stylesheet" href="/src/styles/design-system.css"></noscript>
     <style>
         :root {
-            --primary: #ff6b00;        /* Simyo橙色 */
-            --secondary: #ffffff;      /* 白色 */
-            --success: #28a745;        /* 绿色 */
-            --warning: #dc3545;        /* 红色 */
+            /* 统一与 Giffgaff 页面风格：卡片白底 + 轻量投影，按钮使用设计系统渐变 */
+            --primary: #ff6b00;        /* Simyo 橙 */
+            --secondary: #ffd6b3;      /* 渐变次色，较浅橙 */
+            --success: #10b981;        /* 绿色 */
+            --warning: #ef4444;        /* 红色 */
             --light: #f8f9fa;          /* 浅灰色 */
             --dark: #212529;           /* 深色 */
-            --gray: #6c757d;           /* 中等灰色 */
-            --simyo-blue: #0056b3;     /* Simyo蓝色 */
+            --gray: #6c757d;           /* 中灰 */
         }
         
         body {
-            background: linear-gradient(135deg, #ece9e6, #ffffff);
+            background: linear-gradient(135deg, #f6f1eb 0%, #efe2d3 45%, #e6cfb8 100%);
             color: #212529;
             min-height: 100vh;
             padding: 20px;
@@ -209,8 +209,14 @@
             justify-content: space-between;
             margin: 0 auto 40px;
             position: relative;
-            max-width: 600px;
+            max-width: 720px;
             counter-reset: step;
+            padding: 16px 24px;
+            border-radius: 16px;
+            /* 与“当前状态”卡片一致的柔和浅灰渐变 */
+            background: linear-gradient(135deg, #f8fafc, #eef2f7);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
         }
         
         .step {
@@ -223,10 +229,10 @@
         }
         
         .step-number {
-            width: 50px;
-            height: 50px;
+            width: 56px;
+            height: 56px;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.8);
+            background: #fffaf5;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -234,13 +240,15 @@
             margin-bottom: 10px;
             font-size: 20px;
             color: #212529;
-            border: 2px solid rgba(255, 107, 0, 0.5);
+            border: 2px solid rgba(255, 107, 0, 0.55);
+            box-shadow: inset 0 0 0 2px rgba(255, 107, 0, 0.18);
         }
         
         .step.active .step-number {
-            background: var(--primary);
+            background: linear-gradient(135deg, #ff7a1a, #ffb066);
             color: white;
-            box-shadow: 0 0 15px rgba(255, 107, 0, 0.6);
+            box-shadow: 0 6px 16px rgba(255, 107, 0, 0.45);
+            border-color: rgba(255, 107, 0, 0.8);
         }
         
         .step-text {
@@ -425,7 +433,7 @@
         }
         
         .info-card {
-            background: linear-gradient(135deg, #ff6b00, #ffffff);
+            background: linear-gradient(135deg, #fcf6f6 0%, #fd9246 60%);
             color: #212529;
             padding: 20px;
             border-radius: 12px;
@@ -722,6 +730,10 @@
                     <span class="status-label">激活码:</span>
                     <span id="statusActivationCode" class="status-value disconnected">未获取</span>
                 </div>
+                <div class="status-item">
+                    <span class="status-label">LPA字符串:</span>
+                    <span id="statusLpaString" class="status-value disconnected">未生成</span>
+                </div>
             </div>
             <button id="clearSessionBtn" class="clear-session-btn" aria-label="清除会话并重置所有进度">
                 <i class="fas fa-trash-alt" aria-hidden="true"></i> 清除会话
@@ -780,7 +792,7 @@
                     </div>
                     
                     <div class="btn-group">
-                        <button id="loginBtn" class="btn btn-primary">
+                        <button id="loginBtn" class="btn btn-base btn-primary-gradient">
                             <i class="fas fa-sign-in-alt me-2"></i> 登录账户
                         </button>
                     </div>
@@ -809,7 +821,7 @@
                                     <i class="fas fa-exchange-alt fa-3x text-warning mb-3" aria-hidden="true"></i>
                                     <h5>更换设备</h5>
                                     <p class="text-muted">将eSIM转移到新设备</p>
-                                    <button class="btn btn-warning w-100 btn-base" onclick="startDeviceChange()">
+                                    <button class="btn btn-base btn-primary-gradient w-100" onclick="startDeviceChange()">
                                         选择此选项
                                     </button>
                                 </div>
@@ -821,7 +833,7 @@
                                     <i class="fas fa-sim-card fa-3x text-success mb-3" aria-hidden="true"></i>
                                     <h5>直接获取eSIM</h5>
                                     <p class="text-muted">首次申请或当前设备使用</p>
-                                    <button class="btn btn-success w-100 btn-base" onclick="skipDeviceChange()">
+                                    <button class="btn btn-base btn-dark-gradient w-100" onclick="skipDeviceChange()">
                                         选择此选项
                                     </button>
                                 </div>
@@ -852,7 +864,7 @@
                         <h5>2.1 申请新eSIM</h5>
                         <p>此步骤会通知Simyo系统您要更换eSIM设备</p>
                         <div class="btn-group">
-                            <button class="btn btn-primary" id="applyNewEsimBtn">
+                            <button class="btn btn-base btn-primary-gradient" id="applyNewEsimBtn">
                                 <i class="fas fa-plus me-2"></i>申请新eSIM
                             </button>
                         </div>
@@ -864,7 +876,7 @@
                         <h5>2.2 发送验证码到短信（可选）</h5>
                         <p>如果您能接收短信，在执行完2.1成功后，立即执行此步骤</p>
                         <div class="btn-group">
-                            <button class="btn btn-info" id="sendSmsBtn" disabled>
+                            <button class="btn btn-base btn-primary-gradient" id="sendSmsBtn" disabled>
                                 <i class="fas fa-sms me-2"></i>发送验证码到短信
                             </button>
                         </div>
@@ -881,7 +893,7 @@
                                    placeholder="输入6位数字验证码" maxlength="6" pattern="^\d{6}$">
                         </div>
                         <div class="btn-group">
-                            <button class="btn btn-success" id="verifyCodeBtn" disabled>
+                            <button class="btn btn-base btn-primary-gradient" id="verifyCodeBtn" disabled>
                                 <i class="fas fa-check me-2"></i>确认验证码
                             </button>
                         </div>
@@ -889,7 +901,7 @@
                     </div>
 
                     <div class="text-center mt-4">
-                        <button class="btn btn-outline-secondary" onclick="skipDeviceChange()">
+                        <button class="btn btn-base btn-dark-gradient" onclick="skipDeviceChange()">
                             <i class="fas fa-skip-forward me-2"></i>跳过设备更换，直接获取eSIM
                         </button>
                     </div>
@@ -909,7 +921,7 @@
                     </p>
                     
                     <div class="btn-group">
-                        <button id="getEsimBtn" class="btn btn-primary btn-base btn-primary-gradient">
+                        <button id="getEsimBtn" class="btn btn-base btn-primary-gradient">
                             <i class="fas fa-sim-card me-2"></i> 获取eSIM
                         </button>
                     </div>
@@ -932,7 +944,7 @@
                     </p>
                     
                     <div class="btn-group">
-                        <button id="generateQrBtn" class="btn btn-primary btn-base btn-primary-gradient">
+                        <button id="generateQrBtn" class="btn btn-base btn-primary-gradient">
                             <i class="fas fa-qrcode me-2"></i> 生成二维码
                         </button>
                     </div>
@@ -972,7 +984,7 @@
                     </div>
                     
                     <div class="btn-group">
-                        <button id="confirmInstallBtn" class="btn btn-primary btn-base btn-primary-gradient">
+                        <button id="confirmInstallBtn" class="btn btn-base btn-primary-gradient">
                             <i class="fas fa-check me-2"></i> 确认安装
                         </button>
                     </div>
@@ -1053,6 +1065,7 @@
             statusValidationCode: document.getElementById('statusValidationCode'),
             statusEsimStatus: document.getElementById('statusEsimStatus'),
             statusActivationCode: document.getElementById('statusActivationCode'),
+            statusLpaString: document.getElementById('statusLpaString'),
             clearSessionBtn: document.getElementById('clearSessionBtn'),
             
             // Step 1 - Login
@@ -1149,6 +1162,18 @@
                 elements.statusActivationCode.textContent = '未获取';
                 elements.statusActivationCode.className = 'status-value disconnected';
                 removeTooltip(elements.statusActivationCode);
+            }
+
+            // 更新 LPA 字符串状态
+            if (appState.activationCode) {
+                const lpaString = `LPA:${appState.activationCode}`;
+                elements.statusLpaString.textContent = lpaString;
+                elements.statusLpaString.className = 'status-value connected';
+                addTooltip(elements.statusLpaString, lpaString);
+            } else {
+                elements.statusLpaString.textContent = '未生成';
+                elements.statusLpaString.className = 'status-value disconnected';
+                removeTooltip(elements.statusLpaString);
             }
         }
 
@@ -1538,10 +1563,10 @@
                         <p class="text-break"><small>${lpaString}</small></p>
                     </div>
                     <div class="btn-group mt-3 w-100">
-                        <button id="copyLpaBtn" class="btn btn-outline-dark">
+                        <button id="copyLpaBtn" class="btn btn-base btn-dark-gradient">
                             <i class="fas fa-copy me-2"></i>复制激活码
                         </button>
-                        <button id="downloadQrBtn" class="btn btn-primary">
+                        <button id="downloadQrBtn" class="btn btn-base btn-primary-gradient">
                             <i class="fas fa-download me-2"></i>下载二维码
                         </button>
                     </div>

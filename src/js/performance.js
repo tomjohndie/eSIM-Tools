@@ -22,8 +22,8 @@ class PerformanceOptimizer {
         // 允许通过 meta 配置路径（发布在根目录或 dist）
         const swMeta = document.querySelector('meta[name="sw-path"]');
         const swPath = swMeta?.getAttribute('content') || '/sw.js';
-        const registration = await navigator.serviceWorker.register(swPath);
-        console.log('Service Worker registered:', registration);
+               const registration = await navigator.serviceWorker.register(swPath);
+               // 注册成功
         
         // 检查更新
         registration.addEventListener('updatefound', () => {
@@ -34,8 +34,8 @@ class PerformanceOptimizer {
             }
           });
         });
-      } catch (error) {
-        console.error('Service Worker registration failed:', error);
+            } catch (error) {
+              console.error('Service Worker registration failed:', error);
       }
     }
   }

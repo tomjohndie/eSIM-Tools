@@ -126,7 +126,7 @@
 
 ### 🚀 服务时间与性能优化
 
-- 英国服务窗口（SIM交换）：英国时间 04:30 – 21:30。UI 将显示本地时间与英国时间。窗口外操作可能失败或不稳定。
+- 英国服务窗口（SIM 交换）：英国时间 04:30 – 21:30（Europe/London）。UI 同时显示本地时间与英国时间；窗口外操作可能失败或不稳定。
 - **资源压缩**: Webpack + TerserPlugin，压缩率可达65%+
 - **Service Worker**: 离线缓存，网络状态监控
 - **微交互动画**: 按钮反馈，加载状态，触摸优化
@@ -141,6 +141,14 @@
 - **Node.js** - 本地开发环境
 - **CORS处理** - 完整的跨域请求解决方案
 - **会话持久化** - LocalStorage + 2小时自动过期
+
+### 认证与契约（重要）
+- OAuth 2.0 PKCE：前端只负责获取 `code` 与 `code_verifier`，令牌交换走 `/.netlify/functions/giffgaff-token-exchange`，避免前端出现 `client_secret`。
+- Cookie 登录：`/.netlify/functions/verify-cookie` 原样转发 Cookie，模拟真实浏览器头部，解析页面/Set-Cookie 提取 `memberId` 和可用 token；包含轻量限流与错误屏蔽。
+- 前端与函数契约：所有函数均兼容两种传参方式：
+  - Header: `Authorization: Bearer <accessToken>`
+  - Body: `{ accessToken: "..." }`
+  - MFA 接口在缺少 token 时可传 `{ cookie: "..." }` 回退。
 
 ### 部署平台
 - **Netlify** - 现代化Web应用托管 + 无服务器函数
@@ -206,7 +214,7 @@ esim-tools/
 │   │   └── giffgaff_complete_esim.html  # 完整功能版本
 │   └── simyo/                    # Simyo eSIM工具
 │       ├── simyo_complete_esim.html     # 完整功能版本
-│       └── simyo_proxy_server.js        # CORS代理服务器
+│       └── simyo_proxy_server.js        # 本地开发用 CORS 代理（生产不需要）
 ├── netlify/                      # Netlify无服务器函数
 │   └── functions/                # 生产环境API代理
 │       ├── giffgaff-graphql.js
@@ -233,7 +241,7 @@ esim-tools/
 ├── postman/                      # 原始API脚本（参考）
 ├── netlify.toml                  # Netlify部署配置
 ├── package.json                  # 项目依赖配置
-├── verify_cookie.php             # PHP Cookie验证（备用）
+├── verify_cookie.php             # 已移除（改用 Netlify Functions）
 └── README.md                     # 项目说明文档
 ```
 
@@ -289,7 +297,7 @@ open tests/test_simyo_esim.html
 - 查看 [常见问题解答](./docs/guides/DEPLOYMENT_GUIDE.md#故障排除)
 - 参考详细文档和使用指南
 
-## 📋 TODO列表
+## 📋 TODO列表（精简）
 
 ### 🔄 Giffgaff eSIM激活流程自动化
 - [ ] **网络抓包分析**: 在 `https://www.giffgaff.com/activate` 页面进行完整的网络请求抓包
