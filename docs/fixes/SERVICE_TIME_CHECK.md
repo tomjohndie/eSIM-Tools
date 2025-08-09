@@ -116,6 +116,3 @@ document.addEventListener('DOMContentLoaded', function() {
 2. **服务时间内测试**：在其他时间段访问页面
 3. **时间边界测试**：在04:30和12:30的边界时间测试
 4. **自动更新测试**：观察每分钟的时间更新
-
-## 文件变更
-- `src/giffgaff/giffgaff_complete_esim.html` - 添加服务时间检查功能 

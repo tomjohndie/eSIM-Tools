@@ -1,4 +1,4 @@
-# Font Awesome 图标修复总结
+# Font Awesome 图标修复
 
 ## 问题描述
 部署后图标丢失，原因是Font Awesome通过CDN加载，在部署环境中可能存在网络问题或CDN访问问题。

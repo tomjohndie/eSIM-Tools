@@ -17,7 +17,7 @@
 ## ✨ 功能特性
 
 ### 🔧 Giffgaff eSIM工具
-- **OAuth 2.0 PKCE认证** - 安全的身份验证流程（令牌交换在函数侧完成，不暴露 client_secret）
+- **OAuth 2.0 PKCE认证** - 安全的身份验证流程
 - **智能Cookie登录** - 通过Netlify Functions处理，支持所有部署环境；可携带 Cookie 走官方端到端验证
 - **MFA多因子验证** - 邮件验证码支持，无服务器架构处理
 - **GraphQL API集成** - 完整的API调用链
@@ -111,8 +111,6 @@
    - Build command: `echo 'No build needed'`
    - Publish directory: `.`
 4. 部署完成！
-
-详细部署指南请参考 [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)
 
 ## 🔧 技术架构
 
