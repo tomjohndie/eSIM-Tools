@@ -8,7 +8,7 @@
     "dev": "nodemon server.js",
     "build": "npm run build:css && npm run build:js",
     "build:css": "postcss src/styles/*.css -d dist/css",
-    "build:js": "webpack --mode production",
+    "build:js": "NODE_OPTIONS=--max-old-space-size=1536 webpack --mode production",
     "build:dev": "npm run build:css && npm run build:js",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -35,6 +35,7 @@
   "license": "MIT",
   "dependencies": {
     "axios": "^1.6.2",
+    "cheerio": "^1.0.0-rc.12",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",

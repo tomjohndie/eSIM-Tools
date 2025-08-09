@@ -27,22 +27,34 @@ class Utils {
   }
 
   /**
-   * 服务时间检查
-   * Giffgaff 在凌晨 04:30 至 12:30 之间不提供服务
+   * 服务时间检查（英国时间）
+   * 英国时间凌晨 4:30 至 晚上 9:30 提供 SIM 交换服务
+   * 返回 true 表示“当前处于服务可用时段”（英国时间 04:30-21:30）
    */
   isServiceTimeAvailable() {
     const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-    
-    // 检查是否在服务时间外（凌晨04:30至12:30）
-    // 服务不可用时间：04:30-12:30
-    const isOutsideServiceTime =
-      (currentHour === 4 && currentMinute >= 30) ||  // 4:30-4:59
-      (currentHour > 4 && currentHour < 12) ||        // 5:00-11:59
-      (currentHour === 12 && currentMinute <= 30);    // 12:00-12:30
-    
-    return !isOutsideServiceTime;
+    const parts = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Europe/London', hour12: false, hour: '2-digit', minute: '2-digit'
+    }).formatToParts(now);
+    const hour = Number(parts.find(p => p.type === 'hour')?.value || '0');
+    const minute = Number(parts.find(p => p.type === 'minute')?.value || '0');
+
+    // 服务可用区间：04:30 - 21:30（含边界）
+    const afterStart = (hour > 4) || (hour === 4 && minute >= 30);
+    const beforeEnd = (hour < 21) || (hour === 21 && minute <= 30);
+    return afterStart && beforeEnd;
+  }
+
+  /**
+   * 获取本地和英国当前时间字符串
+   */
+  getLocalAndUkTimeStrings(date = new Date()) {
+    const pad = (n) => String(n).padStart(2, '0');
+    const local = `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    const ukStr = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit', hour12: false
+    }).format(date);
+    return { local, uk: ukStr };
   }
 
   /**

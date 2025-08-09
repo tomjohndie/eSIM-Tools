@@ -17,8 +17,8 @@
 ## ✨ 功能特性
 
 ### 🔧 Giffgaff eSIM工具
-- **OAuth 2.0 PKCE认证** - 安全的身份验证流程
-- **智能Cookie登录** - 通过Netlify Functions处理，支持所有部署环境
+- **OAuth 2.0 PKCE认证** - 安全的身份验证流程（令牌交换在函数侧完成，不暴露 client_secret）
+- **智能Cookie登录** - 通过Netlify Functions处理，支持所有部署环境；可携带 Cookie 走官方端到端验证
 - **MFA多因子验证** - 邮件验证码支持，无服务器架构处理
 - **GraphQL API集成** - 完整的API调用链
 - **自动二维码生成** - LPA格式激活码
@@ -124,7 +124,9 @@
 - **Service Worker** - 离线支持
 - **WebP图片优化** - 自动格式检测和压缩
 
-### 🚀 性能优化特性
+### 🚀 服务时间与性能优化
+
+- 英国服务窗口（SIM交换）：英国时间 04:30 – 21:30。UI 将显示本地时间与英国时间。窗口外操作可能失败或不稳定。
 - **资源压缩**: Webpack + TerserPlugin，压缩率可达65%+
 - **Service Worker**: 离线缓存，网络状态监控
 - **微交互动画**: 按钮反馈，加载状态，触摸优化
@@ -153,7 +155,8 @@
 1. **OAuth登录** - 使用Giffgaff账户登录
 2. **邮件验证** - 输入收到的验证码
 3. **获取会员信息** - 验证账户状态
-4. **申请eSIM** - 预留SIM卡并手动激活
+4. **申请eSIM** - 预留SIM卡并手动激活（在 `https://www.giffgaff.com/activate` 输入 activationCode，点击 Activate your SIM，并确认 Yes, I want to replace my SIM）
+   - 支持使用 Cookie 登录跳过 OAuth，函数侧将验证并尽力提取 `accessToken/memberId`，随后继续后续步骤
 5. **生成二维码** - 获取LPA激活码
 
 ### Simyo设备更换流程
@@ -313,6 +316,11 @@ open tests/test_simyo_esim.html
 - [ ] **错误处理优化**: 改进第五步"申請交換eSIM Swap SIM"的400错误处理
 - [ ] **用户体验优化**: 优化前端显示activationCode、ssn等信息的方式
 - [ ] **流程引导优化**: 改进用户手动激活的引导流程
+
+### 🔐 Cookie 登录安全告知
+- 请仅在可信环境下使用；勿在公共或不受信任的设备上粘贴账号 Cookie。
+- 粘贴前请确认 Cookie 来自已登录后的 `https://www.giffgaff.com` 页面。
+- 系统不会存储您的 Cookie，验证仅用于获取可用的访问凭据。
 
 ### 📚 文档完善
 - [X] **性能优化文档**: 添加PERFORMANCE.md详细说明

@@ -4,19 +4,12 @@
 
 class APIManager {
   constructor() {
-    this.isNetlify = window.location.hostname.includes('cosr.eu.org') || 
-                     window.location.hostname.includes('netlify');
-    
+    // 统一通过无服务器函数代理，避免环境分歧与CORS问题
     this.endpoints = {
-      mfaChallenge: this.isNetlify ? 
-        "/.netlify/functions/giffgaff-mfa-challenge" : 
-        "https://id.giffgaff.com/v4/mfa/challenge/me",
-      mfaValidation: this.isNetlify ? 
-        "/.netlify/functions/giffgaff-mfa-validation" : 
-        "https://id.giffgaff.com/v4/mfa/validation",
-      graphql: this.isNetlify ? 
-        "/.netlify/functions/giffgaff-graphql" : 
-        "https://publicapi.giffgaff.com/gateway/graphql",
+      mfaChallenge: "/.netlify/functions/giffgaff-mfa-challenge",
+      mfaValidation: "/.netlify/functions/giffgaff-mfa-validation",
+      graphql: "/.netlify/functions/giffgaff-graphql",
+      tokenExchange: "/.netlify/functions/giffgaff-token-exchange",
       cookieVerify: "/.netlify/functions/verify-cookie",
       autoActivate: "/.netlify/functions/auto-activate-esim"
     };
@@ -31,10 +24,11 @@ class APIManager {
     const response = await fetch(this.endpoints.mfaChallenge, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`
       },
       body: JSON.stringify({
+        accessToken,
         source: 'esim',
         preferredChannels: ['EMAIL']
       })
@@ -59,10 +53,11 @@ class APIManager {
     const response = await fetch(this.endpoints.mfaValidation, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`
       },
       body: JSON.stringify({
+        accessToken,
         ref: ref,
         code: code
       })
@@ -85,27 +80,29 @@ class APIManager {
    * @returns {Promise<Object>} GraphQL Response
    */
   async graphqlQuery(accessToken, query, variables = {}, mfaSignature = null) {
-    const headers = {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json'
-    };
-
-    if (mfaSignature) {
-      headers['x-mfa-signature'] = mfaSignature;
-    }
-
     const response = await fetch(this.endpoints.graphql, {
       method: 'POST',
-      headers: headers,
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
       body: JSON.stringify({
-        query: query,
-        variables: variables
+        accessToken,
+        mfaSignature: mfaSignature || undefined,
+        query,
+        variables
       })
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`GraphQL request failed: ${response.status} - ${errorText}`);
+      const text = await response.text();
+      if (response.status === 429) {
+        throw new Error('请求过于频繁，请稍后重试（429）。建议在服务窗口内操作。');
+      }
+      if (response.status === 403) {
+        throw new Error('权限不足或登录过期（403）。请重新登录或稍后再试。');
+      }
+      if (response.status === 408 || response.status === 504) {
+        throw new Error('请求超时，请检查网络后重试。');
+      }
+      throw new Error(`GraphQL request failed: ${response.status} - ${text}`);
     }
 
     const data = await response.json();
@@ -115,6 +112,25 @@ class APIManager {
     }
 
     return data;
+  }
+
+  /**
+   * 服务端代办 Token 交换
+   * @param {string} code
+   * @param {string} codeVerifier
+   * @param {string} redirectUri 可选
+   */
+  async exchangeTokenServerSide(code, codeVerifier, redirectUri) {
+    const response = await fetch(this.endpoints.tokenExchange, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, code_verifier: codeVerifier, redirect_uri: redirectUri })
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Server token exchange failed: ${response.status} - ${errorText}`);
+    }
+    return await response.json();
   }
 
   /**

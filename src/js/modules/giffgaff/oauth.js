@@ -6,9 +6,7 @@ class OAuthManager {
   constructor() {
     this.config = {
       clientId: "4a05bf219b3985647d9b9a3ba610a9ce",
-      clientSecret: "WFV2UmxaM3RCT2c9PQ==",
       authUrl: "https://id.giffgaff.com/auth/oauth/authorize",
-      tokenUrl: "https://id.giffgaff.com/auth/oauth/token",
       redirectUri: "giffgaff://auth/callback/"
     };
   }
@@ -33,14 +31,18 @@ class OAuthManager {
    * @returns {Promise<string>} Code Challenge
    */
   async generateCodeChallenge(verifier) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(verifier);
-    const digest = await crypto.subtle.digest('SHA-256', data);
-    
-    return btoa(String.fromCharCode.apply(null, new Uint8Array(digest)))
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=/g, '');
+    // 使用 WebCrypto（浏览器与受支持环境）
+    if (globalThis.crypto && globalThis.crypto.subtle && typeof globalThis.crypto.subtle.digest === 'function') {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(verifier);
+      const digest = await globalThis.crypto.subtle.digest('SHA-256', data);
+      return btoa(String.fromCharCode.apply(null, new Uint8Array(digest)))
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=/g, '');
+    }
+    // 最小回退（非生产）：返回原字符串的 base64url 近似，避免构建引入 Node "crypto" 依赖
+    return verifier.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
   }
 
   /**
@@ -61,9 +63,9 @@ class OAuthManager {
    * @param {string} codeVerifier - Code Verifier
    * @returns {Promise<string>} Authorization URL
    */
-  async buildAuthorizationUrl(codeVerifier) {
+  async buildAuthorizationUrl(codeVerifier, stateOverride) {
     const codeChallenge = await this.generateCodeChallenge(codeVerifier);
-    const state = this.generateState();
+    const state = stateOverride || this.generateState();
     
     const authParams = new URLSearchParams({
       response_type: 'code',
@@ -110,29 +112,18 @@ class OAuthManager {
    * @param {string} codeVerifier - Code Verifier
    * @returns {Promise<Object>} Token Response
    */
+  // 前端不再直接持有 client_secret，改由服务端函数代为交换
   async exchangeToken(code, codeVerifier) {
-    const authHeader = btoa(`${this.config.clientId}:${this.config.clientSecret}`);
-    
-    const response = await fetch(this.config.tokenUrl, {
+    const res = await fetch('/.netlify/functions/giffgaff-token-exchange', {
       method: 'POST',
-      headers: {
-        'Authorization': `Basic ${authHeader}`,
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: new URLSearchParams({
-        grant_type: 'authorization_code',
-        code: code,
-        redirect_uri: this.config.redirectUri,
-        code_verifier: codeVerifier
-      })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, code_verifier: codeVerifier, redirect_uri: this.config.redirectUri })
     });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Token exchange failed: ${response.status} - ${errorText}`);
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Token exchange failed: ${res.status} - ${text}`);
     }
-    
-    return await response.json();
+    return await res.json();
   }
 }
 

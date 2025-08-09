@@ -38,15 +38,25 @@ exports.handler = async (event, context) => {
     try {
         // 解析请求体
         const requestBody = JSON.parse(event.body || '{}');
-        const { accessToken, source = "esim", preferredChannels = ["EMAIL"] } = requestBody;
+        const { source = "esim", preferredChannels = ["EMAIL"], cookie } = requestBody;
 
-        if (!accessToken) {
+        // 从请求体或 Authorization 头提取 accessToken（兼容两种方式）
+        const lowerCaseHeaders = Object.fromEntries(
+            Object.entries(event.headers || {}).map(([k, v]) => [String(k).toLowerCase(), v])
+        );
+        const authHeader = lowerCaseHeaders['authorization'] || '';
+        let accessToken = requestBody.accessToken;
+        if (!accessToken && authHeader.startsWith('Bearer ')) {
+            accessToken = authHeader.slice(7);
+        }
+
+        if (!accessToken && !cookie) {
             return {
                 statusCode: 400,
                 headers,
                 body: JSON.stringify({
                     error: 'Bad Request',
-                    message: 'accessToken是必需的'
+                    message: 'accessToken 或 cookie 至少提供一个'
                 })
             };
         }
@@ -66,17 +76,21 @@ exports.handler = async (event, context) => {
                 preferredChannels
             },
             {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Accept': 'application/json',
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                    'Origin': 'https://www.giffgaff.com',
-                    'Referer': 'https://www.giffgaff.com/',
-                    'Accept-Language': 'en-US,en;q=0.9',
-                    'Cache-Control': 'no-cache',
-                    'Pragma': 'no-cache'
-                },
+                headers: (() => {
+                    const h = {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                        'Origin': 'https://www.giffgaff.com',
+                        'Referer': 'https://www.giffgaff.com/',
+                        'Accept-Language': 'en-US,en;q=0.9',
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    };
+                    if (accessToken) h['Authorization'] = `Bearer ${accessToken}`;
+                    if (!accessToken && cookie) h['Cookie'] = cookie;
+                    return h;
+                })(),
                 timeout: 30000
             }
         );

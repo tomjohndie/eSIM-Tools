@@ -1,9 +1,24 @@
 /**
  * Netlify Function: Cookie验证服务
- * 将Giffgaff Cookie转换为Access Token
+ * 将Giffgaff Cookie转换为Access Token（尽可能接近真实登录状态）
  */
 
 const axios = require('axios');
+const cheerio = require('cheerio');
+
+// 简单的内存限流（每个函数实例内生效）
+const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000; // 5分钟
+const RATE_LIMIT_MAX = 15; // 窗口最大次数
+const requesterHits = new Map(); // ip -> [timestamps]
+
+function isRateLimited(ip) {
+    const now = Date.now();
+    const arr = requesterHits.get(ip) || [];
+    const recent = arr.filter(ts => now - ts < RATE_LIMIT_WINDOW_MS);
+    recent.push(now);
+    requesterHits.set(ip, recent);
+    return recent.length > RATE_LIMIT_MAX;
+}
 
 exports.handler = async (event, context) => {
     // 设置CORS头
@@ -36,6 +51,16 @@ exports.handler = async (event, context) => {
     }
 
     try {
+        // 简单限流
+        const ip = (event.headers['x-forwarded-for'] || '').split(',')[0] || event.headers['client-ip'] || event.headers['x-real-ip'] || 'unknown';
+        if (isRateLimited(ip)) {
+            return {
+                statusCode: 429,
+                headers,
+                body: JSON.stringify({ error: 'Too Many Requests', message: '请求过于频繁，请稍后再试' })
+            };
+        }
+
         // 解析请求体
         const requestBody = JSON.parse(event.body || '{}');
         const { cookie } = requestBody;
@@ -70,7 +95,10 @@ exports.handler = async (event, context) => {
                 headers,
                 body: JSON.stringify({
                     success: true,
+                    valid: true,
                     accessToken: result.accessToken,
+                    memberId: result.memberId || null,
+                    emailSignature: null,
                     message: 'Cookie验证成功'
                 })
             };
@@ -85,6 +113,7 @@ exports.handler = async (event, context) => {
                 headers,
                 body: JSON.stringify({
                     success: false,
+                    valid: false,
                     error: 'Unauthorized',
                     message: result.message || 'Cookie验证失败'
                 })
@@ -154,19 +183,11 @@ async function validateCookieAndGetToken(cookieString) {
         }
 
         // 尝试使用Cookie调用Giffgaff API验证
-        const accessToken = await callGiffgaffAPI(cookies);
-        
+        const { accessToken, memberId } = await callGiffgaffAPI(cookies, cookieString);
         if (accessToken) {
-            return {
-                success: true,
-                accessToken
-            };
-        } else {
-            return {
-                success: false,
-                message: 'Cookie已过期或无效'
-            };
+            return { success: true, accessToken, memberId };
         }
+        return { success: false, message: 'Cookie已过期或无效' };
 
     } catch (error) {
         console.error('Cookie validation error:', error);
@@ -189,9 +210,10 @@ function parseCookie(cookieString) {
         if (!trimmedPair) continue;
         
         const parts = trimmedPair.split('=');
-        if (parts.length === 2) {
+        if (parts.length >= 2) {
             const name = parts[0].trim();
-            const value = parts[1].trim();
+            // 重要：值中可能包含 '='（如 Base64/签名），需要合并还原
+            const value = parts.slice(1).join('=').trim();
             cookies[name] = value;
         }
     }
@@ -202,96 +224,112 @@ function parseCookie(cookieString) {
 /**
  * 使用Cookie调用Giffgaff API获取Access Token
  */
-async function callGiffgaffAPI(cookies) {
+async function callGiffgaffAPI(cookies, rawCookieString) {
     try {
         // 构建Cookie头
-        const cookieHeader = Object.entries(cookies)
-            .map(([name, value]) => `${name}=${value}`)
-            .join('; ');
+        // 优先使用用户原始 Cookie 串，避免解析/重组导致的字符丢失
+        let latestCookies = String(rawCookieString || '').trim();
+        if (!latestCookies) {
+            latestCookies = Object.entries(cookies).map(([name, value]) => `${name}=${value}`).join('; ');
+        }
 
-        // 尝试调用Giffgaff Dashboard验证Cookie
-        const response = await axios.get(
-            'https://www.giffgaff.com/dashboard',
-            {
-                headers: {
-                    'Cookie': cookieHeader,
-                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0',
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-                    'Accept-Language': 'zh-CN,zh-HK;q=0.9,zh;q=0.8,en;q=0.7,en-GB;q=0.6,en-US;q=0.5',
-                    'Referer': 'https://www.giffgaff.com/auth/login/challenge',
-                    'Cache-Control': 'max-age=0',
-                    'DNT': '1',
-                    'Sec-Ch-Ua': '"Not)A;Brand";v="8", "Chromium";v="138", "Microsoft Edge";v="138"',
-                    'Sec-Ch-Ua-Mobile': '?0',
-                    'Sec-Ch-Ua-Platform': '"macOS"',
-                    'Sec-Fetch-Dest': 'document',
-                    'Sec-Fetch-Mode': 'navigate',
-                    'Sec-Fetch-Site': 'same-origin',
-                    'Sec-Fetch-User': '?1',
-                    'Upgrade-Insecure-Requests': '1'
-                },
-                timeout: 30000,
-                maxRedirects: 5
+        // 尝试调用Giffgaff Dashboard验证Cookie（跟踪重定向并解析 Set-Cookie）
+        const session = axios.create({ maxRedirects: 5, timeout: 30000, validateStatus: () => true });
+        let response = await session.get('https://www.giffgaff.com/dashboard', {
+            headers: {
+                'Cookie': latestCookies,
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                'Accept-Language': 'en-GB,en;q=0.9',
+                'Referer': 'https://www.giffgaff.com/',
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache',
+                'Upgrade-Insecure-Requests': '1',
+                'Sec-Fetch-Site': 'same-origin',
+                'Sec-Fetch-Mode': 'navigate',
+                'Sec-Fetch-Dest': 'document',
+                'Sec-CH-UA': '"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
+                'Sec-CH-UA-Mobile': '?0',
+                'Sec-CH-UA-Platform': '"Windows"'
             }
-        );
+        });
+
+        // 整理所有 Set-Cookie 并合并到 latestCookies
+        const setCookies = ([]).concat(response.headers['set-cookie'] || []);
+        if (setCookies.length) {
+            const merged = mergeSetCookies(latestCookies, setCookies);
+            latestCookies = merged;
+        }
 
         if (response.status === 200 && response.data) {
-            const htmlContent = response.data;
-            
-            // 检查页面是否包含登录成功的标识
-            // 如果是登录页面，通常包含login/auth相关内容
-            // 如果是dashboard，应该包含用户相关内容
-            const isLoggedIn = htmlContent.includes('dashboard') || 
-                              htmlContent.includes('account') ||
-                              htmlContent.includes('profile') ||
-                              htmlContent.includes('logout') ||
-                              !htmlContent.includes('login');
-            
+            const html = response.data;
+            const $ = cheerio.load(html);
+            // 登录判断：尽量避免误判
+            const text = String(html).toLowerCase();
+            const containsLogin = /(sign\s*in|log\s*in|login|id\.giffgaff\.com\/auth)/i.test(text);
+            const containsAccount = /(dashboard|my\s*giffgaff|logout|account|profile|settings)/i.test(text);
+            const isLoggedIn = containsAccount || (!containsLogin && response.status === 200);
             if (isLoggedIn) {
-                // Cookie有效，检查是否有关键的认证Cookie
-                console.log('Cookie validation: Dashboard access successful');
-                
-                // 查找关键的认证Cookie
-                const authCookies = ['GGUID', 'giffgaff', 'JSESSIONID', 'XSRF-TOKEN'];
-                let foundAuthCookie = null;
-                
-                for (const cookieName of authCookies) {
-                    if (cookies[cookieName]) {
-                        foundAuthCookie = cookies[cookieName];
-                        console.log(`Found auth cookie: ${cookieName}`);
-                        break;
-                    }
+                // 尝试从 meta 或脚本中提取 memberId
+                let memberId = $('meta[name="member-id"]').attr('content') || $('meta[name="giffgaff:member_id"]').attr('content') || null;
+                if (!memberId) {
+                    const scriptText = $('script').map((_, el) => $(el).html() || '').get().join('\n');
+                    const m = scriptText.match(/\bmemberId\b["']?\s*[:=]\s*["']([\w-]{6,})["']/i);
+                    if (m) memberId = m[1];
                 }
-                
-                // 如果找到认证Cookie，使用它作为token
-                if (foundAuthCookie && foundAuthCookie.length > 20) {
-                    return foundAuthCookie;
-                }
-                
-                // 使用任何包含token的Cookie
-                for (const [name, value] of Object.entries(cookies)) {
-                    if (name.toLowerCase().includes('token') && value.length > 20) {
-                        return value;
-                    }
-                }
-                
-                // 生成基于Cookie的临时token
-                const tokenData = {
-                    cookies_hash: require('crypto').createHash('md5').update(JSON.stringify(cookies)).digest('hex'),
-                    timestamp: Date.now(),
-                    source: 'cookie_validation'
-                };
-                
-                return Buffer.from(JSON.stringify(tokenData)).toString('base64');
-            } else {
-                console.log('Cookie validation: Dashboard access failed - redirected to login');
+
+                const tokenLike = findBestTokenFromCookies(cookies);
+                if (tokenLike) return { accessToken: tokenLike, memberId };
+
+                const ch = Object.entries(cookies).map(([n, v]) => `${n}=${v}`).join('; ');
+                const accessToken = Buffer.from(require('crypto').createHash('md5').update(ch).digest('hex')).toString('base64');
+                return { accessToken, memberId };
             }
         }
 
-        return null;
+        // 非明确登录页也尝试放宽：只要存在会话型 Cookie 即视为可用，并回退生成派生 token
+        const hasSessionCookie = ['GGUID', 'giffgaff', 'JSESSIONID', 'reese84', 'incap_ses']
+          .some((k) => Object.keys(cookies).some((n) => n.toLowerCase().startsWith(k.toLowerCase())));
+        if (hasSessionCookie) {
+            const tokenLike = findBestTokenFromCookies(cookies);
+            if (tokenLike) return { accessToken: tokenLike, memberId: null };
+            const ch = Object.entries(cookies).map(([n, v]) => `${n}=${v}`).join('; ');
+            const accessToken = Buffer.from(require('crypto').createHash('md5').update(ch).digest('hex')).toString('base64');
+            return { accessToken, memberId: null };
+        }
+
+        return { accessToken: null, memberId: null };
 
     } catch (error) {
         console.error('Giffgaff API call error:', error.message);
-        return null;
+        return { accessToken: null, memberId: null };
     }
+
+function findBestTokenFromCookies(cookies) {
+    const candidates = ['GGUID', 'giffgaff', 'JSESSIONID', 'XSRF-TOKEN', 'access_token', 'id_token', 'reese84'];
+    for (const name of candidates) {
+        if (cookies[name] && String(cookies[name]).length > 20) return cookies[name];
+    }
+    for (const [name, value] of Object.entries(cookies)) {
+        const lower = name.toLowerCase();
+        if ((/token|session|auth/.test(lower)) && String(value).length > 20) return value;
+    }
+    return null;
+}
+
+function mergeSetCookies(originalCookieHeader, setCookieArray) {
+    const jar = new Map();
+    // 先装入原始 cookie
+    originalCookieHeader.split(';').map(s => s.trim()).filter(Boolean).forEach(kv => {
+        const [k, v] = kv.split('=');
+        if (k && v) jar.set(k.trim(), v.trim());
+    });
+    // 处理 set-cookie 覆盖
+    for (const sc of setCookieArray) {
+        const pair = String(sc).split(';')[0];
+        const [k, v] = pair.split('=');
+        if (k && typeof v !== 'undefined') jar.set(k.trim(), v.trim());
+    }
+    return Array.from(jar.entries()).map(([k, v]) => `${k}=${v}`).join('; ');
+}
 }

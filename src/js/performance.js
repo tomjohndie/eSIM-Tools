@@ -6,7 +6,8 @@ class PerformanceOptimizer {
   }
 
   init() {
-    this.registerServiceWorker();
+    // 延后 SW 注册以避免首屏抖动
+    setTimeout(() => this.registerServiceWorker(), 2000);
     this.setupNetworkListeners();
     this.optimizeImages();
     this.setupScrollOptimization();
@@ -18,7 +19,10 @@ class PerformanceOptimizer {
   async registerServiceWorker() {
     if ('serviceWorker' in navigator) {
       try {
-        const registration = await navigator.serviceWorker.register('/sw.js');
+        // 允许通过 meta 配置路径（发布在根目录或 dist）
+        const swMeta = document.querySelector('meta[name="sw-path"]');
+        const swPath = swMeta?.getAttribute('content') || '/sw.js';
+        const registration = await navigator.serviceWorker.register(swPath);
         console.log('Service Worker registered:', registration);
         
         // 检查更新

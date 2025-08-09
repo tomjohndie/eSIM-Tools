@@ -74,8 +74,10 @@ class SimyoApp {
    */
   async handleLogin() {
     try {
-      const username = document.getElementById('simyoUsername')?.value;
-      const password = document.getElementById('simyoPassword')?.value;
+      const usernameEl = document.getElementById('simyoUsername');
+      const passwordEl = document.getElementById('simyoPassword');
+      const username = usernameEl ? usernameEl.value : undefined;
+      const password = passwordEl ? passwordEl.value : undefined;
       
       if (!username || !password) {
         this.showStatus('loginStatus', '请输入用户名和密码', 'error');
@@ -119,7 +121,8 @@ class SimyoApp {
       
       if (response.success) {
         this.showStatus('smsStatus', '验证码已发送到您的手机', 'success');
-        document.getElementById('smsCodeSection')?.style.display = 'block';
+        const smsCodeSection = document.getElementById('smsCodeSection');
+        if (smsCodeSection) smsCodeSection.style.display = 'block';
       } else {
         throw new Error(response.message || '发送失败');
       }
@@ -135,7 +138,8 @@ class SimyoApp {
    */
   async handleVerifySMS() {
     try {
-      const code = document.getElementById('smsCode')?.value;
+      const codeEl = document.getElementById('smsCode');
+      const code = codeEl ? codeEl.value : undefined;
       
       if (!code) {
         this.showStatus('smsStatus', '请输入验证码', 'error');

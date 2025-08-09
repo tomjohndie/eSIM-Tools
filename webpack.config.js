@@ -70,6 +70,7 @@ module.exports = {
       swDest: 'sw.js',
       clientsClaim: true,
       skipWaiting: true,
+      cleanupOutdatedCaches: true,
       runtimeCaching: [
         {
           urlPattern: /^https:\/\/api\.qrserver\.com/,

@@ -104,7 +104,9 @@ class GiffgaffApp {
       
       // 生成 PKCE 参数
       this.state.codeVerifier = this.oauth.generateCodeVerifier();
-      const authUrl = await this.oauth.buildAuthorizationUrl(this.state.codeVerifier);
+      // 同时生成并持久化 OAuth state，供回调校验
+      this.state.oauthState = this.oauth.generateState();
+      const authUrl = await this.oauth.buildAuthorizationUrl(this.state.codeVerifier, this.state.oauthState);
       
       // 显示授权 URL
       this.dom.setValue('authUrlDisplay', authUrl);
@@ -144,7 +146,16 @@ class GiffgaffApp {
         throw new Error('无法从回调URL中提取授权码');
       }
       
-      // 交换访问令牌
+      // 可选：校验回调中的 state（标准 URL 才有）
+      try {
+        const url = new URL(callbackUrl);
+        const returnedState = url.searchParams.get('state');
+        if (returnedState && this.state.oauthState && returnedState !== this.state.oauthState) {
+          throw new Error('State 校验失败，请重新开始登录');
+        }
+      } catch (_) {}
+
+      // 交换访问令牌（服务端代办）
       const tokenData = await this.oauth.exchangeToken(code, this.state.codeVerifier);
       this.state.accessToken = tokenData.access_token;
       
@@ -191,8 +202,8 @@ class GiffgaffApp {
       if (result.valid) {
         // 保存认证信息
         this.state.accessToken = result.accessToken;
-        this.state.emailSignature = result.emailSignature;
-        this.state.memberId = result.memberId;
+        this.state.emailSignature = result.emailSignature; // 仍可能为 null
+        this.state.memberId = result.memberId || this.state.memberId;
         
         this.state.saveSession();
         this.updateStatusDisplay();
@@ -211,7 +222,12 @@ class GiffgaffApp {
       
     } catch (error) {
       console.error('Cookie验证失败:', error);
-      this.dom.showStatus('cookieStatus', `验证失败: ${error.message}`, 'error');
+      const msg =
+        /429/.test(error.message) ? '请求过于频繁，请稍后重试（429）。' :
+        /403/.test(error.message) ? '权限不足或登录过期（403），请重新登录或更换 Cookie。' :
+        /超时|timeout|timed out/i.test(error.message) ? '请求超时，请检查网络后重试。' :
+        `验证失败: ${error.message}`;
+      this.dom.showStatus('cookieStatus', msg, 'error');
     }
   }
 
@@ -300,7 +316,7 @@ class GiffgaffApp {
       
       this.dom.showStatus('memberStatus', '正在获取会员信息...', 'info');
       
-      const data = await this.api.getMemberProfile(this.state.accessToken);
+      let data = await this.api.getMemberProfile(this.state.accessToken);
       
       if (data.data?.memberProfile) {
         this.state.memberId = data.data.memberProfile.id;
@@ -309,6 +325,15 @@ class GiffgaffApp {
       
       if (data.data?.sim) {
         this.state.phoneNumber = data.data.sim.phoneNumber;
+      }
+
+      // 兜底：若缺失 memberId，再尝试一次（可因 token 刷新或网络抖动导致）
+      if (!this.state.memberId) {
+        data = await this.api.getMemberProfile(this.state.accessToken);
+        if (data.data?.memberProfile?.id) {
+          this.state.memberId = data.data.memberProfile.id;
+          this.state.memberName = data.data.memberProfile.memberName;
+        }
       }
       
       // 显示会员信息

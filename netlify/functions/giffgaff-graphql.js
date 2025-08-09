@@ -38,7 +38,17 @@ exports.handler = async (event, context) => {
     try {
         // 解析请求体
         const requestBody = JSON.parse(event.body || '{}');
-        const { accessToken, mfaSignature, query, variables, operationName } = requestBody;
+        const { mfaSignature, query, variables, operationName } = requestBody;
+
+        // 从请求体或 Authorization 头提取 accessToken（兼容两种方式）
+        const lowerCaseHeaders = Object.fromEntries(
+            Object.entries(event.headers || {}).map(([k, v]) => [String(k).toLowerCase(), v])
+        );
+        const authHeader = lowerCaseHeaders['authorization'] || '';
+        let accessToken = requestBody.accessToken;
+        if (!accessToken && authHeader.startsWith('Bearer ')) {
+            accessToken = authHeader.slice(7);
+        }
 
         if (!accessToken) {
             return {

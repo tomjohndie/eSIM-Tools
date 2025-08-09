@@ -29,8 +29,8 @@ global.sessionStorage = sessionStorageMock;
 // 模拟 fetch API
 global.fetch = jest.fn();
 
-// 模拟 crypto API
-global.crypto = {
+// 模拟 crypto API（提供 webcrypto.subtle 接口）
+const webcryptoMock = {
   getRandomValues: (arr) => {
     for (let i = 0; i < arr.length; i++) {
       arr[i] = Math.floor(Math.random() * 256);
@@ -38,12 +38,14 @@ global.crypto = {
     return arr;
   },
   subtle: {
-    digest: jest.fn((algorithm, data) => {
-      // 简单的 SHA-256 模拟
-      return Promise.resolve(new ArrayBuffer(32));
-    })
+    digest: jest.fn(() => Promise.resolve(new ArrayBuffer(32)))
   }
 };
+global.crypto = webcryptoMock;
+globalThis.crypto = webcryptoMock;
+if (typeof window !== 'undefined') {
+  window.crypto = webcryptoMock;
+}
 
 // 模拟 navigator.clipboard
 global.navigator.clipboard = {
@@ -71,6 +73,17 @@ global.navigator.serviceWorker = {
     addEventListener: jest.fn()
   }))
 };
+
+// Polyfill: TextEncoder（Node 环境下用于 PKCE 生成）
+if (typeof global.TextEncoder === 'undefined') {
+  const { TextEncoder } = require('util');
+  global.TextEncoder = TextEncoder;
+}
+
+// Polyfill: document.execCommand（降级复制方案）
+if (typeof document.execCommand === 'undefined') {
+  document.execCommand = jest.fn(() => true);
+}
 
 // 清理每个测试后的模拟
 afterEach(() => {

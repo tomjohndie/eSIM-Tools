@@ -10,6 +10,7 @@ class AppState {
   reset() {
     // OAuth相关
     this.codeVerifier = null;
+    this.oauthState = null;
     this.accessToken = null;
     
     // MFA相关
@@ -37,6 +38,8 @@ class AppState {
   // 保存会话到 localStorage
   saveSession() {
     const sessionData = {
+      codeVerifier: this.codeVerifier,
+      oauthState: this.oauthState,
       accessToken: this.accessToken,
       emailCodeRef: this.emailCodeRef,
       emailSignature: this.emailSignature,

@@ -225,6 +225,10 @@ class DOMManager {
         <strong>状态:</strong> 
         <span class="badge bg-info">${state.esimDeliveryStatus || 'RESERVED'}</span>
       </div>
+      <div class="alert alert-info mt-3">
+        <i class="fas fa-info-circle"></i>
+        已为您预留 eSIM（状态 RESERVED）。请保持本页面开启，前往 <a href="https://www.giffgaff.com/activate" target="_blank" rel="noopener">giffgaff 激活页</a> 手动输入上方激活码并点击 “Activate your SIM”，随后确认 “Yes, I want to replace my SIM”。完成后返回本页点击“获取 eSIM Token”继续。
+      </div>
     `;
     esimInfo.style.display = 'block';
   }
@@ -308,12 +312,17 @@ class DOMManager {
    */
   updateServiceTimeDisplay(isAvailable) {
     const now = new Date();
-    const currentTime = now.getHours().toString().padStart(2, '0') + ':' +
-                       now.getMinutes().toString().padStart(2, '0');
+    const pad = (n) => String(n).padStart(2, '0');
+    const localTime = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    const ukTime = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit', hour12: false }).format(now);
     
     const timeElement = document.getElementById('currentTime');
     if (timeElement) {
-      timeElement.textContent = currentTime;
+      timeElement.textContent = localTime;
+    }
+    const ukHint = document.getElementById('ukTimeHint');
+    if (ukHint) {
+      ukHint.textContent = `英国时间 ${ukTime}`;
     }
     
     const alertElement = document.getElementById('serviceTimeAlert');
@@ -322,14 +331,14 @@ class DOMManager {
         alertElement.className = 'alert alert-success';
         alertElement.innerHTML = `
           <i class="fas fa-check-circle"></i>
-          <strong>服务可用</strong> - 当前时间 ${currentTime}
+          <strong>服务可用</strong> - 本地 ${localTime} / 英国 ${ukTime}（服务窗口 04:30-21:30）
         `;
       } else {
         alertElement.className = 'alert alert-warning';
         alertElement.innerHTML = `
           <i class="fas fa-exclamation-triangle"></i>
-          <strong>服务时间外</strong> - 当前时间 ${currentTime}
-          <br><small>Giffgaff API 在 04:30-12:30 期间可能不稳定</small>
+          <strong>服务时间外</strong> - 本地 ${localTime} / 英国 ${ukTime}
+          <br><small>SIM 交换服务窗口：英国时间 04:30 至 21:30。您仍可浏览信息，部分操作可能失败。</small>
         `;
       }
     }
@@ -345,6 +354,10 @@ class DOMManager {
       modal.style.display = 'block';
       modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
       
+      const now = new Date();
+      const localTime = new Intl.DateTimeFormat([], { hour: '2-digit', minute: '2-digit', hour12: false }).format(now);
+      const ukTime = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit', hour12: false }).format(now);
+
       modal.innerHTML = `
         <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content">
@@ -354,8 +367,9 @@ class DOMManager {
               </h5>
             </div>
             <div class="modal-body">
-              <p>当前时间在 Giffgaff 服务维护时段（凌晨 04:30 至 12:30）。</p>
-              <p>在此期间，API 可能不稳定或无法正常响应。</p>
+              <p>SIM 交换服务窗口为 <strong>英国时间 04:30 至 21:30</strong>。</p>
+              <p>当前时间：本地 ${localTime} / 英国 ${ukTime}。</p>
+              <p>窗口外操作可能失败或不稳定，建议在服务窗口内进行。</p>
               <p class="mb-0"><strong>是否继续操作？</strong></p>
             </div>
             <div class="modal-footer">

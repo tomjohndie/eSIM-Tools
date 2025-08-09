@@ -1,10 +1,16 @@
 [build]
   # 构建命令
-  command = "npm install"
-  # 发布目录
+  command = "npm run build --silent"
+  # 发布目录：使用项目根目录，直接提供现有 HTML（避免 dist 无 index.html 导致 404）
   publish = "."
   # Functions目录
   functions = "netlify/functions"
+
+[build.environment]
+# 固定 Node 版本，避免二进制依赖（如 sharp）在 Node 22 下编译耗时
+  NODE_VERSION = "20.12.2"
+# 安装时减少无关输出与提示
+  NPM_FLAGS = "--no-audit --no-fund --omit=optional"
   
 # 重定向和重写规则
 [[redirects]]
@@ -70,4 +76,6 @@
     X-XSS-Protection = "1; mode=block"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; img-src 'self' data: https: http:; connect-src 'self' https://api.qrserver.com https://appapi.simyo.nl https://api.giffgaff.com https://id.giffgaff.com https://publicapi.giffgaff.com; font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;"
+    # 生产 CSP：移除 unsafe-inline，基于 nonce/hash 的策略（页面模板需注入 nonce）
+    # 如暂无模板注入机制，可先允许外链受信源并避免内联脚本
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https://api.qrserver.com https://appapi.simyo.nl https://api.giffgaff.com https://id.giffgaff.com https://publicapi.giffgaff.com; font-src 'self' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;"
