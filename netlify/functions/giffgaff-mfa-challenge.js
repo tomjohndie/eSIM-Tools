@@ -138,33 +138,73 @@ exports.handler = async (event, context) => {
             }
         }
 
-        const sendChallenge = async (token) => axios.post(
+        // 从 mergedCookie 中提取 XSRF-TOKEN，作为 x-xsrf-token 头
+        let xxsrf = null;
+        if (mergedCookie) {
+            const m = String(mergedCookie).match(/XSRF-TOKEN=([^;]+)/);
+            if (m) xxsrf = decodeURIComponent(m[1]);
+        }
+
+        // Web(Cookie)通道：auth/v3/mfa/challenge（method: 'text' | 'email'）
+        const sendChallengeV3Cookie = async () => {
+            const method = Array.isArray(preferredChannels) && preferredChannels[0] === 'TEXT' ? 'text' : 'email';
+            return axios.post(
+                'https://id.giffgaff.com/auth/v3/mfa/challenge',
+                { method },
+                {
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'Accept-Language': 'zh-CN,zh;q=0.9',
+                        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0',
+                        'Origin': 'https://id.giffgaff.com',
+                        'Referer': 'https://id.giffgaff.com/auth/login/challenge',
+                        'Device': 'web',
+                        ...(csrfToken ? { 'x-csrf-token': csrfToken } : {}),
+                        ...(xxsrf ? { 'x-xsrf-token': xxsrf } : {}),
+                        ...(mergedCookie ? { 'Cookie': mergedCookie } : {})
+                    },
+                    timeout: 30000
+                }
+            );
+        };
+
+        // App(Token)通道：v4 按原逻辑
+        const sendChallengeV4Token = async (token) => axios.post(
             'https://id.giffgaff.com/v4/mfa/challenge/me',
             { source, preferredChannels },
             {
-                headers: (() => {
-                    const h = {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0',
-                        'Origin': 'https://www.giffgaff.com',
-                        'Referer': 'https://www.giffgaff.com/',
-                        'Accept-Language': 'zh-CN,zh;q=0.9',
-                        'Cache-Control': 'no-cache',
-                        'Pragma': 'no-cache'
-                    };
-                    if (csrfToken) h['x-csrf-token'] = csrfToken;
-                    if (token) h['Authorization'] = `Bearer ${token}`;
-                    if (mergedCookie) h['Cookie'] = mergedCookie;
-                    return h;
-                })(),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0',
+                    'Origin': 'https://www.giffgaff.com',
+                    'Referer': 'https://www.giffgaff.com/',
+                    'Accept-Language': 'zh-CN,zh;q=0.9',
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache',
+                    ...(csrfToken ? { 'x-csrf-token': csrfToken } : {}),
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+                    ...(mergedCookie ? { 'Cookie': mergedCookie } : {})
+                },
                 timeout: 30000
             }
         );
 
         let response;
         try {
-            response = await sendChallenge(accessToken);
+            // 优先走 Cookie 的 Web 通道（更契合 Cookie 登录）
+            if (mergedCookie) {
+                try {
+                    response = await sendChallengeV3Cookie();
+                } catch (e) {
+                    // 回退到 v4 + token
+                    if (accessToken) response = await sendChallengeV4Token(accessToken);
+                    else throw e;
+                }
+            } else {
+                response = await sendChallengeV4Token(accessToken);
+            }
         } catch (err) {
             const status = err.response?.status;
             const data = err.response?.data || {};
@@ -183,7 +223,8 @@ exports.handler = async (event, context) => {
                             refreshed = null;
                         }
                         console.log('Refreshed access token via cookie, retrying MFA challenge');
-                        response = await sendChallenge(refreshed);
+                        if (refreshed) response = await sendChallengeV4Token(refreshed);
+                        else response = await sendChallengeV3Cookie();
                     } else {
                         throw err;
                     }

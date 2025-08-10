@@ -1561,20 +1561,23 @@
                 removeTooltip(elements.statusMemberId);
             }
             
-            // 更新eSIM状态：优先显示 deliveryStatus（如 RESERVED/ACTIVE），并附加手机号
-            const delivery = appState.esimDeliveryStatus || (appState.esimActivationCode ? 'RESERVED' : '未申请');
+            // 更新eSIM状态：要求具备基本前置（至少拿到 memberId）才展示 RESERVED/ACTIVE 等
+            const hasPrerequisite = !!appState.memberId;
+            const delivery = hasPrerequisite
+                ? (appState.esimDeliveryStatus || (appState.esimActivationCode ? 'RESERVED' : '未申请'))
+                : '未申请';
             const phoneSuffix = appState.phoneNumber ? `/${appState.phoneNumber}` : '';
-            const esimStatusText = (delivery && delivery !== '未申请') ? `${delivery}${phoneSuffix}` : '未申请';
+            const esimStatusText = (hasPrerequisite && delivery && delivery !== '未申请') ? `${delivery}${phoneSuffix}` : '未申请';
             elements.statusEsimStatus.textContent = esimStatusText;
-            elements.statusEsimStatus.className = (delivery && delivery !== '未申请') ? 'status-value connected' : 'status-value disconnected';
-            if (delivery && delivery !== '未申请') {
+            elements.statusEsimStatus.className = (hasPrerequisite && delivery && delivery !== '未申请') ? 'status-value connected' : 'status-value disconnected';
+            if (hasPrerequisite && delivery && delivery !== '未申请') {
                 addTooltip(elements.statusEsimStatus, esimStatusText);
             } else {
                 removeTooltip(elements.statusEsimStatus);
             }
 
-            // 激活码展示：若存在 SSN 则合并显示
-            if (appState.esimActivationCode) {
+            // 激活码展示：要求具备 memberId 且存在 activationCode 才展示
+            if (appState.memberId && appState.esimActivationCode) {
                 const text = appState.esimSSN ? `${appState.esimActivationCode}/${appState.esimSSN}` : appState.esimActivationCode;
                 elements.statusActivationCode.textContent = text;
                 elements.statusActivationCode.className = 'status-value connected';
@@ -1790,8 +1793,8 @@
                             // 根据已有的数据决定跳转到合适的步骤
                             let targetStep = 1;
                             if (appState.emailSignature) {
-                                if (appState.esimActivationCode || appState.esimSSN) {
-                                    // 已预订eSIM
+                                if (appState.memberId && (appState.esimActivationCode || appState.esimSSN)) {
+                                    // 已预订eSIM（要求已有 memberId 才视为有效）
                                     if (appState.lpaString) {
                                         targetStep = 5; // 已可获取二维码
                                     } else {
@@ -1865,6 +1868,18 @@
                     section.classList.remove('active');
                 }
             });
+            // 进入第2步时，重置“发送验证码”相关UI，避免误显示“已发送”与输入区
+            if (stepNumber === 2) {
+                if (elements.emailStatus) {
+                    elements.emailStatus.textContent = '';
+                    elements.emailStatus.className = 'status';
+                }
+                if (elements.emailVerificationSection) {
+                    elements.emailVerificationSection.classList.remove('active');
+                }
+                const codeInput = document.getElementById('emailCode');
+                if (codeInput) codeInput.value = '';
+            }
             appState.currentStep = stepNumber;
             updateSteps(stepNumber);
             saveSession(); // 切换步骤时保存，供刷新/返回
@@ -2085,6 +2100,9 @@
                     // 新增：允许用户继续下一步尝试（使用 Cookie 兜底刷新）
                     const continueBtn = document.createElement('button');
                     continueBtn.className = 'btn btn-outline-primary mt-3';
+                    // 居中显示
+                    continueBtn.style.display = 'block';
+                    continueBtn.style.margin = '12px auto 0';
                     continueBtn.innerHTML = '<i class="fas fa-arrow-right me-2"></i> 仍要继续到下一步（可能在第2步用Cookie兜底刷新）';
                     continueBtn.onclick = () => {
                         // 保存 cookie 以便后续服务端兜底使用
@@ -2304,7 +2322,7 @@
                 }
                 
                 const data = await response.json();
-                
+
                 // 检查令牌是否被刷新
                 if (data._tokenRefreshed && data._newAccessToken) {
                     console.log('令牌已刷新，更新应用状态');
@@ -2312,10 +2330,14 @@
                     saveSession(); // 保存更新后的令牌
                 }
                 
-                appState.emailCodeRef = data.ref;
-                
-                showStatus(elements.emailStatus, "验证码已发送！", "success");
-                elements.emailVerificationSection.classList.add('active');
+                // 只有真的发送成功（存在 ref）才显示“已发送”和验证码输入区
+                if (data && data.ref) {
+                    appState.emailCodeRef = data.ref;
+                    showStatus(elements.emailStatus, "验证码已发送！", "success");
+                    elements.emailVerificationSection.classList.add('active');
+                } else {
+                    throw new Error('发送验证码未成功，请稍后重试');
+                }
                 
             } catch (error) {
                 showStatus(elements.emailStatus, "发送验证码失败：" + error.message, "error");
@@ -2348,15 +2370,27 @@
                 const ref = appState.emailCodeRef;
                 if (!ref) throw new Error('缺少验证码引用，请先发送验证码');
 
-                const result = await api.smsActivateFlow({
-                    ref,
-                    code,
-                    accessToken: appState.accessToken,
-                    cookie: localStorage.getItem('giffgaff_cookie') || undefined,
-                    memberId: appState.memberId || undefined,
-                    ssn: appState.esimSSN || undefined,
-                    activationCode: appState.esimActivationCode || undefined
+                const respSms = await fetch(apiEndpoints.smsActivate, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': appState.accessToken ? `Bearer ${appState.accessToken}` : undefined
+                    },
+                    body: JSON.stringify({
+                        ref,
+                        code,
+                        accessToken: appState.accessToken,
+                        cookie: localStorage.getItem('giffgaff_cookie') || undefined,
+                        memberId: appState.memberId || undefined,
+                        ssn: appState.esimSSN || undefined,
+                        activationCode: appState.esimActivationCode || undefined
+                    })
                 });
+                if (!respSms.ok) {
+                    const t = await respSms.text();
+                    throw new Error(`后端编排失败: ${respSms.status} - ${t}`);
+                }
+                const result = await respSms.json();
 
                 if (result.success && result.lpaString) {
                     appState.lpaString = result.lpaString;
