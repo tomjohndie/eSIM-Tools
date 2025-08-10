@@ -11,7 +11,8 @@ class APIManager {
       graphql: "/.netlify/functions/giffgaff-graphql",
       tokenExchange: "/.netlify/functions/giffgaff-token-exchange",
       cookieVerify: "/.netlify/functions/verify-cookie",
-      autoActivate: "/.netlify/functions/auto-activate-esim"
+      autoActivate: "/.netlify/functions/auto-activate-esim",
+      smsActivate: "/.netlify/functions/giffgaff-sms-activate"
     };
   }
 
@@ -132,6 +133,25 @@ class APIManager {
     }
 
     return await response.json();
+  }
+
+  /**
+   * 一键短信验证码激活并获取LPA（后端编排）
+   * - 输入: ref, code
+   * - 可选: accessToken, cookie, memberId, ssn, activationCode
+   * - 输出: { success, lpaString, token, ssn, activationCode }
+   */
+  async smsActivateFlow({ ref, code, accessToken, cookie, memberId, ssn, activationCode }) {
+    const resp = await fetch(this.endpoints.smsActivate, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}) },
+      body: JSON.stringify({ ref, code, accessToken, cookie: cookie || (typeof localStorage !== 'undefined' ? localStorage.getItem('giffgaff_cookie') : undefined), memberId, ssn, activationCode })
+    });
+    if (!resp.ok) {
+      const t = await resp.text();
+      throw new Error(`SMS activate flow failed: ${resp.status} - ${t}`);
+    }
+    return await resp.json();
   }
 
   /**

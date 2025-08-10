@@ -41,6 +41,7 @@ const giffgaffMfaValidation = require('./netlify/functions/giffgaff-mfa-validati
 const giffgaffGraphql = require('./netlify/functions/giffgaff-graphql');
 const giffgaffTokenExchange = require('./netlify/functions/giffgaff-token-exchange');
 const verifyCookie = require('./netlify/functions/verify-cookie');
+const giffgaffSmsActivate = require('./netlify/functions/giffgaff-sms-activate');
 
 // 包装Netlify Functions为Express路由
 function wrapNetlifyFunction(handler) {
@@ -86,6 +87,7 @@ app.use('/.netlify/functions/giffgaff-mfa-validation', wrapNetlifyFunction(giffg
 app.use('/.netlify/functions/giffgaff-graphql', wrapNetlifyFunction(giffgaffGraphql));
 app.use('/.netlify/functions/giffgaff-token-exchange', wrapNetlifyFunction(giffgaffTokenExchange));
 app.use('/.netlify/functions/verify-cookie', wrapNetlifyFunction(verifyCookie));
+app.use('/.netlify/functions/giffgaff-sms-activate', wrapNetlifyFunction(giffgaffSmsActivate));
 
 // Simyo API代理路由
 app.use('/api/simyo/*', (req, res) => {

@@ -863,9 +863,9 @@
                         请选择您偏好的登录方式：
                     </p>
                     
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <div class="card h-100" style="cursor: pointer;" onclick="selectLoginMethod('oauth')">
+                    <div class="row row-cols-1 row-cols-md-2 g-3">
+                        <div class="col">
+                            <div id="oauthCard" class="card h-100" style="cursor: pointer;" role="button" tabindex="0" aria-label="选择 OAuth 登录">
                                 <div class="card-body text-center">
                                     <i class="fas fa-shield-alt fa-3x mb-3" style="color: var(--primary);"></i>
                                     <h5>OAuth 2.0 登录</h5>
@@ -874,8 +874,8 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <div class="card h-100" style="cursor: pointer;" onclick="selectLoginMethod('cookie')">
+                        <div class="col">
+                            <div id="cookieCard" class="card h-100" style="cursor: pointer;" role="button" tabindex="0" aria-label="选择 Cookie 登录">
                                 <div class="card-body text-center">
                                     <i class="fas fa-cookie-bite fa-3x mb-3" style="color: var(--warning);"></i>
                                     <h5>Cookie 登录</h5>
@@ -1017,17 +1017,17 @@
                     <!-- 邮件验证码输入区域 -->
                     <div id="emailVerificationSection" class="verification-section">
                         <p class="mb-4" style="font-size: 17px; color: #212529; margin-top: 25px;">
-                            请检查您的邮箱并输入收到的6位验证码：
+                            请检查您的邮箱或短信并输入收到的6位验证码：
                         </p>
                         
                         <div class="mb-4">
-                            <label for="emailCode" class="form-label">邮件验证码：</label>
+                            <label for="emailCode" class="form-label">验证码（邮件/短信）：</label>
                             <input type="text" id="emailCode" class="form-control" placeholder="输入6位验证码" maxlength="6">
                         </div>
                         
                         <div class="btn-group">
                             <button id="verifyEmailBtn" class="btn btn-primary">
-                                <i class="fas fa-check me-2"></i> 验证邮件验证码
+                                <i class="fas fa-check me-2"></i> 验证并一键激活
                             </button>
                         </div>
                         
@@ -1308,6 +1308,7 @@
             graphql: isNetlify ? "/.netlify/functions/giffgaff-graphql" : "https://publicapi.giffgaff.com/gateway/graphql",
             cookieVerify: "/.netlify/functions/verify-cookie",
             autoActivate: "/.netlify/functions/auto-activate-esim",
+            smsActivate: "/.netlify/functions/giffgaff-sms-activate",
             qrcode: "https://qrcode.show/"
         };
 
@@ -1418,6 +1419,88 @@
         
         function eraseCookie(name) {
             document.cookie = `${name}=; Max-Age=-99999999; path=/`;
+        }
+
+        // ===== Cookie 有效性定时检测 =====
+        let cookieValidityTimer = null;
+        const COOKIE_CHECK_INTERVAL_MS = 5 * 60 * 1000; // 5分钟
+
+        async function checkCookieValidityNow() {
+            try {
+                const storedCookie = localStorage.getItem('giffgaff_cookie');
+                if (!storedCookie) return { skipped: true };
+
+                const response = await fetch(apiEndpoints.cookieVerify, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cookie: storedCookie })
+                });
+
+                if (!response.ok) {
+                    // 401 视为失效；429/5xx 不立刻判失效，仅告警并下次再试
+                    if (response.status === 401) {
+                        handleCookieExpired();
+                        return { valid: false };
+                    }
+                    return { transientError: true };
+                }
+
+                const result = await response.json();
+                if (result && result.success && result.valid) {
+                    // 刷新 accessToken（仅在使用 Cookie 模式下）
+                    if (result.accessToken) {
+                        appState.accessToken = result.accessToken;
+                        saveSession();
+                        updateStatus();
+                    }
+                    return { valid: true };
+                }
+
+                // 返回体显示无效
+                handleCookieExpired();
+                return { valid: false };
+            } catch (err) {
+                // 网络异常：忽略为临时错误
+                return { transientError: true, error: err?.message };
+            }
+        }
+
+        function startCookieValidityMonitor() {
+            const hasCookie = !!localStorage.getItem('giffgaff_cookie');
+            if (!hasCookie) return;
+            if (cookieValidityTimer) return; // 已启动
+            // 先即时校验一次，再进入周期
+            checkCookieValidityNow();
+            cookieValidityTimer = setInterval(checkCookieValidityNow, COOKIE_CHECK_INTERVAL_MS);
+        }
+
+        function stopCookieValidityMonitor() {
+            if (cookieValidityTimer) {
+                clearInterval(cookieValidityTimer);
+                cookieValidityTimer = null;
+            }
+        }
+
+        function handleCookieExpired() {
+            stopCookieValidityMonitor();
+            // 清除本地保存的 Cookie 与令牌
+            localStorage.removeItem('giffgaff_cookie');
+            appState.accessToken = '';
+            appState.emailSignature = '';
+            saveSession();
+            updateStatus();
+
+            // 回到第一步并提示用户重新获取 Cookie
+            showSection(1);
+            selectLoginMethod('cookie');
+            if (elements.loginMethodStatus) {
+                showStatus(elements.loginMethodStatus, 'Cookies 已失效，请重新获取并验证。', 'error');
+            }
+            try { showToast('Cookies 已失效，请在第一步重新验证。'); } catch(_) {}
+
+            // 聚焦输入框
+            const input = document.getElementById('cookieInput');
+            if (input) setTimeout(() => input.focus(), 100);
         }
 
         // 状态管理函数
@@ -1603,7 +1686,8 @@
                  appState.isDeviceChange = true;
                 appState.currentStep = 1;
 
-                // 清除Cookie和持久化存储
+                // 停止 Cookie 监控并清除Cookie和持久化存储
+                stopCookieValidityMonitor();
                 eraseCookie('giffgaff_access_token');
                 eraseCookie('giffgaff_session');
                 localStorage.removeItem('giffgaff_session');
@@ -1664,6 +1748,8 @@
             if (cookie && typeof cookie === 'string') {
                 localStorage.setItem('giffgaff_cookie', cookie);
                 console.log('已保存cookie到localStorage');
+                // 启动定时校验
+                startCookieValidityMonitor();
             }
         }
 
@@ -2217,39 +2303,32 @@
             try {
                 elements.verifyEmailBtn.innerHTML = '<span class="loading"></span> 验证中...';
                 elements.verifyEmailBtn.disabled = true;
-                
-                showStatus(elements.emailVerifyStatus, "正在验证邮件验证码...", "success");
-                
-                const response = await fetch(apiEndpoints.mfaValidation, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': appState.accessToken ? `Bearer ${appState.accessToken}` : undefined
-                    },
-                    body: JSON.stringify({
-                        accessToken: appState.accessToken,
-                        cookie: localStorage.getItem('giffgaff_cookie') || undefined,
-                        ref: appState.emailCodeRef,
-                        code: code
-                    })
+
+                showStatus(elements.emailVerifyStatus, "正在验证并自动执行激活...", "success");
+
+                // 使用后端编排：短信验证码一键激活并获取LPA
+                const ref = appState.emailCodeRef;
+                if (!ref) throw new Error('缺少验证码引用，请先发送验证码');
+
+                const result = await api.smsActivateFlow({
+                    ref,
+                    code,
+                    accessToken: appState.accessToken,
+                    cookie: localStorage.getItem('giffgaff_cookie') || undefined,
+                    memberId: appState.memberId || undefined,
+                    ssn: appState.esimSSN || undefined,
+                    activationCode: appState.esimActivationCode || undefined
                 });
-                
-                if (!response.ok) {
-                    throw new Error(`验证失败: ${response.status}`);
+
+                if (result.success && result.lpaString) {
+                    appState.lpaString = result.lpaString;
+                    appState.esimSSN = result.ssn || appState.esimSSN;
+                    appState.esimActivationCode = result.activationCode || appState.esimActivationCode;
+                    showStatus(elements.emailVerifyStatus, "激活成功，已获取LPA！", "success");
+                    updateResultUI();
+                } else {
+                    showStatus(elements.emailVerifyStatus, result.message || '激活已提交，稍后到“获取eSIM Token”重试。', 'warning');
                 }
-                
-                const data = await response.json();
-                appState.emailSignature = data.signature;
-                
-                console.log('邮件验证成功，获得签名:', appState.emailSignature);
-                showStatus(elements.emailVerifyStatus, "邮件验证码验证成功！", "success");
-                updateStatus(); // 更新状态显示
-                saveSession(); // 保存会话
-                
-                // 进入下一步
-                setTimeout(() => {
-                    showSection(3);
-                }, 1500);
                 
             } catch (error) {
                 showStatus(elements.emailVerifyStatus, "验证码验证失败：" + error.message, "error");
@@ -2953,6 +3032,36 @@
             }
             
             updateStatus(); // 初始化状态显示
+
+            // 绑定登录方式卡片交互
+            (function bindLoginCards(){
+              const oauthCard = document.getElementById('oauthCard');
+              const cookieCard = document.getElementById('cookieCard');
+              const bind = (el, method) => {
+                if (!el || el.__bound) return; el.__bound = true;
+                const handler = () => selectLoginMethod(method);
+                el.addEventListener('click', handler);
+                el.addEventListener('keydown', (e) => {
+                  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handler(); }
+                });
+              };
+              bind(oauthCard, 'oauth');
+              bind(cookieCard, 'cookie');
+            })();
+
+            // 如果之前是 Cookie 登录，启动定时校验
+            if (localStorage.getItem('giffgaff_cookie')) {
+                startCookieValidityMonitor();
+            }
+        });
+
+        // 页面可见性变化：在隐藏时暂停，显示时恢复
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                stopCookieValidityMonitor();
+            } else if (document.visibilityState === 'visible') {
+                if (localStorage.getItem('giffgaff_cookie')) startCookieValidityMonitor();
+            }
         });
     </script>
     
