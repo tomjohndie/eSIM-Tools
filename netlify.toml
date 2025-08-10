@@ -45,7 +45,7 @@
   # 限制 Simyo 代理仅允许指定站点跨域访问
   for = "/api/simyo/*"
   [headers.values]
-    Access-Control-Allow-Origin = "https://esim.cosr.eu.org"
+    Access-Control-Allow-Origin = "*"
     Access-Control-Allow-Headers = "Content-Type, Authorization"
     Access-Control-Allow-Methods = "GET, POST, OPTIONS"
 
@@ -59,7 +59,7 @@
 [[headers]]
   for = "/api/giffgaff/*"
   [headers.values]
-    Access-Control-Allow-Origin = "https://esim.cosr.eu.org"
+    Access-Control-Allow-Origin = "*"
     Access-Control-Allow-Headers = "Content-Type, Authorization"
     Access-Control-Allow-Methods = "GET, POST, OPTIONS"
 
@@ -73,7 +73,7 @@
 [[headers]]
   for = "/api/giffgaff-id/*"
   [headers.values]
-    Access-Control-Allow-Origin = "https://esim.cosr.eu.org"
+    Access-Control-Allow-Origin = "*"
     Access-Control-Allow-Headers = "Content-Type, Authorization"
     Access-Control-Allow-Methods = "GET, POST, OPTIONS"
 
@@ -87,7 +87,7 @@
 [[headers]]
   for = "/api/giffgaff-public/*"
   [headers.values]
-    Access-Control-Allow-Origin = "https://esim.cosr.eu.org"
+    Access-Control-Allow-Origin = "*"
     Access-Control-Allow-Headers = "Content-Type, Authorization"
     Access-Control-Allow-Methods = "GET, POST, OPTIONS"
 # 处理SPA路由（如果需要）
