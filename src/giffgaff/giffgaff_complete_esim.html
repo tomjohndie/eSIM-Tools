@@ -1117,10 +1117,14 @@
                                             页面会显示您的SIM信息对比（当前SIM vs 新eSIM）
                                         </li>
                                         <li class="list-group-item">
-                                            核对信息无误后，点击 <strong>"Yes, I want to replace my SIM"</strong>
+                                            确认无误后，点击 <strong>"Yes, I want to replace my SIM"</strong>
+                                            （跳转到 <code>/activate/swap-confirm</code> 确认页）
+                                        </li>
+                                        <li class="list-group-item">
+                                            在确认页点击 <strong>"Yes I'm sure"</strong>
                                         </li>
                                         <li class="list-group-item text-success">
-                                            <strong>激活成功后会跳转到Giffgaff首页并显示成功信息</strong>
+                                            <strong>稍等片刻，新 eSIM 生效后会跳转回 Giffgaff 首页显示成功信息</strong>
                                         </li>
                                     </ol>
                                     
@@ -2399,7 +2403,10 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        activationCode: appState.esimActivationCode
+                        activationCode: appState.esimActivationCode,
+                        // 优先使用Cookie通道。若此前使用OAuth登录，也会带上Bearer以便后端将来扩展
+                        cookie: localStorage.getItem('giffgaff_cookie') || undefined,
+                        accessToken: appState.accessToken || undefined
                     })
                 });
 

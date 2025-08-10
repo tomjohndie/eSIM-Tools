@@ -38,7 +38,7 @@ exports.handler = async (event, context) => {
     try {
         // 解析请求体
         const requestBody = JSON.parse(event.body || '{}');
-        const { activationCode } = requestBody;
+        const { activationCode, cookie, accessToken } = requestBody;
 
         if (!activationCode) {
             return {
@@ -53,11 +53,12 @@ exports.handler = async (event, context) => {
 
         console.log('Auto Activation Request:', {
             activationCode: activationCode,
+            hasCookie: !!cookie,
             timestamp: new Date().toISOString()
         });
 
         // 调用Giffgaff激活API
-        const result = await callGiffgaffActivationAPI(activationCode);
+        const result = await callGiffgaffActivationAPI(activationCode, cookie, accessToken);
 
         if (result.success) {
             console.log('Auto Activation Success:', {
@@ -112,30 +113,36 @@ exports.handler = async (event, context) => {
 /**
  * 调用Giffgaff激活API - 完整流程
  */
-async function callGiffgaffActivationAPI(activationCode) {
+async function callGiffgaffActivationAPI(activationCode, cookieString, bearerToken) {
     try {
         const timestamp = Date.now();
+        const defaultHeaders = {
+            'Accept-Language': 'en-GB,en;q=0.9',
+            'DNT': '1',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36',
+            'Sec-Ch-Ua': '"Not;A=Brand";v="99", "Chromium";v="139", "Google Chrome";v="139"',
+            'Sec-Ch-Ua-Mobile': '?0',
+            'Sec-Ch-Ua-Platform': '"Windows"'
+        };
+        const cookieHeader = cookieString ? { Cookie: cookieString } : {};
+        const bearerHeader = bearerToken ? { Authorization: `Bearer ${bearerToken}` } : {};
+        const getHeaders = (extra = {}) => ({ ...defaultHeaders, ...cookieHeader, ...bearerHeader, ...extra });
         
-        // 第一步：验证激活码
+        // 第一步：验证激活码（Ajax校验）
         console.log('Step 1: Validating activation code...');
         const validateUrl = `https://www.giffgaff.com/activate/validate-sim-code?code=${activationCode}&next-action=products&_=${timestamp}`;
         
         const validateResponse = await axios.get(validateUrl, {
-            headers: {
-                'Accept': 'application/json, text/javascript, */*; q=0.01',
-                'Accept-Language': 'zh-CN,zh-HK;q=0.9,zh;q=0.8,en;q=0.7,en-GB;q=0.6,en-US;q=0.5',
-                'DNT': '1',
-                'Referer': 'https://www.giffgaff.com/activate',
-                'Sec-Ch-Ua': '"Not)A;Brand";v="8", "Chromium";v="138", "Microsoft Edge";v="138"',
-                'Sec-Ch-Ua-Mobile': '?0',
-                'Sec-Ch-Ua-Platform': '"macOS"',
+            headers: getHeaders({
+                Accept: 'application/json, text/javascript, */*; q=0.01',
+                Referer: 'https://www.giffgaff.com/activate',
                 'Sec-Fetch-Dest': 'empty',
                 'Sec-Fetch-Mode': 'cors',
                 'Sec-Fetch-Site': 'same-origin',
-                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0',
                 'X-Requested-With': 'XMLHttpRequest'
-            },
-            timeout: 30000
+            }),
+            timeout: 30000,
+            maxRedirects: 5
         });
 
         console.log('Step 1 Response:', {
@@ -150,57 +157,70 @@ async function callGiffgaffActivationAPI(activationCode) {
             };
         }
 
-        // 第二步：确认替换SIM（如果需要）
-        console.log('Step 2: Confirming SIM replacement...');
-        
-        // 尝试调用确认替换的API
-        // 注意：这个API端点可能需要根据实际的Giffgaff页面分析来确定
-        const confirmUrl = `https://www.giffgaff.com/activate/confirm-replacement?code=${activationCode}&_=${timestamp}`;
-        
-        try {
-            const confirmResponse = await axios.post(confirmUrl, {
-                action: 'confirm_replacement',
-                code: activationCode
-            }, {
-                headers: {
-                    'Accept': 'application/json, text/javascript, */*; q=0.01',
-                    'Accept-Language': 'zh-CN,zh-HK;q=0.9,zh;q=0.8,en;q=0.7,en-GB;q=0.6,en-US;q=0.5',
-                    'Content-Type': 'application/json',
-                    'DNT': '1',
-                    'Referer': 'https://www.giffgaff.com/activate',
-                    'Sec-Ch-Ua': '"Not)A;Brand";v="8", "Chromium";v="138", "Microsoft Edge";v="138"',
-                    'Sec-Ch-Ua-Mobile': '?0',
-                    'Sec-Ch-Ua-Platform': '"macOS"',
-                    'Sec-Fetch-Dest': 'empty',
-                    'Sec-Fetch-Mode': 'cors',
-                    'Sec-Fetch-Site': 'same-origin',
-                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                timeout: 30000
-            });
+        // 第二步：访问 /activate/swap 预览页面（保持会话）
+        console.log('Step 2: Loading swap preview page...');
+        const swapPreview = await axios.get('https://www.giffgaff.com/activate/swap', {
+            headers: getHeaders({
+                Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                Referer: 'https://www.giffgaff.com/activate',
+                'Sec-Fetch-Dest': 'document',
+                'Sec-Fetch-Mode': 'navigate',
+                'Sec-Fetch-Site': 'same-origin',
+                'Upgrade-Insecure-Requests': '1'
+            }),
+            timeout: 30000,
+            maxRedirects: 5
+        });
 
-            console.log('Step 2 Response:', {
-                status: confirmResponse.status,
-                data: confirmResponse.data
-            });
+        // 第三步：GET swap-confirm 页面
+        console.log('Step 3: Loading swap-confirm page...');
+        const swapConfirmGet = await axios.get('https://www.giffgaff.com/activate/swap-confirm', {
+            headers: getHeaders({
+                Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                Referer: 'https://www.giffgaff.com/activate/swap',
+                'Sec-Fetch-Dest': 'document',
+                'Sec-Fetch-Mode': 'navigate',
+                'Sec-Fetch-Site': 'same-origin',
+                'Upgrade-Insecure-Requests': '1'
+            }),
+            timeout: 30000,
+            maxRedirects: 5
+        });
 
-            if (confirmResponse.status === 200) {
-                return {
-                    success: true,
-                    message: 'eSIM激活成功（包含确认步骤）',
-                    data: confirmResponse.data
-                };
-            }
-        } catch (confirmError) {
-            console.log('Step 2 failed, proceeding with Step 1 result only:', confirmError.message);
+        // 第四步：POST 确认（空体）
+        console.log('Step 4: Confirming swap (POST)...');
+        // 从 cookie 中提取 XSRF-TOKEN（若存在）
+        let xsrf = null;
+        if (cookieString) {
+            const m = cookieString.match(/XSRF-TOKEN=([^;]+)/);
+            if (m) xsrf = decodeURIComponent(m[1]);
         }
 
-        // 如果第二步失败，返回第一步的结果
+        const confirmPost = await axios.post('https://www.giffgaff.com/activate/swap-confirm', null, {
+            headers: getHeaders({
+                Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                Origin: 'https://www.giffgaff.com',
+                Referer: 'https://www.giffgaff.com/activate/swap-confirm',
+                'Content-Type': 'application/x-www-form-urlencoded',
+                ...(xsrf ? { 'X-XSRF-TOKEN': xsrf } : {}),
+                'Sec-Fetch-Dest': 'document',
+                'Sec-Fetch-Mode': 'navigate',
+                'Sec-Fetch-Site': 'same-origin',
+                'Upgrade-Insecure-Requests': '1'
+            }),
+            timeout: 30000,
+            maxRedirects: 5
+        });
+
+        // 若执行到此，表示触发了确认流程。返回成功提示。
         return {
             success: true,
-            message: 'eSIM激活码验证成功（可能需要手动确认替换）',
-            data: validateResponse.data
+            message: '已提交SIM替换确认，请等待新eSIM生效（通常几分钟）',
+            data: {
+                previewStatus: swapPreview.status,
+                confirmGetStatus: swapConfirmGet.status,
+                confirmPostStatus: confirmPost.status
+            }
         };
 
     } catch (error) {
