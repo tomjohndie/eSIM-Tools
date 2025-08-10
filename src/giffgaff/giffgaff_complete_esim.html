@@ -1055,6 +1055,28 @@
                         </button>
                     </div>
                     
+                        <!-- 已有激活码/SSN 的快捷入口 -->
+                        <div class="mt-3">
+                            <button id="manualEsimInputToggle" class="btn btn-link p-0" type="button">
+                                我已完成申请（已有激活码/SSN）
+                            </button>
+                            <div id="manualEsimInputSection" class="card card-body mt-2" style="display: none;">
+                                <div class="row g-2">
+                                    <div class="col-md-6">
+                                        <label for="manualActivationCode" class="form-label">激活码 (Activation Code)</label>
+                                        <input id="manualActivationCode" class="form-control" placeholder="如：Y6GKL6" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="manualSSN" class="form-label">SSN</label>
+                                        <input id="manualSSN" class="form-control" placeholder="如：8944…" />
+                                    </div>
+                                </div>
+                                <button id="manualSaveAndNextBtn" class="btn btn-success mt-3" type="button">
+                                    <i class="fas fa-check me-2"></i>保存并进入下一步
+                                </button>
+                            </div>
+                        </div>
+
                     <div id="esimReserveStatus" class="status" role="status" aria-live="polite"></div>
                     
                     <!-- eSIM信息显示区域 -->
@@ -2588,6 +2610,47 @@
                 elements.resultContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }, 500);
         }
+
+        // 手动输入已申请的 eSIM 信息
+        (function bindManualEsimInputs(){
+            const toggleBtn = document.getElementById('manualEsimInputToggle');
+            const section = document.getElementById('manualEsimInputSection');
+            const activationInput = document.getElementById('manualActivationCode');
+            const ssnInput = document.getElementById('manualSSN');
+            const saveBtn = document.getElementById('manualSaveAndNextBtn');
+            if (!toggleBtn || !section) return;
+            toggleBtn.addEventListener('click', () => {
+                section.style.display = section.style.display === 'none' ? 'block' : 'none';
+            });
+            if (saveBtn) {
+                saveBtn.addEventListener('click', () => {
+                    const a = (activationInput?.value || '').trim();
+                    const s = (ssnInput?.value || '').trim();
+                    if (!a) {
+                        showStatus(document.getElementById('esimReserveStatus'), '请输入激活码', 'error');
+                        return;
+                    }
+                    appState.esimActivationCode = a;
+                    if (s) appState.esimSSN = s;
+                    appState.esimDeliveryStatus = 'RESERVED';
+
+                    // 立即更新UI与状态卡片
+                    const title = document.getElementById('esimStatusTitle');
+                    if (title) title.textContent = '您的eSIM信息（状态：RESERVED）';
+                    const displayActivationCode = document.getElementById('displayActivationCode');
+                    const displaySSN = document.getElementById('displaySSN');
+                    if (displayActivationCode) displayActivationCode.textContent = a;
+                    if (displaySSN && s) displaySSN.textContent = s;
+                    const info = document.getElementById('esimInfoDisplay');
+                    if (info) info.style.display = 'block';
+                    updateStatus();
+                    saveSession();
+
+                    // 跳转到下一步：获取 eSIM Token
+                    showSection(5);
+                });
+            }
+        })();
 
         // 生成二维码
         function generateQRCode(data) {

@@ -114,7 +114,7 @@ exports.handler = async (event, context) => {
                         'Pragma': 'no-cache'
                     };
                     if (token) h['Authorization'] = `Bearer ${token}`;
-                    if (!token && cookie) h['Cookie'] = cookie;
+                    if (cookie) h['Cookie'] = cookie; // 始终附带 cookie，提升成功率
                     return h;
                 })(),
                 timeout: 30000
@@ -135,7 +135,12 @@ exports.handler = async (event, context) => {
                         timeout: 30000
                     });
                     if (cookieVerifyResponse.data?.success && cookieVerifyResponse.data?.accessToken) {
-                        const refreshed = cookieVerifyResponse.data.accessToken;
+                        let refreshed = cookieVerifyResponse.data.accessToken;
+                        // 非JWT样式（无点号或长度过短）时，强制使用cookie通道
+                        const looksLikeJwt = typeof refreshed === 'string' && refreshed.includes('.') && refreshed.length > 200;
+                        if (!looksLikeJwt) {
+                            refreshed = null;
+                        }
                         console.log('Refreshed access token via cookie, retrying MFA challenge');
                         response = await sendChallenge(refreshed);
                     } else {
