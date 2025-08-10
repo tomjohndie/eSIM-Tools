@@ -40,7 +40,7 @@ exports.handler = async (event) => {
 
     const clientId = process.env.GIFFGAFF_CLIENT_ID;
     const clientSecret = process.env.GIFFGAFF_CLIENT_SECRET;
-    const tokenUrl = process.env.GIFFGAFF_TOKEN_URL || 'https://id.giffgaff.com/auth/oauth/token';
+    const tokenUrl = process.env.GIFFGAFF_TOKEN_URL || 'https://id.giffgaff.com/oauth/token';
     const defaultRedirectUri = process.env.GIFFGAFF_REDIRECT_URI || 'giffgaff://auth/callback/';
 
     if (!clientId || !clientSecret) {
@@ -54,7 +54,21 @@ exports.handler = async (event) => {
       };
     }
 
-    const authHeader = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+    // 解码BASE64编码的客户端密钥（如果需要）
+let decodedSecret = clientSecret;
+try {
+  // 尝试解码，如果已经是解码状态则会失败
+  const decoded = Buffer.from(clientSecret, 'base64').toString();
+  // 检查解码结果是否看起来像有效的密钥
+  if (decoded && decoded.length > 8 && !/[\x00-\x08\x0B\x0C\x0E-\x1F]/.test(decoded)) {
+    decodedSecret = decoded;
+  }
+} catch (e) {
+  console.log('客户端密钥已经是解码状态或解码失败');
+}
+
+// 创建认证头
+const authHeader = Buffer.from(`${clientId}:${decodedSecret}`).toString('base64');
 
     const form = new URLSearchParams({
       grant_type: 'authorization_code',
@@ -63,7 +77,13 @@ exports.handler = async (event) => {
       code_verifier: codeVerifier
     });
 
-    const response = await axios.post(tokenUrl, form, {
+    // 添加调试日志
+console.log(`请求令牌端点: ${tokenUrl}`);
+console.log(`请求参数: ${form.toString()}`);
+// 不打印敏感信息
+console.log(`请求头部: Authorization: Basic ******, Content-Type: application/x-www-form-urlencoded`);
+
+const response = await axios.post(tokenUrl, form, {
       headers: {
         'Authorization': `Basic ${authHeader}`,
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -76,6 +96,15 @@ exports.handler = async (event) => {
   } catch (error) {
     const status = error.response?.status || 500;
     const data = error.response?.data || { message: error.message };
+    
+    // 添加详细错误日志
+    console.error('Token exchange error:', {
+      status,
+      data,
+      message: error.message,
+      stack: error.stack
+    });
+    
     return {
       statusCode: status,
       headers,
