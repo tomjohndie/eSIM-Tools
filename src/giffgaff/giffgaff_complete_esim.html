@@ -793,10 +793,6 @@
                     <span id="statusEsimStatus" class="status-value disconnected">未申请</span>
                 </div>
                 <div class="status-item">
-                    <span class="status-label">SSN:</span>
-                    <span id="statusSSN" class="status-value disconnected">未获取</span>
-                </div>
-                <div class="status-item">
                     <span class="status-label">激活码:</span>
                     <span id="statusActivationCode" class="status-value disconnected">未获取</span>
                 </div>
@@ -1096,22 +1092,22 @@
                                     <strong>请保持此网页开启状态，不要关闭或刷新页面！</strong>
                                 </div>
                                 
-                                <h5 class="text-success mb-3" id="esimStatusTitle">您的eSIM信息（状态：RESERVED）</h5>
+                                <h5 class="text-success mb-3 text-center" id="esimStatusTitle">您的eSIM信息（状态：RESERVED）</h5>
                                     <div class="row text-center">
                                         <div class="col-md-6 d-flex flex-column align-items-center">
                                             <p class="mb-2"><strong>激活码 (Activation Code):</strong></p>
-                                            <div class="border p-3 mb-3 bg-light w-100" style="max-width:520px;">
+                                            <div class="border p-3 mb-3 bg-light w-100 d-flex flex-column align-items-center" style="max-width:520px;">
                                                 <code id="displayActivationCode" class="text-break fs-4"></code>
-                                                <button class="btn btn-sm btn-outline-primary ms-2" onclick="copyTextFromCode('displayActivationCode', this)">
+                                                <button class="btn btn-sm btn-outline-primary mt-2" onclick="copyTextFromCode('displayActivationCode', this)">
                                                     <i class="fas fa-copy"></i> 复制
                                                 </button>
                                             </div>
                                         </div>
                                         <div class="col-md-6 d-flex flex-column align-items-center">
                                             <p class="mb-2"><strong>SSN:</strong></p>
-                                            <div class="border p-3 mb-3 bg-light w-100" style="max-width:520px;">
+                                            <div class="border p-3 mb-3 bg-light w-100 d-flex flex-column align-items-center" style="max-width:520px;">
                                                 <code id="displaySSN" class="text-break fs-5"></code>
-                                                <button class="btn btn-sm btn-outline-primary ms-2" onclick="copyTextFromCode('displaySSN', this)">
+                                                <button class="btn btn-sm btn-outline-primary mt-2" onclick="copyTextFromCode('displaySSN', this)">
                                                     <i class="fas fa-copy"></i> 复制
                                                 </button>
                                             </div>
@@ -1438,19 +1434,16 @@
             elements.statusEsimStatus.textContent = (delivery && delivery !== '未申请') ? `${delivery}${phoneSuffix}` : '未申请';
             elements.statusEsimStatus.className = (delivery && delivery !== '未申请') ? 'status-value connected' : 'status-value disconnected';
 
-            // SSN 状态
-            if (appState.esimSSN) {
-                const ssnEl = document.getElementById('statusSSN');
-                if (ssnEl) {
-                    ssnEl.textContent = appState.esimSSN;
-                    ssnEl.className = 'status-value connected';
-                }
+            // 激活码展示：若存在 SSN 则合并显示
+            if (appState.esimActivationCode) {
+                const text = appState.esimSSN ? `${appState.esimActivationCode}/${appState.esimSSN}` : appState.esimActivationCode;
+                elements.statusActivationCode.textContent = text;
+                elements.statusActivationCode.className = 'status-value connected';
+                addTooltip(elements.statusActivationCode, text);
             } else {
-                const ssnEl = document.getElementById('statusSSN');
-                if (ssnEl) {
-                    ssnEl.textContent = '未获取';
-                    ssnEl.className = 'status-value disconnected';
-                }
+                elements.statusActivationCode.textContent = '未获取';
+                elements.statusActivationCode.className = 'status-value disconnected';
+                removeTooltip(elements.statusActivationCode);
             }
             
             // 更新激活码状态
@@ -1497,13 +1490,10 @@
             tooltip.setAttribute('aria-hidden', 'true');
             
             // 添加鼠标事件
-            element.addEventListener('mouseenter', function(e) {
-                showTooltip(tooltip, e);
-            });
-            
-            element.addEventListener('mouseleave', function() {
-                hideTooltip(tooltip);
-            });
+            const onEnter = (e) => { showTooltip(tooltip, e, true); };
+            const onLeave = () => { hideTooltip(tooltip); };
+            element.addEventListener('mouseenter', onEnter);
+            element.addEventListener('mouseleave', onLeave);
             
             // 设置光标样式为help，表示有悬浮框
             element.style.cursor = 'help';
@@ -1521,7 +1511,7 @@
             element.style.cursor = 'default';
         }
 
-        function showTooltip(tooltip, event) {
+        function showTooltip(tooltip, event, pinBelow = false) {
             if (!tooltip) return;
             
             // 将提示框添加到body
@@ -1532,14 +1522,14 @@
             const tooltipRect = tooltip.getBoundingClientRect();
             
             let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
-            let top = rect.bottom + 2;
+            let top = rect.bottom + (pinBelow ? 8 : 2);
             
             // 确保提示框不超出视窗
             if (left < 10) left = 10;
             if (left + tooltipRect.width > window.innerWidth - 10) {
                 left = window.innerWidth - tooltipRect.width - 10;
             }
-            if (top + tooltipRect.height > window.innerHeight - 10) {
+            if (top + tooltipRect.height > window.innerHeight - 10 && !pinBelow) {
                 top = rect.top - tooltipRect.height - 2;
             }
             
@@ -2446,6 +2436,15 @@
                 alert('复制失败，请手动选择文本复制');
             });
         }
+
+        // 委托绑定：兼容刷新后动态渲染的“我已完成手动激活，继续下一步”按钮
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest('#confirmActivationBtn');
+            if (btn) {
+                e.preventDefault();
+                showSection(5);
+            }
+        });
 
         // 自动激活eSIM
         async function autoActivateESim() {
