@@ -2051,10 +2051,12 @@
                 const response = await fetch(apiEndpoints.mfaChallenge, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Authorization': appState.accessToken ? `Bearer ${appState.accessToken}` : undefined
                     },
                     body: JSON.stringify({
                         accessToken: appState.accessToken,
+                        cookie: localStorage.getItem('giffgaff_cookie') || undefined,
                         source: "esim",
                         preferredChannels: ["EMAIL"]
                     })
@@ -2108,10 +2110,12 @@
                 const response = await fetch(apiEndpoints.mfaValidation, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Authorization': appState.accessToken ? `Bearer ${appState.accessToken}` : undefined
                     },
                     body: JSON.stringify({
                         accessToken: appState.accessToken,
+                        cookie: localStorage.getItem('giffgaff_cookie') || undefined,
                         ref: appState.emailCodeRef,
                         code: code
                     })

@@ -62,18 +62,22 @@ exports.handler = async (event, context) => {
             };
         }
         
-        // 如果提供cookie但没有accessToken，先尝试使用cookie获取accessToken
+    // 站点URL用于内部调用 verify-cookie（避免硬编码域名）
+    const lowerCaseHeadersForUrl = Object.fromEntries(
+        Object.entries(event.headers || {}).map(([k, v]) => [String(k).toLowerCase(), v])
+    );
+    const hostHeader = lowerCaseHeadersForUrl['x-forwarded-host'] || lowerCaseHeadersForUrl['host'] || '';
+    const protoHeader = lowerCaseHeadersForUrl['x-forwarded-proto'] || 'https';
+    const verifyCookieUrl = hostHeader ? `${protoHeader}://${hostHeader}/.netlify/functions/verify-cookie` : ((process.env.URL || '').replace(/\/$/, '') + '/.netlify/functions/verify-cookie');
+
+    // 如果提供cookie但没有accessToken，先尝试使用cookie获取accessToken
         if (cookie && !accessToken) {
             try {
                 // 调用verify-cookie函数获取accessToken
-                const cookieVerifyResponse = await axios.post(
-                    'https://esim.cosr.eu.org/.netlify/functions/verify-cookie',
-                    { cookie },
-                    { 
-                        headers: { 'Content-Type': 'application/json' },
-                        timeout: 30000
-                    }
-                );
+            const cookieVerifyResponse = await axios.post(verifyCookieUrl, { cookie }, {
+                headers: { 'Content-Type': 'application/json' },
+                timeout: 30000
+            });
                 
                 if (cookieVerifyResponse.data && cookieVerifyResponse.data.success && cookieVerifyResponse.data.accessToken) {
                     accessToken = cookieVerifyResponse.data.accessToken;
@@ -93,13 +97,10 @@ exports.handler = async (event, context) => {
             timestamp: new Date().toISOString()
         });
 
-        // 调用Giffgaff MFA验证API
-        const response = await axios.post(
+        // 调用Giffgaff MFA验证API，失败且令牌过期时，尝试用cookie刷新一次
+        const sendValidation = async (token) => axios.post(
             'https://id.giffgaff.com/v4/mfa/validation',
-            {
-                ref,
-                code
-            },
+            { ref, code },
             {
                 headers: (() => {
                     const h = {
@@ -112,13 +113,41 @@ exports.handler = async (event, context) => {
                         'Cache-Control': 'no-cache',
                         'Pragma': 'no-cache'
                     };
-                    if (accessToken) h['Authorization'] = `Bearer ${accessToken}`;
-                    if (!accessToken && cookie) h['Cookie'] = cookie;
+                    if (token) h['Authorization'] = `Bearer ${token}`;
+                    if (!token && cookie) h['Cookie'] = cookie;
                     return h;
                 })(),
                 timeout: 30000
             }
         );
+
+        let response;
+        try {
+            response = await sendValidation(accessToken);
+        } catch (err) {
+            const status = err.response?.status;
+            const data = err.response?.data || {};
+            const isExpired = status === 401 && (data.error === 'invalid_token' || /expired/i.test(String(data.error_description || '')));
+            if (isExpired && cookie) {
+                try {
+                    const cookieVerifyResponse = await axios.post(verifyCookieUrl, { cookie }, {
+                        headers: { 'Content-Type': 'application/json' },
+                        timeout: 30000
+                    });
+                    if (cookieVerifyResponse.data?.success && cookieVerifyResponse.data?.accessToken) {
+                        const refreshed = cookieVerifyResponse.data.accessToken;
+                        console.log('Refreshed access token via cookie, retrying MFA validation');
+                        response = await sendValidation(refreshed);
+                    } else {
+                        throw err;
+                    }
+                } catch (reErr) {
+                    throw err;
+                }
+            } else {
+                throw err;
+            }
+        }
 
         console.log('MFA Validation Success:', {
             status: response.status,

@@ -32,6 +32,8 @@ class APIManager {
         },
         body: JSON.stringify({
           accessToken,
+          // 附带cookie以便服务端在令牌过期时刷新
+          cookie: localStorage.getItem('giffgaff_cookie') || undefined,
           source: 'esim',
           preferredChannels: ['EMAIL']
         })
@@ -71,6 +73,7 @@ class APIManager {
               },
               body: JSON.stringify({
                 accessToken: newAccessToken,
+                cookie: localStorage.getItem('giffgaff_cookie') || undefined,
                 source: 'esim',
                 preferredChannels: ['EMAIL']
               })
