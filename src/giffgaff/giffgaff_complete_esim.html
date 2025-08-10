@@ -1490,7 +1490,7 @@
             const tooltipRect = tooltip.getBoundingClientRect();
             
             let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
-            let top = rect.bottom + 4;
+            let top = rect.bottom + 2;
             
             // 确保提示框不超出视窗
             if (left < 10) left = 10;
@@ -1498,7 +1498,7 @@
                 left = window.innerWidth - tooltipRect.width - 10;
             }
             if (top + tooltipRect.height > window.innerHeight - 10) {
-                top = rect.top - tooltipRect.height - 4;
+                top = rect.top - tooltipRect.height - 2;
             }
             
             tooltip.style.left = left + 'px';
