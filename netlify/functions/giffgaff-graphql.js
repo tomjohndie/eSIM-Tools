@@ -94,6 +94,17 @@ exports.handler = async (event, context) => {
             'Pragma': 'no-cache'
         };
 
+        // 针对 reserveESim 需要设备元数据头，按 Postman 约定补充（可通过环境变量覆盖）
+        const opName = operationName || '';
+        const isReserve = /reserveESim\s*\(/.test(String(query || '')) || opName === 'reserveESim';
+        if (isReserve) {
+            requestHeaders['x-gg-app-os'] = process.env.GG_APP_OS || 'Android';
+            requestHeaders['x-gg-app-os-version'] = process.env.GG_APP_OS_VERSION || '14';
+            requestHeaders['x-gg-app-build-number'] = process.env.GG_APP_BUILD_NUMBER || '763';
+            requestHeaders['x-gg-app-device-manufacturer'] = process.env.GG_APP_DEVICE_MANUFACTURER || 'Google';
+            requestHeaders['x-gg-app-device-model'] = process.env.GG_APP_DEVICE_MODEL || 'Pixel8';
+        }
+
         // 如果有MFA签名，添加到请求头
         if (mfaSignature) {
             requestHeaders['X-MFA-Signature'] = mfaSignature;
