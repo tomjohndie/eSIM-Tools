@@ -54,11 +54,17 @@ exports.handler = async (event) => {
       };
     }
 
-    // 直接使用环境变量中的客户端密钥，不进行解码
-    // 创建认证头
+    // 尝试清理客户端密钥中可能存在的问题
+    let cleanedSecret = clientSecret;
+    // 如果密钥末尾有百分号，尝试去除
+    if (clientSecret.endsWith('%')) {
+      cleanedSecret = clientSecret.slice(0, -1);
+      console.log('检测到客户端密钥末尾有百分号，已去除');
+    }
+    
     console.log(`使用客户端ID: ${clientId.substring(0, 5)}*****`);
-    console.log(`客户端密钥长度: ${clientSecret.length}`);
-    const authHeader = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+    console.log(`客户端密钥长度: ${cleanedSecret.length}`);
+    const authHeader = Buffer.from(`${clientId}:${cleanedSecret}`).toString('base64');
 
     const form = new URLSearchParams({
       grant_type: 'authorization_code',
@@ -80,10 +86,28 @@ const formWithCredentials = new URLSearchParams({
   redirect_uri: redirectUri || defaultRedirectUri,
   code_verifier: codeVerifier,
   client_id: clientId,
-  client_secret: clientSecret
+  client_secret: cleanedSecret
 });
 
-console.log(`请求参数(包含凭据): ${formWithCredentials.toString().replace(clientSecret, '******')}`);
+console.log(`请求参数(包含凭据): ${formWithCredentials.toString().replace(cleanedSecret, '******')}`);
+
+// 确保授权码没有被额外编码
+// 如果授权码中包含了URL编码字符，尝试解码一次
+let decodedCode = code;
+try {
+  if (code.includes('%')) {
+    const possiblyDecodedCode = decodeURIComponent(code);
+    if (possiblyDecodedCode !== code) {
+      decodedCode = possiblyDecodedCode;
+      console.log('检测到授权码可能被多次编码，已解码');
+      
+      // 更新表单参数
+      formWithCredentials.set('code', decodedCode);
+    }
+  }
+} catch (e) {
+  console.log('授权码解码失败，使用原始码');
+}
 
 const response = await axios.post(tokenUrl, formWithCredentials, {
   headers: {
