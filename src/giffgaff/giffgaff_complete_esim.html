@@ -793,6 +793,10 @@
                     <span id="statusEsimStatus" class="status-value disconnected">未申请</span>
                 </div>
                 <div class="status-item">
+                    <span class="status-label">SSN:</span>
+                    <span id="statusSSN" class="status-value disconnected">未获取</span>
+                </div>
+                <div class="status-item">
                     <span class="status-label">激活码:</span>
                     <span id="statusActivationCode" class="status-value disconnected">未获取</span>
                 </div>
@@ -1428,10 +1432,26 @@
                 removeTooltip(elements.statusMemberId);
             }
             
-            // 更新eSIM状态：优先显示 deliveryStatus（如 RESERVED/ACTIVE），否则根据是否有激活码判断
+            // 更新eSIM状态：优先显示 deliveryStatus（如 RESERVED/ACTIVE），并附加手机号
             const delivery = appState.esimDeliveryStatus || (appState.esimActivationCode ? 'RESERVED' : '未申请');
-            elements.statusEsimStatus.textContent = delivery;
+            const phoneSuffix = appState.phoneNumber ? `/${appState.phoneNumber}` : '';
+            elements.statusEsimStatus.textContent = (delivery && delivery !== '未申请') ? `${delivery}${phoneSuffix}` : '未申请';
             elements.statusEsimStatus.className = (delivery && delivery !== '未申请') ? 'status-value connected' : 'status-value disconnected';
+
+            // SSN 状态
+            if (appState.esimSSN) {
+                const ssnEl = document.getElementById('statusSSN');
+                if (ssnEl) {
+                    ssnEl.textContent = appState.esimSSN;
+                    ssnEl.className = 'status-value connected';
+                }
+            } else {
+                const ssnEl = document.getElementById('statusSSN');
+                if (ssnEl) {
+                    ssnEl.textContent = '未获取';
+                    ssnEl.className = 'status-value disconnected';
+                }
+            }
             
             // 更新激活码状态
             if (appState.esimActivationCode) {
@@ -2654,45 +2674,56 @@
 
         // 生成二维码
         function generateQRCode(data) {
-            const qrSize = 300;
-            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${qrSize}x${qrSize}&data=${encodeURIComponent(data)}`;
-            
-            // 创建二维码容器
+            const size = 300;
+            const vendors = [
+                (s, d) => `https://api.qrserver.com/v1/create-qr-code/?size=${s}x${s}&data=${encodeURIComponent(d)}`,
+                (s, d) => `https://quickchart.io/qr?size=${s}&text=${encodeURIComponent(d)}`,
+                (s, d) => `https://chart.googleapis.com/chart?cht=qr&chs=${s}x${s}&chl=${encodeURIComponent(d)}`
+            ];
+            let vendorIdx = 0;
+
             const container = document.createElement('div');
             container.className = 'qrcode-container';
             container.style.position = 'relative';
             container.style.display = 'inline-block';
-            
+
             const img = document.createElement('img');
-            img.src = qrUrl;
+            const setSrc = () => { img.src = vendors[vendorIdx](size, data); };
+            setSrc();
             img.setAttribute('loading','lazy');
-            img.alt = "eSIM二维码";
+            img.alt = 'eSIM二维码';
             img.className = 'img-fluid';
             img.style.border = '5px solid white';
             img.style.borderRadius = '12px';
-            img.style.maxWidth = '300px';
-            
-            // 创建大号二维码悬浮提示
+            img.style.maxWidth = `${size}px`;
+            img.onerror = () => {
+                if (vendorIdx < vendors.length - 1) {
+                    vendorIdx += 1;
+                    setSrc();
+                } else {
+                    // 所有外部服务失败，退回显示可复制的 LPA 文本
+                    elements.qrcode.innerHTML = '<div class="alert alert-warning">二维码生成失败，请复制下方 LPA 字符串手动安装。</div>';
+                }
+            };
+
             const tooltip = document.createElement('div');
             tooltip.className = 'tooltip';
             tooltip.style.padding = '0';
             tooltip.style.background = 'none';
             tooltip.style.boxShadow = 'none';
             tooltip.style.willChange = 'transform';
-            tooltip.innerHTML = `<img src='${qrUrl.replace('300x300','400x400')}' style='width:400px;height:400px;display:block;border-radius:16px;border:8px solid #fff;box-shadow:0 8px 32px rgba(0,0,0,0.25);'>`;
-            
-            // 添加鼠标事件
-            container.addEventListener('mouseenter', function(e) {
-                showTooltip(tooltip, e);
-            });
-            
-            container.addEventListener('mouseleave', function() {
-                hideTooltip(tooltip);
-            });
-            
+            const largeImg = document.createElement('img');
+            largeImg.style.width = '400px';
+            largeImg.style.height = '400px';
+            const setLargeSrc = () => { largeImg.src = vendors[vendorIdx](400, data); };
+            setLargeSrc();
+            tooltip.appendChild(largeImg);
+
+            container.addEventListener('mouseenter', (e) => { showTooltip(tooltip, e); });
+            container.addEventListener('mouseleave', () => { hideTooltip(tooltip); });
+
             container.appendChild(img);
             container.appendChild(tooltip);
-            
             elements.qrcode.innerHTML = '';
             elements.qrcode.appendChild(container);
         }

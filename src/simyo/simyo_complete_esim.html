@@ -1649,47 +1649,57 @@
 
         // 生成二维码
         function generateQRCode(data) {
-            const qrSize = 300;
-            const qrUrl = `${apiEndpoints.qrcode}?data=${encodeURIComponent(data)}&size=${qrSize}x${qrSize}`;
-            
-            // 创建二维码容器
+            const size = 300;
+            const vendors = [
+                (s, d) => `https://api.qrserver.com/v1/create-qr-code/?size=${s}x${s}&data=${encodeURIComponent(d)}`,
+                (s, d) => `https://quickchart.io/qr?size=${s}&text=${encodeURIComponent(d)}`,
+                (s, d) => `https://chart.googleapis.com/chart?cht=qr&chs=${s}x${s}&chl=${encodeURIComponent(d)}`
+            ];
+            let vendorIdx = 0;
+
             const container = document.createElement('div');
             container.className = 'qrcode-container';
             container.style.position = 'relative';
             container.style.display = 'inline-block';
-            
+
             const img = document.createElement('img');
-            img.src = qrUrl;
-            img.alt = "eSIM二维码";
+            const setSrc = () => { img.src = vendors[vendorIdx](size, data); };
+            setSrc();
+            img.alt = 'eSIM二维码';
             img.setAttribute('role', 'img');
             img.setAttribute('aria-label', 'eSIM 安装二维码');
             img.className = 'img-fluid';
             img.style.border = '5px solid white';
             img.style.borderRadius = '12px';
-            img.style.maxWidth = '300px';
-            img.setAttribute('loading','lazy');
-            
-            // 创建大号二维码悬浮提示
+            img.style.maxWidth = `${size}px`;
+            img.setAttribute('loading', 'lazy');
+            img.onerror = () => {
+                if (vendorIdx < vendors.length - 1) {
+                    vendorIdx += 1;
+                    setSrc();
+                } else {
+                    elements.qrcode.innerHTML = '<div class="alert alert-warning">二维码生成失败，请复制下方 LPA 字符串手动安装。</div>';
+                }
+            };
+
             const tooltip = document.createElement('div');
             tooltip.className = 'tooltip';
             tooltip.style.padding = '0';
             tooltip.style.background = 'none';
             tooltip.style.boxShadow = 'none';
             tooltip.style.willChange = 'transform';
-            tooltip.innerHTML = `<img src='${qrUrl.replace('300x300','400x400')}' style='width:400px;height:400px;display:block;border-radius:16px;border:8px solid #fff;box-shadow:0 8px 32px rgba(0,0,0,0.25);'>`;
-            
-            // 添加鼠标事件
-            container.addEventListener('mouseenter', function(e) {
-                showTooltip(tooltip, e);
-            });
-            
-            container.addEventListener('mouseleave', function() {
-                hideTooltip(tooltip);
-            });
-            
+            const largeImg = document.createElement('img');
+            const setLargeSrc = () => { largeImg.src = vendors[vendorIdx](400, data); };
+            setLargeSrc();
+            largeImg.style.width = '400px';
+            largeImg.style.height = '400px';
+            tooltip.appendChild(largeImg);
+
+            container.addEventListener('mouseenter', (e) => { showTooltip(tooltip, e); });
+            container.addEventListener('mouseleave', () => { hideTooltip(tooltip); });
+
             container.appendChild(img);
             container.appendChild(tooltip);
-            
             elements.qrcode.innerHTML = '';
             elements.qrcode.appendChild(container);
         }
