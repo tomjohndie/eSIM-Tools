@@ -39,7 +39,7 @@ exports.handler = async (event, context) => {
     try {
         // 解析请求体
         const requestBody = JSON.parse(event.body || '{}');
-        const { mfaSignature, query, variables, operationName } = requestBody;
+        const { mfaSignature, query, variables, operationName, cookie } = requestBody;
 
         // 从请求体或 Authorization 头提取 accessToken（兼容两种方式）
         const lowerCaseHeaders = Object.fromEntries(
@@ -117,15 +117,53 @@ exports.handler = async (event, context) => {
             operationName: operationName || null
         };
 
-        // 调用Giffgaff GraphQL API
-        const response = await axios.post(
-            'https://publicapi.giffgaff.com/gateway/graphql',
-            graphqlBody,
-            {
-                headers: requestHeaders,
-                timeout: 30000
+        // 供失败时刷新令牌使用的 verify-cookie 地址
+        const hostHdr = lowerCaseHeaders['x-forwarded-host'] || lowerCaseHeaders['host'] || '';
+        const protoHdr = lowerCaseHeaders['x-forwarded-proto'] || 'https';
+        const verifyCookieUrl = hostHdr ? `${protoHdr}://${hostHdr}/.netlify/functions/verify-cookie` : ((process.env.URL || '').replace(/\/$/, '') + '/.netlify/functions/verify-cookie');
+
+        // 调用Giffgaff GraphQL API（失败 401 时尝试用 cookie 刷新后重试一次）
+        let response;
+        try {
+            response = await axios.post(
+                'https://publicapi.giffgaff.com/gateway/graphql',
+                graphqlBody,
+                { headers: requestHeaders, timeout: 30000 }
+            );
+        } catch (err) {
+            const status = err.response?.status;
+            const data = err.response?.data || {};
+            const isUnauthorized = status === 401 || data?.error === 'unauthorized' || /invalid_token/i.test(String(data?.error || ''));
+            if (isUnauthorized && cookie) {
+                try {
+                    const r = await axios.post(verifyCookieUrl, { cookie }, { headers: { 'Content-Type': 'application/json' }, timeout: 15000 });
+                    if (r.data?.success && r.data?.accessToken) {
+                        accessToken = r.data.accessToken;
+                        requestHeaders['Authorization'] = `Bearer ${accessToken}`;
+                        response = await axios.post(
+                            'https://publicapi.giffgaff.com/gateway/graphql',
+                            graphqlBody,
+                            { headers: requestHeaders, timeout: 30000 }
+                        );
+                    } else {
+                        throw err;
+                    }
+                } catch (reErr) {
+                    return {
+                        statusCode: 401,
+                        headers,
+                        body: JSON.stringify({
+                            error: 'GraphQL Request Failed',
+                            message: 'Access token expired. Please re-login with cookie.',
+                            details: data,
+                            needReLogin: true
+                        })
+                    };
+                }
+            } else {
+                throw err;
             }
-        );
+        }
 
         console.log('GraphQL Success:', {
             status: response.status,

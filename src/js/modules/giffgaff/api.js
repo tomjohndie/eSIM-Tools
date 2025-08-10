@@ -148,6 +148,7 @@ class APIManager {
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
       body: JSON.stringify({
         accessToken,
+        cookie: (typeof localStorage !== 'undefined' ? localStorage.getItem('giffgaff_cookie') : null) || undefined,
         mfaSignature: mfaSignature || undefined,
         query,
         variables
