@@ -27,7 +27,16 @@ app.use(helmet({
     }
 }));
 
-app.use(cors());
+// 仅允许特定来源访问本地API（前端文件本地打开时可能 Origin 为 undefined）
+const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || 'https://esim.cosr.eu.org';
+app.use(cors({
+    origin: function(origin, callback) {
+        if (!origin) return callback(null, true); // 非浏览器/本地文件放行
+        if (origin === ALLOWED_ORIGIN) return callback(null, true);
+        return callback(new Error('Not allowed by CORS'));
+    },
+    credentials: false
+}));
 app.use(morgan('combined'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -94,10 +103,11 @@ app.use('/api/simyo/*', (req, res) => {
     const targetUrl = `https://appapi.simyo.nl/simyoapi/api/v1${req.path.replace('/api/simyo', '')}`;
     console.log(`[Simyo Proxy] ${req.method} ${req.path} -> ${targetUrl}`);
     
-    // 设置CORS头
-    res.header('Access-Control-Allow-Origin', '*');
+    // 设置CORS头（仅允许指定域）
+    res.header('Access-Control-Allow-Origin', ALLOWED_ORIGIN);
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Client-Token, X-Client-Platform, X-Client-Version');
+    res.header('Vary', 'Origin');
     
     if (req.method === 'OPTIONS') {
         return res.status(200).end();

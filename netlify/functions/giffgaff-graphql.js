@@ -6,23 +6,53 @@
 const axios = require('axios');
 
 exports.handler = async (event, context) => {
-    // 设置CORS头
+    // CORS 允许域（默认仅允许生产域名）
+    const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || 'https://esim.cosr.eu.org';
+    const lower = Object.fromEntries(Object.entries(event.headers || {}).map(([k, v]) => [String(k).toLowerCase(), v]));
+    const requestOrigin = lower['origin'];
+
+    const ACCESS_KEY = process.env.ACCESS_KEY || process.env.ESIM_ACCESS_KEY || '';
+    const getProvidedKey = () => {
+        const fromHeader = lower['x-esim-key'] || lower['x-app-key'] || '';
+        if (fromHeader) return fromHeader;
+        try {
+            const bodyObj = JSON.parse(event.body || '{}');
+            if (bodyObj && typeof bodyObj.authKey === 'string') return bodyObj.authKey;
+        } catch {}
+        const q = event.queryStringParameters || {};
+        if (q.authKey) return q.authKey;
+        return '';
+    };
+
     const headers = {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
         'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-MFA-Signature',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Vary': 'Origin',
         'Content-Type': 'application/json'
     };
 
     // 处理预检请求
     if (event.httpMethod === 'OPTIONS') {
-        return {
-            statusCode: 200,
-            headers,
-            body: ''
-        };
+        // 仅允许指定来源的预检
+        if (requestOrigin && requestOrigin !== ALLOWED_ORIGIN) {
+            return { statusCode: 403, headers, body: JSON.stringify({ error: 'Forbidden', message: 'Origin not allowed' }) };
+        }
+        return { statusCode: 200, headers, body: '' };
     }
-    // 不限制来源
+
+    // 非预检：限制来源（无 Origin 视为服务端调用，放行）
+    if (requestOrigin && requestOrigin !== ALLOWED_ORIGIN) {
+        return { statusCode: 403, headers, body: JSON.stringify({ error: 'Forbidden', message: 'Origin not allowed' }) };
+    }
+
+    // 鉴权参数校验（若配置了 ACCESS_KEY 则要求提供）
+    if (ACCESS_KEY) {
+        const provided = getProvidedKey();
+        if (!provided || provided !== ACCESS_KEY) {
+            return { statusCode: 401, headers, body: JSON.stringify({ error: 'Unauthorized', message: 'Missing or invalid auth key' }) };
+        }
+    }
 
     // 只允许POST请求
     if (event.httpMethod !== 'POST') {

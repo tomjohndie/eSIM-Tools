@@ -21,24 +21,50 @@ function isRateLimited(ip) {
 }
 
 exports.handler = async (event, context) => {
+    const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || 'https://esim.cosr.eu.org';
+    const lower = Object.fromEntries(Object.entries(event.headers || {}).map(([k, v]) => [String(k).toLowerCase(), v]));
+    const requestOrigin = lower['origin'];
+    const ACCESS_KEY = process.env.ACCESS_KEY || process.env.ESIM_ACCESS_KEY || '';
+    const getProvidedKey = () => {
+        const fromHeader = lower['x-esim-key'] || lower['x-app-key'] || '';
+        if (fromHeader) return fromHeader;
+        try {
+            const bodyObj = JSON.parse(event.body || '{}');
+            if (bodyObj && typeof bodyObj.authKey === 'string') return bodyObj.authKey;
+        } catch {}
+        const q = event.queryStringParameters || {};
+        if (q.authKey) return q.authKey;
+        return '';
+    };
+
     // 设置CORS头
     const headers = {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
         'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Vary': 'Origin',
         'Content-Type': 'application/json'
     };
 
     // 处理预检请求
     if (event.httpMethod === 'OPTIONS') {
-        return {
-            statusCode: 200,
-            headers,
-            body: ''
-        };
+        if (requestOrigin && requestOrigin !== ALLOWED_ORIGIN) {
+            return { statusCode: 403, headers, body: JSON.stringify({ error: 'Forbidden', message: 'Origin not allowed' }) };
+        }
+        return { statusCode: 200, headers, body: '' };
     }
 
-    // 不限制来源
+    // 限制来源（服务端内部互调通常无 Origin，将被允许）
+    if (requestOrigin && requestOrigin !== ALLOWED_ORIGIN) {
+        return { statusCode: 403, headers, body: JSON.stringify({ error: 'Forbidden', message: 'Origin not allowed' }) };
+    }
+
+    if (ACCESS_KEY) {
+        const provided = getProvidedKey();
+        if (!provided || provided !== ACCESS_KEY) {
+            return { statusCode: 401, headers, body: JSON.stringify({ success: false, error: 'Unauthorized', message: 'Missing or invalid auth key' }) };
+        }
+    }
 
     // 只允许POST请求
     if (event.httpMethod !== 'POST') {

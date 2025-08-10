@@ -45,9 +45,10 @@
   # 限制 Simyo 代理仅允许指定站点跨域访问
   for = "/api/simyo/*"
   [headers.values]
-    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Origin = "https://esim.cosr.eu.org"
     Access-Control-Allow-Headers = "Content-Type, Authorization"
     Access-Control-Allow-Methods = "GET, POST, OPTIONS"
+    Vary = "Origin"
 
 [[redirects]]
   from = "/api/giffgaff/*"
@@ -59,6 +60,7 @@
 [[headers]]
   for = "/api/giffgaff/*"
   [headers.values]
+    # giffgaff 直连不受此限制，保持通用放行
     Access-Control-Allow-Origin = "*"
     Access-Control-Allow-Headers = "Content-Type, Authorization"
     Access-Control-Allow-Methods = "GET, POST, OPTIONS"
