@@ -1071,26 +1071,26 @@
                                 </div>
                                 
                                 <h5 class="text-success mb-3" id="esimStatusTitle">您的eSIM信息（状态：RESERVED）</h5>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <p><strong>激活码 (Activation Code):</strong></p>
-                                        <div class="border p-2 mb-3 bg-light">
-                                            <code id="displayActivationCode" class="text-break"></code>
-                                            <button class="btn btn-sm btn-outline-primary ms-2" onclick="copyToClipboard('displayActivationCode')">
-                                                <i class="fas fa-copy"></i> 复制
-                                            </button>
+                                    <div class="row text-center">
+                                        <div class="col-md-6 d-flex flex-column align-items-center">
+                                            <p class="mb-2"><strong>激活码 (Activation Code):</strong></p>
+                                            <div class="border p-3 mb-3 bg-light w-100" style="max-width:520px;">
+                                                <code id="displayActivationCode" class="text-break fs-4"></code>
+                                                <button class="btn btn-sm btn-outline-primary ms-2" onclick="copyTextFromCode('displayActivationCode', this)">
+                                                    <i class="fas fa-copy"></i> 复制
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 d-flex flex-column align-items-center">
+                                            <p class="mb-2"><strong>SSN:</strong></p>
+                                            <div class="border p-3 mb-3 bg-light w-100" style="max-width:520px;">
+                                                <code id="displaySSN" class="text-break fs-5"></code>
+                                                <button class="btn btn-sm btn-outline-primary ms-2" onclick="copyTextFromCode('displaySSN', this)">
+                                                    <i class="fas fa-copy"></i> 复制
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
-                                        <p><strong>SSN:</strong></p>
-                                        <div class="border p-2 mb-3 bg-light">
-                                            <code id="displaySSN" class="text-break"></code>
-                                            <button class="btn btn-sm btn-outline-primary ms-2" onclick="copyToClipboard('displaySSN')">
-                                                <i class="fas fa-copy"></i> 复制
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
                                 
                                 <div class="manual-activation-guide">
                                     <h5 class="text-primary mb-3">
@@ -1103,8 +1103,8 @@
                                     <ol class="list-group list-group-numbered">
                                         <li class="list-group-item">
                                             前往 Giffgaff 激活页面：
-                                            <a href="https://www.giffgaff.com/activate" target="_blank" class="btn btn-sm btn-success ms-2">
-                                                <i class="fas fa-external-link-alt me-1"></i>打开激活页面
+                                            <a href="https://www.giffgaff.com/activate" target="_blank" class="btn btn-success ms-2" style="padding: 12px 20px; font-size: 16px;">
+                                                <i class="fas fa-external-link-alt me-1"></i> 打开激活页面
                                             </a>
                                         </li>
                                         <li class="list-group-item">
@@ -1402,9 +1402,10 @@
                 removeTooltip(elements.statusMemberId);
             }
             
-            // 更新eSIM状态
-            elements.statusEsimStatus.textContent = appState.esimActivationCode ? '已获取' : '未申请';
-            elements.statusEsimStatus.className = appState.esimActivationCode ? 'status-value connected' : 'status-value disconnected';
+            // 更新eSIM状态：优先显示 deliveryStatus（如 RESERVED/ACTIVE），否则根据是否有激活码判断
+            const delivery = appState.esimDeliveryStatus || (appState.esimActivationCode ? 'RESERVED' : '未申请');
+            elements.statusEsimStatus.textContent = delivery;
+            elements.statusEsimStatus.className = (delivery && delivery !== '未申请') ? 'status-value connected' : 'status-value disconnected';
             
             // 更新激活码状态
             if (appState.esimActivationCode) {
@@ -1480,12 +1481,12 @@
             // 将提示框添加到body
             document.body.appendChild(tooltip);
             
-            // 计算位置
+            // 计算位置（更贴近触发元素）
             const rect = event.target.getBoundingClientRect();
             const tooltipRect = tooltip.getBoundingClientRect();
             
             let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
-            let top = rect.bottom + 8;
+            let top = rect.bottom + 4;
             
             // 确保提示框不超出视窗
             if (left < 10) left = 10;
@@ -1493,7 +1494,7 @@
                 left = window.innerWidth - tooltipRect.width - 10;
             }
             if (top + tooltipRect.height > window.innerHeight - 10) {
-                top = rect.top - tooltipRect.height - 8;
+                top = rect.top - tooltipRect.height - 4;
             }
             
             tooltip.style.left = left + 'px';
@@ -2354,31 +2355,28 @@
             }
         }
 
-        // 复制到剪贴板功能
-        function copyToClipboard(elementId) {
-            const element = document.getElementById(elementId);
-            if (element) {
-                const text = element.textContent;
-                navigator.clipboard.writeText(text).then(() => {
-                    // 临时改变按钮文本显示复制成功
-                    const button = element.nextElementSibling;
-                    if (button) {
-                        const originalText = button.innerHTML;
-                        button.innerHTML = '<i class="fas fa-check"></i> 已复制';
-                        button.classList.add('btn-success');
-                        button.classList.remove('btn-outline-primary');
-                        
-                        setTimeout(() => {
-                            button.innerHTML = originalText;
-                            button.classList.remove('btn-success');
-                            button.classList.add('btn-outline-primary');
-                        }, 2000);
-                    }
-                }).catch(err => {
-                    console.error('复制失败:', err);
-                    alert('复制失败，请手动选择文本复制');
-                });
-            }
+        // 复制到剪贴板功能（从 code 元素提取文本，避免复制元素ID）
+        function copyTextFromCode(codeElementId, btnEl) {
+            const el = document.getElementById(codeElementId);
+            if (!el) return;
+            const text = (el.textContent || '').trim();
+            if (!text) return;
+            navigator.clipboard.writeText(text).then(() => {
+                if (btnEl) {
+                    const old = btnEl.innerHTML;
+                    btnEl.innerHTML = '<i class="fas fa-check"></i> 已复制';
+                    btnEl.classList.add('btn-success');
+                    btnEl.classList.remove('btn-outline-primary');
+                    setTimeout(() => {
+                        btnEl.innerHTML = old;
+                        btnEl.classList.remove('btn-success');
+                        btnEl.classList.add('btn-outline-primary');
+                    }, 1500);
+                }
+            }).catch((e) => {
+                console.error('复制失败:', e);
+                alert('复制失败，请手动选择文本复制');
+            });
         }
 
         // 自动激活eSIM

@@ -142,7 +142,17 @@ exports.handler = async (event, context) => {
                         throw err;
                     }
                 } catch (reErr) {
-                    throw err;
+                    // 多次失败提示客户端需要刷新登录/重新获取Cookie
+                    return {
+                        statusCode: 401,
+                        headers,
+                        body: JSON.stringify({
+                            error: 'MFA Challenge Failed',
+                            message: 'Access token expired. Please re-login with cookie.',
+                            details: data,
+                            needReLogin: true
+                        })
+                    };
                 }
             } else {
                 throw err;

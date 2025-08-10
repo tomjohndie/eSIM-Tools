@@ -95,6 +95,9 @@ class APIManager {
       }
       
       // 如果无法刷新令牌或其他错误，抛出原始错误
+      if (errorData && errorData.needReLogin) {
+        throw new Error('登录过期，请重新使用Cookie登录');
+      }
       throw new Error(`MFA Challenge failed: ${response.status} - ${JSON.stringify(errorData)}`);
     } catch (error) {
       console.error('MFA Challenge error:', error);

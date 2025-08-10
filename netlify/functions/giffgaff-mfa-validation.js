@@ -142,7 +142,16 @@ exports.handler = async (event, context) => {
                         throw err;
                     }
                 } catch (reErr) {
-                    throw err;
+                    return {
+                        statusCode: 401,
+                        headers,
+                        body: JSON.stringify({
+                            error: 'MFA Validation Failed',
+                            message: 'Access token expired. Please re-login with cookie.',
+                            details: data,
+                            needReLogin: true
+                        })
+                    };
                 }
             } else {
                 throw err;
