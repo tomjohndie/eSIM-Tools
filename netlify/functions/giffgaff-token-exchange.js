@@ -7,9 +7,8 @@
 const axios = require('axios');
 
 exports.handler = async (event) => {
-  const allowedOrigin = 'https://esim.cosr.eu.org';
   const headers = {
-    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Content-Type': 'application/json'
@@ -17,11 +16,6 @@ exports.handler = async (event) => {
 
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 200, headers, body: '' };
-  }
-
-  const reqOrigin = (event.headers && (event.headers.origin || event.headers.Origin)) || '';
-  if (reqOrigin && reqOrigin !== allowedOrigin) {
-    return { statusCode: 403, headers, body: JSON.stringify({ error: 'Forbidden', message: 'Origin not allowed' }) };
   }
 
   if (event.httpMethod !== 'POST') {
@@ -89,5 +83,3 @@ exports.handler = async (event) => {
     };
   }
 };
-
-

@@ -1243,10 +1243,12 @@
         const oauthConfig = {
             clientId: "4a05bf219b3985647d9b9a3ba610a9ce",
             redirectUri: "giffgaff://auth/callback/",
-            authUrl: "https://id.giffgaff.com/auth/oauth/authorize",
+            authUrl: "https://id.giffgaff.com/oauth/authorize",
             // 前端不再保存/使用 clientSecret；令牌交换改由后端函数完成
             tokenUrl: "/.netlify/functions/giffgaff-token-exchange",
-            scope: "read"
+            scope: "read",
+            // 可选：显式要求后端使用 Basic（仅在你使用机密客户端时打开）
+            // useBasic: true
         };
 
         // Giffgaff API端点
@@ -1885,6 +1887,13 @@
                 appState.codeVerifier = generateCodeVerifier();
                 const codeChallenge = await generateCodeChallenge(appState.codeVerifier);
                 const state = generateState();
+                // 临时持久化（使用 state->verifier 映射，避免多次点击导致覆盖）
+                try {
+                    const pkceMap = JSON.parse(sessionStorage.getItem('gg_pkce_map') || '{}');
+                    pkceMap[state] = appState.codeVerifier;
+                    sessionStorage.setItem('gg_pkce_map', JSON.stringify(pkceMap));
+                    sessionStorage.setItem('gg_oauth_last_state', state);
+                } catch (e) {}
                 
                 // 构建授权URL
                 const authParams = new URLSearchParams({
@@ -1953,6 +1962,22 @@
                 console.log('解析到的授权码:', code);
                 console.log('解析到的状态:', state);
                 
+                // 如果内存中的 codeVerifier 丢失，优先通过 state 在映射中恢复
+                if (!appState.codeVerifier) {
+                    try {
+                        const pkceMap = JSON.parse(sessionStorage.getItem('gg_pkce_map') || '{}');
+                        const byState = state && pkceMap[state];
+                        if (byState && byState.length >= 43) appState.codeVerifier = byState;
+                        if (!appState.codeVerifier) {
+                            const savedVerifier = sessionStorage.getItem('gg_code_verifier');
+                            if (savedVerifier && savedVerifier.length >= 43) appState.codeVerifier = savedVerifier;
+                        }
+                    } catch (e) {}
+                }
+                if (!appState.codeVerifier) {
+                    throw new Error('会话已重置或过期：缺少 code_verifier，请重新点击“开始OAuth登录”');
+                }
+
                 // 交换访问令牌
                 const tokenResponse = await fetch(oauthConfig.tokenUrl, {
                     method: 'POST',
@@ -1960,7 +1985,9 @@
                     body: JSON.stringify({
                         code: code,
                         code_verifier: appState.codeVerifier,
-                        redirect_uri: oauthConfig.redirectUri
+                        redirect_uri: oauthConfig.redirectUri,
+                        client_id: oauthConfig.clientId,
+                        ...(typeof oauthConfig.useBasic !== 'undefined' ? { use_basic: oauthConfig.useBasic } : {})
                     })
                 });
                 
@@ -1970,6 +1997,11 @@
                 
                 const tokenData = await tokenResponse.json();
                 appState.accessToken = tokenData.access_token;
+                try {
+                    const pkceMap = JSON.parse(sessionStorage.getItem('gg_pkce_map') || '{}');
+                    if (state && pkceMap[state]) { delete pkceMap[state]; }
+                    sessionStorage.setItem('gg_pkce_map', JSON.stringify(pkceMap));
+                } catch (e) {}
                 
                 showStatus(elements.callbackStatus, "OAuth登录成功！", "success");
                 updateStatus(); // 更新状态显示

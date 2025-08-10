@@ -61,7 +61,7 @@ describe('Giffgaff OAuthManager', () => {
       const verifier = 'test-verifier';
       const url = await OAuthManager.buildAuthorizationUrl(verifier);
       
-      expect(url).toContain('https://id.giffgaff.com/auth/oauth/authorize');
+      expect(url).toContain('https://id.giffgaff.com/oauth/authorize');
       expect(url).toContain('response_type=code');
       expect(url).toContain('client_id=');
       expect(url).toContain('redirect_uri=');
