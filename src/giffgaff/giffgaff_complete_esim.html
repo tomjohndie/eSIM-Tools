@@ -409,7 +409,7 @@
         
         /* 状态显示面板 */
         .status-panel {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            background: linear-gradient(135deg, #fffff0 0%, #fffbe4 90%);
             border: 1px solid #dee2e6;
             border-radius: 12px;
             padding: 20px;
@@ -1683,15 +1683,24 @@
                 .replace(/=+$/, '');
         }
 
-        // 服务时间检查函数
+        // 服务时间检查函数（英国伦敦时区 04:30–21:30）
         function isServiceTimeAvailable() {
             const now = new Date();
-            const currentHour = now.getHours();
-            const currentMinute = now.getMinutes();
-            // 废弃：旧的 04:30-12:30 规则
-            const isOutsideServiceTime = false;
+            // 取伦敦时区下的小时与分钟，避免本地/夏令时偏差
+            const parts = new Intl.DateTimeFormat('en-GB', {
+                timeZone: 'Europe/London',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            }).formatToParts(now);
+            const ukHour = parseInt((parts.find(p => p.type === 'hour') || {}).value || '0', 10);
+            const ukMinute = parseInt((parts.find(p => p.type === 'minute') || {}).value || '0', 10);
 
-            return !isOutsideServiceTime;
+            const minutesSinceMidnight = ukHour * 60 + ukMinute;
+            const start = 4 * 60 + 30;   // 04:30
+            const end = 21 * 60 + 30;    // 21:30
+
+            return minutesSinceMidnight >= start && minutesSinceMidnight <= end;
         }
 
         // 显示服务时间警告对话框
@@ -2655,8 +2664,8 @@
             timeElement.offsetHeight; // 触发重排
             timeElement.style.animation = 'time-update 0.5s ease-out';
             
-            // 使用模块化 JS 统一计算，这里不再内联判断
-            const isOutsideServiceTime = false;
+            // 统一使用同一逻辑判断当前是否在服务时段
+            const isOutsideServiceTime = !isServiceTimeAvailable();
             
             const alertElement = document.getElementById('serviceTimeAlert');
             const iconElement = document.getElementById('serviceTimeIcon');
@@ -2686,11 +2695,15 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Giffgaff eSIM申请工具已加载');
             
-            // 初始化服务时间检查
+            // 初始化服务时间检查（立即渲染一次）
             checkServiceTime();
-            
-            // 每分钟更新一次时间
-            setInterval(checkServiceTime, 60000);
+
+            // 将下一次刷新对齐到“下一分钟整点”，之后每 60s 刷新，避免显示落后一整分钟
+            const msToNextMinute = 60000 - (Date.now() % 60000);
+            setTimeout(() => {
+                checkServiceTime();
+                setInterval(checkServiceTime, 60000);
+            }, msToNextMinute);
             
             // 尝试恢复之前的会话
             const sessionRestored = loadSession();
@@ -2826,7 +2839,7 @@
           padding: 14px 16px;
           border-radius: 14px;
           /* 与 current-time-card 一致的暖黄渐变与柔和阴影 */
-          background: linear-gradient(135deg, #fff3d6 60%, #fffaf0 0%);
+          background: linear-gradient(135deg, #fff3d6 60%, #fffaf0 60%);
           border: 1px solid rgba(255, 193, 7, 0.25);
           box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
           position: relative;
@@ -3017,7 +3030,7 @@
           gap: 14px;
           padding: 16px 18px;
           border-radius: var(--st-card-radius);
-          background: linear-gradient(225deg, #fff3d6 60%, #fffaf0 0%);
+          background: linear-gradient(135deg, #fffaf0 60%, #fff3d6 60%);
           box-shadow: var(--st-card-shadow);
           position: relative;
           overflow: hidden;
@@ -3181,8 +3194,8 @@
         /* 警告状态特殊样式 */
         .alert-warning #serviceTimeIcon {
             animation: warning-pulse 2s ease-in-out infinite;
-            background: #fef3c7; /* 警告态底色 */
-            color: #f59e0b;      /* 警告态主色 */
+            background: #f8ecbb; /* 警告态底色 */
+            color: #f59d06;      /* 警告态主色 */
             box-shadow: inset 0 0 0 2px rgba(245,158,11,0.15);
         }
         
@@ -3197,8 +3210,8 @@
         
         /* 成功状态特殊样式 */
         .alert-success #serviceTimeIcon {
-            animation: success-bounce 3s ease-in-out infinite;
-            background: #e6f6ee; /* 成功态底色 */
+            animation: breathing-light-green 2s ease-in-out infinite;
+            background: #e0f6eb; /* 成功态底色 */
             color: #10b981;      /* 成功态主色 */
             box-shadow: inset 0 0 0 2px rgba(16,185,129,0.15);
         }
