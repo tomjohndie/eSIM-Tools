@@ -90,14 +90,12 @@ console.log(`请求参数: ${form.toString()}`);
 // 不打印敏感信息
 console.log(`请求头部: Authorization: Basic ******, Content-Type: application/x-www-form-urlencoded`);
 
-// 尝试使用表单参数方式发送客户端凭据，而不是通过Authorization头
+// 根据Postman配置使用Authorization头发送客户端凭据，而不是表单参数
 const formWithCredentials = new URLSearchParams({
   grant_type: 'authorization_code',
   code,
   redirect_uri: redirectUri || defaultRedirectUri,
-  code_verifier: codeVerifier,
-  client_id: clientId,
-  client_secret: cleanedSecret
+  code_verifier: codeVerifier
 });
 
 console.log(`请求参数(包含凭据): ${formWithCredentials.toString().replace(cleanedSecret, '******')}`);
@@ -123,7 +121,8 @@ try {
 const response = await axios.post(tokenUrl, formWithCredentials, {
   headers: {
     'Content-Type': 'application/x-www-form-urlencoded',
-    'Accept': 'application/json'
+    'Accept': 'application/json',
+    'Authorization': `Basic ${authHeader}`
   },
   timeout: 30000
 });

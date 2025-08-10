@@ -66,11 +66,35 @@ exports.handler = async (event, context) => {
                 })
             };
         }
+        
+        // 如果提供cookie但没有accessToken，先尝试使用cookie获取accessToken
+        if (cookie && !accessToken) {
+            try {
+                // 调用verify-cookie函数获取accessToken
+                const cookieVerifyResponse = await axios.post(
+                    'https://esim.cosr.eu.org/.netlify/functions/verify-cookie',
+                    { cookie },
+                    { 
+                        headers: { 'Content-Type': 'application/json' },
+                        timeout: 30000
+                    }
+                );
+                
+                if (cookieVerifyResponse.data && cookieVerifyResponse.data.success && cookieVerifyResponse.data.accessToken) {
+                    accessToken = cookieVerifyResponse.data.accessToken;
+                    console.log('Successfully obtained access token from cookie');
+                }
+            } catch (cookieError) {
+                console.error('Failed to verify cookie:', cookieError.message);
+                // 继续使用原始cookie
+            }
+        }
 
         console.log('MFA Challenge Request:', {
             source,
             preferredChannels,
-            tokenLength: accessToken.length,
+            tokenLength: accessToken ? accessToken.length : 0,
+            hasCookie: !!cookie,
             timestamp: new Date().toISOString()
         });
 
