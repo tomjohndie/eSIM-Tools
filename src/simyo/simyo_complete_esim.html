@@ -488,6 +488,21 @@
             gap: 8px;
         }
 
+        /* 模式徽标 */
+        .mode-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #7c2d12;
+            background: linear-gradient(135deg, #ffedd5, #fed7aa);
+            border: 1px solid #fdba74;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+        }
+
         .status-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -711,12 +726,19 @@
         <div class="page-title reveal">
             <h1>Simyo NL eSIM 申请工具</h1>
             <p>轻松管理您的Simyo eSIM配置</p>
+            <div id="modeBadge" class="mode-badge" style="display:none" aria-live="polite">
+                <i class="fas fa-exchange-alt" aria-hidden="true"></i> 设备更换模式
+            </div>
         </div>
         
         <!-- 状态显示面板 -->
         <div class="status-panel card-elevated reveal" role="status" aria-live="polite">
             <h3><i class="fas fa-info-circle" aria-hidden="true"></i> 当前状态</h3>
             <div class="status-grid">
+                <div class="status-item">
+                    <span class="status-label">当前模式:</span>
+                    <span id="statusMode" class="status-value connected">标准流程</span>
+                </div>
                 <div class="status-item">
                     <span class="status-label">Session Token:</span>
                     <span id="statusSessionToken" class="status-value disconnected">未登录</span>
@@ -753,19 +775,19 @@
         
         <!-- 步骤指示器 -->
         <div class="step-indicator reveal" role="list" aria-label="进度步骤">
-          <div class="step active" role="listitem" aria-current="step">
+          <div class="step active" role="listitem" aria-current="step" data-step="1">
             <div class="step-number" aria-hidden="true">1</div>
             <div class="step-text">账户登录</div>
           </div>
-            <div class="step">
+            <div class="step" data-step="2">
                 <div class="step-number">2</div>
                 <div class="step-text">获取eSIM</div>
             </div>
-            <div class="step">
+            <div class="step" data-step="3">
                 <div class="step-number">3</div>
                 <div class="step-text">生成二维码</div>
             </div>
-            <div class="step">
+            <div class="step" data-step="4">
                 <div class="step-number">4</div>
                 <div class="step-text">确认安装</div>
             </div>
@@ -843,6 +865,13 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="d-flex justify-content-between mt-3">
+                        <button type="button" class="btn btn-link back-step-btn" aria-label="返回上一步">
+                            ← 返回上一步
+                        </button>
+                        <span></span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -908,6 +937,15 @@
                             <i class="fas fa-skip-forward me-2"></i>跳过设备更换，直接获取eSIM
                         </button>
                     </div>
+
+                    <div class="d-flex justify-content-between mt-3">
+                        <button id="backToDeviceChangeOptionBtn" type="button" class="btn btn-link" aria-label="返回设备更换选项">
+                            ← 返回设备更换选项
+                        </button>
+                        <button type="button" class="btn btn-link back-step-btn" aria-label="返回上一步">
+                            ← 返回上一步
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -931,6 +969,12 @@
                     
                     <div id="esimStatus" class="status" role="status" aria-live="polite"></div>
                     <div id="esimInfo" class="mt-4"></div>
+
+                    <div class="d-flex justify-content-end mt-3">
+                        <button type="button" class="btn btn-link back-step-btn" aria-label="返回上一步">
+                            ← 返回上一步
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -966,6 +1010,12 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="d-flex justify-content-end mt-3">
+                        <button type="button" class="btn btn-link back-step-btn" aria-label="返回上一步">
+                            ← 返回上一步
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -993,6 +1043,12 @@
                     </div>
                     
                     <div id="confirmStatus" class="status" role="status" aria-live="polite"></div>
+
+                    <div class="d-flex justify-content-end mt-3">
+                        <button type="button" class="btn btn-link back-step-btn" aria-label="返回上一步">
+                            ← 返回上一步
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1065,12 +1121,16 @@
             sections: document.querySelectorAll('.section'),
             
             // 状态显示元素
+            statusMode: document.getElementById('statusMode'),
             statusSessionToken: document.getElementById('statusSessionToken'),
             statusValidationCode: document.getElementById('statusValidationCode'),
             statusEsimStatus: document.getElementById('statusEsimStatus'),
             statusActivationCode: document.getElementById('statusActivationCode'),
             statusLpaString: document.getElementById('statusLpaString'),
             clearSessionBtn: document.getElementById('clearSessionBtn'),
+
+            // 模式徽标
+            modeBadge: document.getElementById('modeBadge'),
             
             // Step 1 - Login
             phoneNumber: document.getElementById('phoneNumber'),
@@ -1106,10 +1166,15 @@
 
         function updateSteps(currentStep) {
             elements.steps.forEach((step, index) => {
-                if (index < currentStep) {
+                const stepNo = index + 1;
+                if (stepNo <= currentStep) {
                     step.classList.add('active');
+                    step.style.cursor = 'pointer';
+                    step.title = stepNo < currentStep ? '点击返回此步骤' : '';
                 } else {
                     step.classList.remove('active');
+                    step.style.cursor = 'not-allowed';
+                    step.title = '请按顺序完成前序步骤';
                 }
             });
         }
@@ -1124,10 +1189,24 @@
             });
             appState.currentStep = stepNumber;
             updateSteps(stepNumber);
+            saveSession();
         }
 
         // 状态管理函数
         function updateStatus() {
+            // 模式显示
+            if (elements.statusMode) {
+                if (appState.isDeviceChange) {
+                    elements.statusMode.textContent = '设备更换';
+                    elements.statusMode.className = 'status-value connected';
+                } else {
+                    elements.statusMode.textContent = '标准流程';
+                    elements.statusMode.className = 'status-value connected';
+                }
+            }
+            if (elements.modeBadge) {
+                elements.modeBadge.style.display = appState.isDeviceChange ? 'inline-flex' : 'none';
+            }
             // 更新Session Token状态
             if (appState.sessionToken) {
                 elements.statusSessionToken.textContent = appState.sessionToken;
@@ -1168,12 +1247,11 @@
                 removeTooltip(elements.statusActivationCode);
             }
 
-            // 更新 LPA 字符串状态
+            // 更新 LPA 字符串状态：生成后仅显示“已获取”，不展示原始 LPA
             if (appState.activationCode) {
-                const lpaString = `LPA:${appState.activationCode}`;
-                elements.statusLpaString.textContent = lpaString;
+                elements.statusLpaString.textContent = '已获取';
                 elements.statusLpaString.className = 'status-value connected';
-                addTooltip(elements.statusLpaString, lpaString);
+                removeTooltip(elements.statusLpaString);
             } else {
                 elements.statusLpaString.textContent = '未生成';
                 elements.statusLpaString.className = 'status-value disconnected';
@@ -1185,26 +1263,24 @@
         function addTooltip(element, fullText) {
             if (!element || !fullText) return;
             
-            // 移除现有的提示框
+            // 仅在被截断时添加
+            const isTruncated = element.scrollWidth > element.clientWidth;
+            if (!isTruncated) return;
+
             removeTooltip(element);
-            
-            // 创建提示框
             const tooltip = document.createElement('div');
             tooltip.className = 'tooltip';
             tooltip.textContent = fullText;
             tooltip.setAttribute('role', 'tooltip');
             tooltip.setAttribute('aria-hidden', 'true');
             
-            // 添加鼠标事件
             element.addEventListener('mouseenter', function(e) {
                 showTooltip(tooltip, e);
             });
-            
             element.addEventListener('mouseleave', function() {
                 hideTooltip(tooltip);
             });
-            
-            // 存储提示框引用
+            element.style.cursor = 'help';
             element.tooltip = tooltip;
         }
 
@@ -1212,6 +1288,9 @@
             if (element.tooltip) {
                 element.tooltip.remove();
                 element.tooltip = null;
+            }
+            if (element && element.style) {
+                element.style.cursor = 'default';
             }
         }
 
@@ -1221,21 +1300,19 @@
             // 将提示框添加到body
             document.body.appendChild(tooltip);
             
-            // 计算位置
+            // 计算位置：始终贴近元素下方，缩小间隔
             const rect = event.target.getBoundingClientRect();
             const tooltipRect = tooltip.getBoundingClientRect();
             
             let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
-            let top = rect.bottom + 2;
+            let top = rect.bottom + 4;
             
             // 确保提示框不超出视窗
             if (left < 10) left = 10;
             if (left + tooltipRect.width > window.innerWidth - 10) {
                 left = window.innerWidth - tooltipRect.width - 10;
             }
-            if (top + tooltipRect.height > window.innerHeight - 10) {
-                top = rect.top - tooltipRect.height - 2;
-            }
+            // 不再向上翻转
             
             tooltip.style.left = left + 'px';
             tooltip.style.top = top + 'px';
@@ -1363,14 +1440,20 @@
                                 bindDeviceChangeEvents();
                             }
 
-                            // 还原步骤：若已拿到激活码则跳到二维码步骤，否则保持之前的步骤或展示选项
-                            if (appState.activationCode) {
-                                // 已有激活码：切到二维码页，并还原二维码容器
-                                showSection(Math.max(3, appState.currentStep));
-                                if (elements?.resultContainer) {
-                                    elements.resultContainer.classList.add('active');
-                                }
-                            } else if (!appState.isDeviceChange) {
+                // 还原步骤：若已拿到激活码，则提示 LPA 仅显示一次并建议清理；否则保持之前的步骤或展示选项
+                if (appState.activationCode) {
+                    // 不再自动展开结果容器，仅提示用户
+                    if (elements?.qrStatus) {
+                        showStatus(elements.qrStatus, '已成功获取到 eSIM 二维码/LPA（仅显示一次，本页不再展示原文）。是否清空 cookies？', 'success');
+                    }
+                    setTimeout(() => {
+                        const shouldClear = confirm('已成功获取到 eSIM 二维码/LPA（仅显示一次）。是否立即清空 cookies 并重置？');
+                        if (shouldClear) {
+                            clearSession();
+                        }
+                    }, 100);
+                    showSection(Math.max(3, appState.currentStep));
+                } else if (!appState.isDeviceChange) {
                                 // 显示设备更换选项让用户选择
                                 showDeviceChangeOption();
                             }
@@ -1833,44 +1916,59 @@
 
         // 显示设备更换选项
         function showDeviceChangeOption() {
-            // 隐藏登录步骤
             const step1 = document.getElementById('step1');
-            if (step1) {
-                step1.style.display = 'none';
-            }
-            
-            // 显示设备更换选项
             const deviceChangeOption = document.getElementById('deviceChangeOption');
-            if (deviceChangeOption) {
-                deviceChangeOption.style.display = 'block';
-            }
-            
-            // 更新步骤指示器，跳过步骤1
-            updateSteps(2);
+            const deviceChangeSteps = document.getElementById('deviceChangeSteps');
+
+            // 使用类控制显示，避免行内样式干扰全局切换
+            if (step1) step1.classList.remove('active');
+            if (deviceChangeSteps) deviceChangeSteps.classList.remove('active');
+            if (deviceChangeOption) deviceChangeOption.classList.add('active');
+
+            // 逻辑进度：进入第2步（不可越级到3/4）
+            appState.currentStep = Math.max(appState.currentStep, 2);
+            updateSteps(appState.currentStep);
+            saveSession();
         }
 
         // 开始设备更换流程
         function startDeviceChange() {
             appState.isDeviceChange = true;
             
-            // 隐藏选项，显示设备更换步骤
-            document.getElementById('deviceChangeOption').style.display = 'none';
-            document.getElementById('deviceChangeSteps').style.display = 'block';
+            // 切换可见区域（使用类控制）
+            const optionEl = document.getElementById('deviceChangeOption');
+            const stepsEl = document.getElementById('deviceChangeSteps');
+            if (optionEl) optionEl.classList.remove('active');
+            if (stepsEl) stepsEl.classList.add('active');
             
             // 绑定设备更换相关的事件监听器
             bindDeviceChangeEvents();
+
+            // 保持逻辑进度为第2步
+            appState.currentStep = Math.max(appState.currentStep, 2);
+            updateSteps(appState.currentStep);
+            updateStatus();
+            saveSession();
         }
 
         // 跳过设备更换，直接获取eSIM
         function skipDeviceChange() {
             appState.isDeviceChange = false;
             
-            // 隐藏选项和设备更换步骤
-            document.getElementById('deviceChangeOption').style.display = 'none';
-            document.getElementById('deviceChangeSteps').style.display = 'none';
-            
-            // 显示获取eSIM步骤
-            showSection(2);
+            // 隐藏选项和设备更换步骤（类控制）
+            const optionEl = document.getElementById('deviceChangeOption');
+            const stepsEl = document.getElementById('deviceChangeSteps');
+            if (optionEl) optionEl.classList.remove('active');
+            if (stepsEl) stepsEl.classList.remove('active');
+
+            // 显示“获取eSIM”步骤（此节在 sections 中为第4个，索引基于结构）
+            showSection(4);
+
+            // 但逻辑进度仍为第2步，防止越级点击
+            appState.currentStep = Math.max(appState.currentStep, 2);
+            updateSteps(appState.currentStep);
+            updateStatus();
+            saveSession();
         }
 
         // 绑定设备更换相关的事件监听器
@@ -1906,6 +2004,21 @@
                 });
             }
         }
+
+        // 设备更换流程页：返回到设备更换选项
+        document.addEventListener('click', function(e){
+            const backToOption = e.target.closest('#backToDeviceChangeOptionBtn');
+            if (backToOption) {
+                e.preventDefault();
+                const optionEl = document.getElementById('deviceChangeOption');
+                const stepsEl = document.getElementById('deviceChangeSteps');
+                if (stepsEl) stepsEl.classList.remove('active');
+                if (optionEl) optionEl.classList.add('active');
+                appState.currentStep = Math.max(appState.currentStep, 2);
+                updateSteps(appState.currentStep);
+                saveSession();
+            }
+        });
 
         // 处理申请新eSIM
         async function handleApplyNewEsim() {
@@ -2061,6 +2174,27 @@
             
             // 初始化状态显示
             updateStatus();
+        });
+
+        // 步骤点击跳转（仅允许已达成的步骤）与“返回上一步”按钮
+        document.addEventListener('click', function (e) {
+            const stepEl = e.target.closest('.step-indicator .step');
+            if (stepEl && stepEl.dataset && stepEl.dataset.step) {
+                const target = parseInt(stepEl.dataset.step, 10);
+                if (!isNaN(target) && target <= appState.currentStep) {
+                    e.preventDefault();
+                    showSection(target);
+                }
+            }
+
+            const backBtn = e.target.closest('.back-step-btn');
+            if (backBtn) {
+                e.preventDefault();
+                const prev = Math.max(1, appState.currentStep - 1);
+                if (prev < appState.currentStep) {
+                    showSection(prev);
+                }
+            }
         });
     </script>
 </body>
