@@ -71,21 +71,43 @@ exports.handler = async (event, context) => {
     const verifyCookieUrl = hostHeader ? `${protoHeader}://${hostHeader}/.netlify/functions/verify-cookie` : ((process.env.URL || '').replace(/\/$/, '') + '/.netlify/functions/verify-cookie');
 
     // 如果提供cookie但没有accessToken，先尝试使用cookie获取accessToken
-        if (cookie && !accessToken) {
+        let mergedCookie = cookie || '';
+        if (cookie) {
+            // 预热：访问 dashboard 刷新并合并 Set-Cookie，提高 id.giffgaff.com 接口成功率
             try {
-                // 调用verify-cookie函数获取accessToken
-            const cookieVerifyResponse = await axios.post(verifyCookieUrl, { cookie }, {
-                headers: { 'Content-Type': 'application/json' },
-                timeout: 30000
-            });
-                
-                if (cookieVerifyResponse.data && cookieVerifyResponse.data.success && cookieVerifyResponse.data.accessToken) {
-                    accessToken = cookieVerifyResponse.data.accessToken;
-                    console.log('Successfully obtained access token from cookie');
+                const session = axios.create({ maxRedirects: 5, timeout: 30000, validateStatus: () => true });
+                const dashResp = await session.get('https://www.giffgaff.com/dashboard', {
+                    headers: {
+                        'Cookie': mergedCookie,
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                        'Accept-Language': 'zh-CN,zh;q=0.9',
+                        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0',
+                        'Referer': 'https://www.giffgaff.com/auth/login/challenge?redirect=%2Fdashboard',
+                        'Upgrade-Insecure-Requests': '1',
+                        'DNT': '1'
+                    }
+                });
+                const setCookies = ([]).concat(dashResp.headers['set-cookie'] || []);
+                if (setCookies.length) {
+                    mergedCookie = mergeSetCookies(mergedCookie, setCookies);
                 }
-            } catch (cookieError) {
-                console.error('Failed to verify cookie:', cookieError.message);
-                // 继续使用原始cookie
+            } catch (e) {
+                console.warn('Dashboard warm-up failed:', e.message);
+            }
+            // 若还没有 access token，则尝试一次 verify-cookie
+            if (!accessToken) {
+                try {
+                    const cookieVerifyResponse = await axios.post(verifyCookieUrl, { cookie: mergedCookie }, {
+                        headers: { 'Content-Type': 'application/json' },
+                        timeout: 30000
+                    });
+                    if (cookieVerifyResponse.data?.success && cookieVerifyResponse.data?.accessToken) {
+                        accessToken = cookieVerifyResponse.data.accessToken;
+                        console.log('Successfully obtained access token from merged cookie');
+                    }
+                } catch (cookieError) {
+                    console.error('Failed to verify merged cookie:', cookieError.message);
+                }
             }
         }
 
@@ -98,6 +120,24 @@ exports.handler = async (event, context) => {
         });
 
         // 调用Giffgaff MFA API，失败且令牌过期时，尝试用cookie刷新一次
+        // 获取 CSRF（可提升 /v4/mfa/challenge/me 的通过率）
+        let csrfToken = null;
+        if (mergedCookie) {
+            try {
+                const csrfResp = await axios.get('https://id.giffgaff.com/auth/csrf', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'Cookie': mergedCookie,
+                        'User-Agent': 'giffgaff/1321 CFNetwork/1568.300.101 Darwin/24.2.0'
+                    },
+                    timeout: 15000
+                });
+                csrfToken = csrfResp.data?.token || null;
+            } catch (e) {
+                console.warn('Fetch CSRF failed:', e.message);
+            }
+        }
+
         const sendChallenge = async (token) => axios.post(
             'https://id.giffgaff.com/v4/mfa/challenge/me',
             { source, preferredChannels },
@@ -106,15 +146,16 @@ exports.handler = async (event, context) => {
                     const h = {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0',
                         'Origin': 'https://www.giffgaff.com',
                         'Referer': 'https://www.giffgaff.com/',
-                        'Accept-Language': 'en-US,en;q=0.9',
+                        'Accept-Language': 'zh-CN,zh;q=0.9',
                         'Cache-Control': 'no-cache',
                         'Pragma': 'no-cache'
                     };
+                    if (csrfToken) h['x-csrf-token'] = csrfToken;
                     if (token) h['Authorization'] = `Bearer ${token}`;
-                    if (cookie) h['Cookie'] = cookie; // 始终附带 cookie，提升成功率
+                    if (mergedCookie) h['Cookie'] = mergedCookie;
                     return h;
                 })(),
                 timeout: 30000
@@ -128,9 +169,9 @@ exports.handler = async (event, context) => {
             const status = err.response?.status;
             const data = err.response?.data || {};
             const isExpired = status === 401 && (data.error === 'invalid_token' || /expired/i.test(String(data.error_description || '')));
-            if (isExpired && cookie) {
+            if (isExpired && mergedCookie) {
                 try {
-                    const cookieVerifyResponse = await axios.post(verifyCookieUrl, { cookie }, {
+                    const cookieVerifyResponse = await axios.post(verifyCookieUrl, { cookie: mergedCookie }, {
                         headers: { 'Content-Type': 'application/json' },
                         timeout: 30000
                     });
@@ -199,3 +240,32 @@ exports.handler = async (event, context) => {
         };
     }
 };
+
+// 合并原始 Cookie 与 Set-Cookie 数组
+function mergeSetCookies(originalCookieHeader, setCookieArray) {
+    const jar = new Map();
+    // 先装入原始 cookie
+    String(originalCookieHeader || '')
+        .split(';')
+        .map(s => s.trim())
+        .filter(Boolean)
+        .forEach(kv => {
+            const eq = kv.indexOf('=');
+            if (eq > 0) {
+                const k = kv.slice(0, eq).trim();
+                const v = kv.slice(eq + 1).trim();
+                if (k) jar.set(k, v);
+            }
+        });
+    // 处理 set-cookie 覆盖
+    for (const sc of setCookieArray) {
+        const pair = String(sc).split(';')[0];
+        const eq = pair.indexOf('=');
+        if (eq > 0) {
+            const k = pair.slice(0, eq).trim();
+            const v = pair.slice(eq + 1).trim();
+            if (k) jar.set(k, v);
+        }
+    }
+    return Array.from(jar.entries()).map(([k, v]) => `${k}=${v}`).join('; ');
+}

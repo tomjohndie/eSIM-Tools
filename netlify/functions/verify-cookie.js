@@ -87,10 +87,28 @@ exports.handler = async (event, context) => {
         const result = await validateCookieAndGetToken(cookie);
 
         if (result.success) {
+            const looksLikeJwt = typeof result.accessToken === 'string' && result.accessToken.includes('.') && result.accessToken.length > 200;
             console.log('Cookie Validation Success:', {
                 hasAccessToken: !!result.accessToken,
+                looksLikeJwt,
                 timestamp: new Date().toISOString()
             });
+
+            // 只有拿到疑似 JWT 的令牌才视为可直接进入第2步
+            if (!looksLikeJwt) {
+                return {
+                    statusCode: 200,
+                    headers,
+                    body: JSON.stringify({
+                        success: true,
+                        valid: false,
+                        accessToken: null,
+                        memberId: result.memberId || null,
+                        emailSignature: null,
+                        message: 'Cookie验证通过但未获取可用于API的访问令牌，请使用OAuth或确保包含 id.giffgaff.com 域的完整会话后重试'
+                    })
+                };
+            }
 
             return {
                 statusCode: 200,

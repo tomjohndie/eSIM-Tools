@@ -29,12 +29,12 @@ class APIManager {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
+          ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {})
         },
         body: JSON.stringify({
-          accessToken,
-          // 附带cookie以便服务端在令牌过期时刷新
-          cookie: localStorage.getItem('giffgaff_cookie') || undefined,
+          ...(accessToken ? { accessToken } : {}),
+          // 附带cookie以便服务端在令牌过期或缺失时用 cookie 兜底刷新
+          cookie: (typeof localStorage !== 'undefined' ? localStorage.getItem('giffgaff_cookie') : null) || undefined,
           source: 'esim',
           preferredChannels: ['EMAIL']
         })
