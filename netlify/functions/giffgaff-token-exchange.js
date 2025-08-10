@@ -40,6 +40,7 @@ exports.handler = async (event) => {
 
     const clientId = process.env.GIFFGAFF_CLIENT_ID;
     const clientSecret = process.env.GIFFGAFF_CLIENT_SECRET;
+    // 根据Postman配置文件中的设置使用正确的令牌端点URL
     const tokenUrl = process.env.GIFFGAFF_TOKEN_URL || 'https://id.giffgaff.com/auth/oauth/token';
     const defaultRedirectUri = process.env.GIFFGAFF_REDIRECT_URI || 'giffgaff://auth/callback/';
 
@@ -54,12 +55,22 @@ exports.handler = async (event) => {
       };
     }
 
-    // 尝试清理客户端密钥中可能存在的问题
+    // 使用正确的客户端密钥格式，确保包含等号
     let cleanedSecret = clientSecret;
-    // 如果密钥末尾有百分号，尝试去除
-    if (clientSecret.endsWith('%')) {
-      cleanedSecret = clientSecret.slice(0, -1);
-      console.log('检测到客户端密钥末尾有百分号，已去除');
+    
+    // 确保客户端密钥包含等号，这在base64密钥中很重要
+    if (!cleanedSecret.endsWith('=')) {
+      // 如果不是以等号结尾，先检查是否以百分号结尾并去除
+      if (cleanedSecret.endsWith('%')) {
+        cleanedSecret = cleanedSecret.slice(0, -1);
+        console.log('检测到客户端密钥末尾有百分号，已去除');
+      }
+      
+      // 如果客户端密钥是标准的base64，但缺少等号，添加等号
+      if (!/=$/.test(cleanedSecret)) {
+        cleanedSecret = cleanedSecret + '=';
+        console.log('客户端密钥可能缺少等号，已添加');
+      }
     }
     
     console.log(`使用客户端ID: ${clientId.substring(0, 5)}*****`);

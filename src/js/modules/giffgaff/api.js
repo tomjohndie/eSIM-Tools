@@ -21,25 +21,82 @@ class APIManager {
    * @returns {Promise<Object>} MFA Challenge Response
    */
   async sendMFAChallenge(accessToken) {
-    const response = await fetch(this.endpoints.mfaChallenge, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`
-      },
-      body: JSON.stringify({
-        accessToken,
-        source: 'esim',
-        preferredChannels: ['EMAIL']
-      })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`MFA Challenge failed: ${response.status} - ${errorText}`);
+    // 先检查令牌是否过期，如果过期则尝试使用cookie重新验证
+    try {
+      // 尝试使用现有令牌
+      const response = await fetch(this.endpoints.mfaChallenge, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify({
+          accessToken,
+          source: 'esim',
+          preferredChannels: ['EMAIL']
+        })
+      });
+      
+      // 如果响应成功，直接返回结果
+      if (response.ok) {
+        return await response.json();
+      }
+      
+      // 如果是401错误，可能是令牌过期
+      const errorData = await response.json();
+      console.warn('令牌可能过期，尝试重新验证cookie', errorData);
+      
+      // 检查是否是令牌过期错误
+      if (response.status === 401 && 
+          errorData?.details?.error === 'invalid_token' && 
+          errorData?.details?.error_description === 'Access token expired') {
+        
+        // 尝试使用本地存储的cookie重新验证
+        const cookie = localStorage.getItem('giffgaff_cookie');
+        if (cookie) {
+          console.log('尝试使用cookie重新验证');
+          const cookieVerifyResult = await this.verifyCookie(cookie);
+          
+          if (cookieVerifyResult.success && cookieVerifyResult.accessToken) {
+            // 更新全局令牌
+            const newAccessToken = cookieVerifyResult.accessToken;
+            console.log('使用cookie重新验证成功，更新令牌');
+            
+            // 使用新令牌重新发送MFA请求
+            const newResponse = await fetch(this.endpoints.mfaChallenge, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${newAccessToken}`
+              },
+              body: JSON.stringify({
+                accessToken: newAccessToken,
+                source: 'esim',
+                preferredChannels: ['EMAIL']
+              })
+            });
+            
+            if (newResponse.ok) {
+              // 返回数据并更新状态
+              const result = await newResponse.json();
+              // 通知调用者令牌已更新
+              result._tokenRefreshed = true;
+              result._newAccessToken = newAccessToken;
+              return result;
+            } else {
+              const newErrorText = await newResponse.text();
+              throw new Error(`MFA Challenge with refreshed token failed: ${newResponse.status} - ${newErrorText}`);
+            }
+          }
+        }
+      }
+      
+      // 如果无法刷新令牌或其他错误，抛出原始错误
+      throw new Error(`MFA Challenge failed: ${response.status} - ${JSON.stringify(errorData)}`);
+    } catch (error) {
+      console.error('MFA Challenge error:', error);
+      throw error;
     }
-
-    return await response.json();
   }
 
   /**

@@ -1583,6 +1583,14 @@
             };
             localStorage.setItem('giffgaff_session', JSON.stringify(sessionData));
         }
+        
+        // 保存cookie到localStorage
+        function saveCookie(cookie) {
+            if (cookie && typeof cookie === 'string') {
+                localStorage.setItem('giffgaff_cookie', cookie);
+                console.log('已保存cookie到localStorage');
+            }
+        }
 
         function loadSession() {
             try {
@@ -1846,6 +1854,10 @@
                 
                 if (result.success) {
                     appState.accessToken = result.accessToken;
+                    
+                    // 保存cookie以便后续令牌刷新使用
+                    saveCookie(cookie);
+                    
                     showStatus(elements.cookieStatus, "Cookie验证成功！已获取Access Token，接下来需要进行邮件验证", "success");
                     updateStatus(); // 更新状态显示
                     saveSession(); // 保存会话
@@ -2053,6 +2065,14 @@
                 }
                 
                 const data = await response.json();
+                
+                // 检查令牌是否被刷新
+                if (data._tokenRefreshed && data._newAccessToken) {
+                    console.log('令牌已刷新，更新应用状态');
+                    appState.accessToken = data._newAccessToken;
+                    saveSession(); // 保存更新后的令牌
+                }
+                
                 appState.emailCodeRef = data.ref;
                 
                 showStatus(elements.emailStatus, "邮件验证码已发送！", "success");
