@@ -1355,16 +1355,22 @@
                         }
                         
                         if (appState.sessionToken) {
-                            // 根据用户之前的选择决定显示什么
+                            // 根据用户之前的选择与数据决定显示什么
                             if (appState.isDeviceChange) {
                                 // 用户之前选择了设备更换，直接显示设备更换步骤
                                 document.getElementById('deviceChangeOption').style.display = 'none';
                                 document.getElementById('deviceChangeSteps').style.display = 'block';
                                 bindDeviceChangeEvents();
-                            } else if (appState.activationCode) {
-                                // 用户已经获取了eSIM，直接跳转到相应步骤
+                            }
+
+                            // 还原步骤：若已拿到激活码则跳到二维码步骤，否则保持之前的步骤或展示选项
+                            if (appState.activationCode) {
+                                // 已有激活码：切到二维码页，并还原二维码容器
                                 showSection(Math.max(3, appState.currentStep));
-                            } else {
+                                if (elements?.resultContainer) {
+                                    elements.resultContainer.classList.add('active');
+                                }
+                            } else if (!appState.isDeviceChange) {
                                 // 显示设备更换选项让用户选择
                                 showDeviceChangeOption();
                             }

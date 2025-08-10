@@ -1623,11 +1623,33 @@
                             // 根据已有的数据决定跳转到合适的步骤
                             let targetStep = 1;
                             if (appState.emailSignature) {
-                                targetStep = 3; // 跳到会员信息步骤
+                                if (appState.esimActivationCode || appState.esimSSN) {
+                                    // 已预订eSIM
+                                    if (appState.lpaString) {
+                                        targetStep = 5; // 已可获取二维码
+                                    } else {
+                                        targetStep = 4; // 预订eSIM步骤
+                                    }
+                                } else {
+                                    targetStep = 3; // 会员信息
+                                }
                             } else if (appState.accessToken) {
-                                targetStep = 2; // 跳到邮件验证步骤
+                                targetStep = 2; // 邮件验证
                             }
                             showSection(Math.max(targetStep, appState.currentStep));
+
+                            // 恢复激活码/SSN与结果UI
+                            const esimInfoDisplay = document.getElementById('esimInfoDisplay');
+                            const displayActivationCode = document.getElementById('displayActivationCode');
+                            const displaySSN = document.getElementById('displaySSN');
+                            if (esimInfoDisplay && (appState.esimActivationCode || appState.esimSSN)) {
+                                if (displayActivationCode) displayActivationCode.textContent = appState.esimActivationCode || '未获取';
+                                if (displaySSN) displaySSN.textContent = appState.esimSSN || '未获取';
+                                esimInfoDisplay.style.display = 'block';
+                            }
+                            if (appState.lpaString && elements?.resultContainer) {
+                                elements.resultContainer.classList.add('active');
+                            }
                         }
                         
                         updateStatus();
