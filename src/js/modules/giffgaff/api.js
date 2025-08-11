@@ -287,7 +287,15 @@ class APIManager {
       }
     };
 
-    return await this.graphqlQuery(accessToken, query, variables, mfaSignature);
+    const data = await this.graphqlQuery(accessToken, query, variables, mfaSignature);
+    try {
+      const esim = data?.data?.reserveESim?.esim;
+      if (esim) {
+        localStorage.setItem('gg_esim_activationCode', esim.activationCode || '');
+        localStorage.setItem('gg_esim_ssn', esim.ssn || '');
+      }
+    } catch (_) {}
+    return data;
   }
 
   /**
@@ -313,7 +321,12 @@ class APIManager {
       ssn: ssn
     };
 
-    return await this.graphqlQuery(accessToken, query, variables);
+    const data = await this.graphqlQuery(accessToken, query, variables);
+    try {
+      const lpa = data?.data?.eSimDownloadToken?.lpaString;
+      if (lpa) localStorage.setItem('gg_esim_lpa', lpa);
+    } catch (_) {}
+    return data;
   }
 
   /**

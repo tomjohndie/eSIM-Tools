@@ -2174,6 +2174,22 @@
             
             // 初始化状态显示
             updateStatus();
+
+            // 如已存在激活码，询问是否继续
+            (function promptResumeIfHasActivation(){
+                try {
+                    const hasAct = !!appState.activationCode;
+                    if (!hasAct) return;
+                    const resumed = sessionStorage.getItem('simyo_resumed_once');
+                    if (resumed === '1') return;
+                    sessionStorage.setItem('simyo_resumed_once', '1');
+                    const ok = confirm('检测到已存在激活码，是否继续完成 eSIM 二维码生成/安装？');
+                    if (ok) {
+                        // 直接跳到生成二维码步骤
+                        showSection(3);
+                    }
+                } catch (_) {}
+            })();
         });
 
         // 步骤点击跳转（仅允许已达成的步骤）与“返回上一步”按钮

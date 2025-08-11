@@ -2633,6 +2633,7 @@
                 
                 showStatus(elements.esimReserveStatus, `eSIM预订成功！状态：${appState.esimDeliveryStatus || 'RESERVED'}`, "success");
                 updateStatus(); // 更新状态显示
+                saveSession(); // 持久化激活码/SSN
                 
                 // 显示eSIM信息和手动激活指导
                 showESIMInfoAndGuide();
@@ -2713,22 +2714,37 @@
                         appState.esimActivationCode = reserveData.data?.reserveESim?.esim?.activationCode || appState.esimActivationCode;
                         appState.esimDeliveryStatus = reserveData.data?.reserveESim?.esim?.deliveryStatus || 'RESERVED';
                         updateStatus();
-                        // 自动激活（网页流）
-                        const actResp = await fetch(apiEndpoints.autoActivate, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ activationCode: appState.esimActivationCode, cookie: localStorage.getItem('giffgaff_cookie') || undefined, accessToken: appState.accessToken || undefined }) });
-                        if (!actResp.ok) throw new Error('激活请求失败: ' + actResp.status);
-                        const actData = await actResp.json();
-                        showStatus(statusEl, actData.success ? '激活已提交/成功，正在获取二维码...' : (actData.message || '激活失败'), actData.success ? 'success' : 'error');
-                        // 获取 LPA
-                        const tokenResp = await fetch(apiEndpoints.graphql, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ accessToken: appState.accessToken, mfaSignature: appState.emailSignature, query: `query eSimDownloadToken($ssn: String!) { eSimDownloadToken(ssn: $ssn) { lpaString __typename } }`, variables: { ssn: appState.esimSSN }, operationName: 'eSimDownloadToken' }) });
-                        if (!tokenResp.ok) throw new Error('获取LPA失败: ' + tokenResp.status);
-                        const tokenData = await tokenResp.json();
-                        appState.lpaString = tokenData.data?.eSimDownloadToken?.lpaString || '';
-                        if (appState.lpaString) {
-                            showSection(5);
-                            showESimResult();
-                        } else {
-                            showStatus(statusEl, '暂未获取到LPA，请在第五步稍后重试“获取eSIM Token”。', 'warning');
+                        saveSession();
+                        
+                        // 执行 swapSim（关键：将预订的新卡生效）
+                        try {
+                            const swapResp = await fetch(apiEndpoints.graphql, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ accessToken: appState.accessToken, mfaSignature: appState.emailSignature, query: `mutation SwapSim($activationCode: String!, $mfaSignature: String!) { swapSim(activationCode: $activationCode, mfaSignature: $mfaSignature) { old { ssn activationCode __typename } new { ssn activationCode __typename } __typename } }`, variables: { activationCode: appState.esimActivationCode, mfaSignature: appState.emailSignature }, operationName: 'SwapSim' }) });
+                            if (swapResp.ok) {
+                                const swapData = await swapResp.json();
+                                const newSim = swapData?.data?.swapSim?.new;
+                                if (newSim?.ssn) {
+                                    appState.esimSSN = newSim.ssn;
+                                    if (newSim.activationCode) appState.esimActivationCode = newSim.activationCode;
+                                    saveSession();
+                                }
+                            }
+                        } catch (e) {
+                            // 忽略，继续轮询获取 LPA
                         }
+                        // 直接尝试获取 LPA（与 App 抓包一致，不走网页 /activate 流）
+                        showStatus(statusEl, '已完成预订，正在获取二维码...', 'success');
+                        let got = false;
+                        for (let i = 0; i < 10; i++) { // 轮询 ~40s
+                            const tokenResp = await fetch(apiEndpoints.graphql, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ accessToken: appState.accessToken, mfaSignature: appState.emailSignature, query: `query eSimDownloadToken($ssn: String!) { eSimDownloadToken(ssn: $ssn) { lpaString __typename } }`, variables: { ssn: appState.esimSSN }, operationName: 'eSimDownloadToken' }) });
+                            if (tokenResp.ok) {
+                                const tokenData = await tokenResp.json();
+                                const lpa = tokenData.data?.eSimDownloadToken?.lpaString || '';
+                                if (lpa) { appState.lpaString = lpa; got = true; break; }
+                            }
+                            await new Promise(r=>setTimeout(r, 4000));
+                        }
+                        if (got) { showSection(5); showESimResult(); }
+                        else { showStatus(statusEl, '暂未获取到LPA，请在第五步稍后点击“获取eSIM Token”。', 'warning'); }
                     } catch (e) {
                         showStatus(statusEl, '短信激活失败：' + e.message, 'error');
                     } finally {
@@ -2829,6 +2845,31 @@
             }
 
             try {
+                // 网页自动激活严格依赖 giffgaff 官网 Cookie；无 Cookie 时先拦截并提示
+                const webCookie = localStorage.getItem('giffgaff_cookie');
+                if (!webCookie) {
+                    showStatus(
+                        elements.autoActivateStatus,
+                        '需要 giffgaff 官网 Cookie 才能自动激活。请回到第一步选择“Cookie 登录”并验证，或手动前往官网激活。',
+                        'error'
+                    );
+                    // 提供一个快捷按钮引导到第一步 Cookie 登录
+                    const gateBtnId = 'goCookieLoginBtn';
+                    let gateBtn = document.getElementById(gateBtnId);
+                    if (!gateBtn) {
+                        gateBtn = document.createElement('button');
+                        gateBtn.id = gateBtnId;
+                        gateBtn.className = 'btn btn-outline-primary mt-2';
+                        gateBtn.innerHTML = '<i class="fas fa-arrow-left me-2"></i> 前往第一步进行 Cookie 登录';
+                        gateBtn.addEventListener('click', () => {
+                            showSection(1);
+                            try { selectLoginMethod('cookie'); } catch (_) {}
+                        });
+                        elements.autoActivateStatus.appendChild(gateBtn);
+                    }
+                    return;
+                }
+
                 elements.autoActivateBtn.innerHTML = '<span class="loading"></span> 自动激活中...';
                 elements.autoActivateBtn.disabled = true;
                 
@@ -2843,7 +2884,7 @@
                     body: JSON.stringify({
                         activationCode: appState.esimActivationCode,
                         // 优先使用Cookie通道。若此前使用OAuth登录，也会带上Bearer以便后端将来扩展
-                        cookie: localStorage.getItem('giffgaff_cookie') || undefined,
+                        cookie: webCookie,
                         accessToken: appState.accessToken || undefined
                     })
                 });
@@ -3297,6 +3338,22 @@
             }
             
             updateStatus(); // 初始化状态显示
+
+            // 若已存在激活码/SSN，提示是否继续激活流程
+            (function promptResumeIfReserved(){
+                try {
+                    const hasCodes = !!(appState.esimActivationCode || appState.esimSSN);
+                    if (!hasCodes) return;
+                    const resumed = sessionStorage.getItem('gg_resumed_once');
+                    if (resumed === '1') return;
+                    sessionStorage.setItem('gg_resumed_once', '1');
+                    const ok = confirm('检测到已有激活码/SSN，是否继续完成eSIM激活？');
+                    if (ok) {
+                        // 若已有签名与会员信息，直接到第四步；否则按顺序补齐
+                        if (appState.memberId) showSection(4); else if (appState.emailSignature) showSection(3); else showSection(2);
+                    }
+                } catch (_) {}
+            })();
 
             // 绑定登录方式卡片交互
             (function bindLoginCards(){

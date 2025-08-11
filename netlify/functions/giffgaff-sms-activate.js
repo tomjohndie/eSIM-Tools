@@ -219,7 +219,24 @@ exports.handler = async (event, context) => {
       currentActivationCode = reservation.esim.activationCode;
     }
 
-    // 4) 直接走 GraphQL 下载令牌（多数 App 流程不依赖网页 /activate）
+    // 4) 执行 swapSim，将预订的 eSIM 正式替换为新卡（App 流程关键步骤）
+    try {
+      const swapBody = {
+        query: `mutation SwapSim($activationCode: String!, $mfaSignature: String!) { swapSim(activationCode: $activationCode, mfaSignature: $mfaSignature) { old { ssn activationCode __typename } new { ssn activationCode __typename } __typename } }`,
+        variables: { activationCode: currentActivationCode, mfaSignature },
+        operationName: 'SwapSim'
+      };
+      const rs = await createGraphql(accessToken)({ ...swapBody });
+      const sw = rs.data?.data?.swapSim;
+      if (sw?.new?.ssn) {
+        currentSSN = sw.new.ssn;
+        currentActivationCode = sw.new.activationCode || currentActivationCode;
+      }
+    } catch (e) {
+      // 允许继续轮询（有些场景 swapSim 会由后端异步完成）
+    }
+
+    // 5) 直接走 GraphQL 下载令牌（多数 App 流程不依赖网页 /activate）
     //    这里不再调用网页 auto-activate-esim，避免 403 和与 App 流不一致
     // 轮询获取 LPA（最长 ~120秒）
     const downloadQuery = {
