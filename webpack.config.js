@@ -1,4 +1,5 @@
 const path = require('path');
+const webpack = require('webpack');
 const TerserPlugin = require('terser-webpack-plugin');
 const CompressionPlugin = require('compression-webpack-plugin');
 const { GenerateSW } = require('workbox-webpack-plugin');
@@ -60,6 +61,9 @@ module.exports = {
     }
   },
   plugins: [
+    new webpack.DefinePlugin({
+      'process.env.ESIM_ACCESS_KEY': JSON.stringify(process.env.ESIM_ACCESS_KEY || ''),
+    }),
     new CompressionPlugin({
       test: /\.(js|css|html|svg)$/,
       algorithm: 'gzip',

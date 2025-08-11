@@ -35,6 +35,7 @@ class APIManager {
           ...(accessToken ? { accessToken } : {}),
           // 附带cookie以便服务端在令牌过期或缺失时用 cookie 兜底刷新
           cookie: (typeof localStorage !== 'undefined' ? localStorage.getItem('giffgaff_cookie') : null) || undefined,
+          authKey: (typeof window !== 'undefined' ? window.ESIM_ACCESS_KEY : undefined),
           source: 'esim',
           preferredChannels: ['EMAIL']
         })
@@ -75,6 +76,7 @@ class APIManager {
               body: JSON.stringify({
                 accessToken: newAccessToken,
                 cookie: localStorage.getItem('giffgaff_cookie') || undefined,
+                authKey: (typeof window !== 'undefined' ? window.ESIM_ACCESS_KEY : undefined),
                 source: 'esim',
                 preferredChannels: ['EMAIL']
               })
@@ -123,7 +125,8 @@ class APIManager {
       body: JSON.stringify({
         accessToken,
         ref: ref,
-        code: code
+        code: code,
+        authKey: (typeof window !== 'undefined' ? window.ESIM_ACCESS_KEY : undefined)
       })
     });
 
@@ -145,7 +148,7 @@ class APIManager {
     const resp = await fetch(this.endpoints.smsActivate, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}) },
-      body: JSON.stringify({ ref, code, accessToken, cookie: cookie || (typeof localStorage !== 'undefined' ? localStorage.getItem('giffgaff_cookie') : undefined), memberId, ssn, activationCode })
+      body: JSON.stringify({ ref, code, accessToken, cookie: cookie || (typeof localStorage !== 'undefined' ? localStorage.getItem('giffgaff_cookie') : undefined), memberId, ssn, activationCode, authKey: (typeof window !== 'undefined' ? window.ESIM_ACCESS_KEY : undefined) })
     });
     if (!resp.ok) {
       const t = await resp.text();
@@ -170,6 +173,7 @@ class APIManager {
         accessToken,
         cookie: (typeof localStorage !== 'undefined' ? localStorage.getItem('giffgaff_cookie') : null) || undefined,
         mfaSignature: mfaSignature || undefined,
+        authKey: (typeof window !== 'undefined' ? window.ESIM_ACCESS_KEY : undefined),
         query,
         variables
       })
@@ -208,7 +212,7 @@ class APIManager {
     const response = await fetch(this.endpoints.tokenExchange, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code, code_verifier: codeVerifier, redirect_uri: redirectUri })
+      body: JSON.stringify({ code, code_verifier: codeVerifier, redirect_uri: redirectUri, authKey: (typeof window !== 'undefined' ? window.ESIM_ACCESS_KEY : undefined) })
     });
     if (!response.ok) {
       const errorText = await response.text();
@@ -317,7 +321,8 @@ class APIManager {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        cookie: cookie
+        cookie: cookie,
+        authKey: (typeof window !== 'undefined' ? window.ESIM_ACCESS_KEY : undefined)
       })
     });
 
@@ -341,7 +346,8 @@ class APIManager {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        activationCode: activationCode
+        activationCode: activationCode,
+        authKey: (typeof window !== 'undefined' ? window.ESIM_ACCESS_KEY : undefined)
       })
     });
 

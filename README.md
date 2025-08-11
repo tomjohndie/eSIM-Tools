@@ -31,6 +31,22 @@
 - **一键二维码生成** - 即时生成可扫描二维码
 - **安装确认功能** - 确保eSIM正确激活
 
+## 🖼️ 界面预览
+
+> 下方为主要页面的功能截图预览，便于快速了解工具界面与核心操作路径。（图片位于 `src/assets/images/`，如在GitHub上无法展示，请前往在线版本查看。）
+
+### 主页
+
+![主页-功能总览](./src/assets/images/home-preview.jpg)
+
+### Giffgaff eSIM 工具
+
+![Giffgaff-工具界面](./src/assets/images/giffgaff-preview.jpg)
+
+### Simyo eSIM 工具
+
+![Simyo-工具界面](./src/assets/images/simyo-preview.jpg)
+
 ## 🌐 在线使用
 
 ### 🚀 公共服务（推荐）
@@ -148,6 +164,17 @@
   - Body: `{ accessToken: "..." }`
   - MFA 接口在缺少 token 时可传 `{ cookie: "..." }` 回退。
 
+### 使用要点与近期变更（重要）
+
+- 申请流程中的“申請交換eSIM Swap SIM”步骤，官方接口可能返回 400。现已在流程中进行“跳过处理”，不会阻塞后续步骤。
+- 申请 eSIM 后将获得状态为 **RESERVED** 的 eSIM 卡信息，并在页面直接展示关键字段（例如 `activationCode`、`ssn`）。
+- 页面会提示并引导进行“手动激活”：
+  1) 访问 `https://www.giffgaff.com/activate`
+  2) 输入上一步获得的 `activationCode`，点击“Activate your SIM”
+  3) 出现确认页后，点击“Yes, I want to replace my SIM”
+  4) 激活完成后返回本页面继续后续自动化步骤（如生成 LPA 字符串/二维码）
+- 激活过程中请保持本页面开启，避免会话信息过期导致需要重走验证流程。
+
 ### 部署平台
 - **Netlify** - 现代化Web应用托管 + 无服务器函数
 - **GitHub Actions** - 自动化部署（可选）
@@ -176,6 +203,20 @@
 - [Giffgaff工具说明](./README_giffgaff_esim.md)
 - [Simyo工具说明](./README_simyo_esim.md)
 - [性能优化指南](./PERFORMANCE.md)
+
+## ❓ 常见问题（FAQ）
+
+- 为什么需要手动激活？
+  - 出于合规与稳定性考虑，激活动作需在 Giffgaff 官方页面完成；本工具会在获得 RESERVED 状态后展示 `activationCode` 并提供清晰引导。
+
+- 激活后多久能获得二维码（LPA）？
+  - 一般数十秒至数分钟。完成手动激活后返回本页面，系统会自动继续后续步骤并生成 LPA 字符串与二维码。
+
+- 如果我误关了页面怎么办？
+  - 重新打开后按照提示登录/验证，系统会从最近的可恢复节点继续。建议在激活完成前保持页面开启。
+
+- 遇到“Swap SIM 400”错误怎么办？
+  - 该错误已被流程内处理并跳过，通常无需额外操作；请继续按照页面提示完成手动激活。
 
 ## ⚠️ 重要说明
 
@@ -294,45 +335,6 @@ open tests/test_simyo_esim.html
 - 提交 [GitHub Issue](https://github.com/Silentely/esim-tools/issues)
 - 查看 [常见问题解答](./docs/guides/DEPLOYMENT_GUIDE.md#故障排除)
 - 参考详细文档和使用指南
-
-## 📋 TODO列表（精简）
-
-### 🔄 Giffgaff eSIM激活流程自动化
-- [ ] **网络抓包分析**: 在 `https://www.giffgaff.com/activate` 页面进行完整的网络请求抓包
-  - [ ] 输入第四步获得的activationCode
-  - [ ] 点击"Activate your SIM"按钮
-  - [ ] 记录跳转后的页面URL和参数
-  - [ ] 点击"Yes, I want to replace my SIM"按钮
-  - [ ] 分析所有相关的API调用和请求参数
-  - [ ] 记录认证token、session信息等关键参数
-  - [ ] 整理完整的请求流程和参数映射
-- [ ] **自动化脚本开发**: 基于抓包结果开发自动化激活脚本
-  - [X] 实现自动输入activationCode
-  - [X] 实现自动点击激活按钮(完成待实卡测试)
-  - [ ] 实现自动确认SIM替换
-  - [ ] 集成到现有的eSIM申请流程中
-- [ ] **测试验证**: 验证自动化流程的稳定性和准确性
-  - [ ] 多环境测试（不同浏览器、网络环境）
-  - [ ] 错误处理和异常情况处理
-  - [ ] 用户友好的进度提示和状态反馈
-
-### 🛠️ 技术改进
-- [X] **悬浮框优化**: 只有被截断才显示悬浮框，空值时不显示鼠标问号
-- [X] **性能优化**: 添加Service Worker离线支持，资源压缩，微交互动画
-- [ ] **错误处理优化**: 改进第五步"申請交換eSIM Swap SIM"的400错误处理
-- [ ] **用户体验优化**: 优化前端显示activationCode、ssn等信息的方式
-- [ ] **流程引导优化**: 改进用户手动激活的引导流程
-
-### 🔐 Cookie 登录安全告知
-- 请仅在可信环境下使用；勿在公共或不受信任的设备上粘贴账号 Cookie。
-- 粘贴前请确认 Cookie 来自已登录后的 `https://www.giffgaff.com` 页面。
-- 系统不会存储您的 Cookie，验证仅用于获取可用的访问凭据。
-
-### 📚 文档完善
-- [X] **性能优化文档**: 添加PERFORMANCE.md详细说明
-- [ ] **API文档**: 完善Giffgaff激活流程的API调用文档
-- [ ] **用户指南**: 更新用户使用指南，包含新的自动化流程
-- [ ] **开发文档**: 添加自动化脚本的开发说明
 
 ## 免责声明
 

@@ -118,7 +118,12 @@ class OAuthManager {
     const res = await fetch('/.netlify/functions/giffgaff-token-exchange', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code, code_verifier: codeVerifier, redirect_uri: this.config.redirectUri })
+      body: JSON.stringify({ 
+        code, 
+        code_verifier: codeVerifier, 
+        redirect_uri: this.config.redirectUri,
+        authKey: (typeof window !== 'undefined' ? window.ESIM_ACCESS_KEY : undefined)
+      })
     });
     if (!res.ok) {
       const text = await res.text();

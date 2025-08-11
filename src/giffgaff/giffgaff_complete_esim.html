@@ -952,7 +952,7 @@
                             </ol>
                             <div class="mt-2">
                               <strong>或</strong> 在已登录的 <code>giffgaff.com</code> 页签，打开控制台(Console)粘贴以下代码并回车，复制输出结果：
-                              <pre class="mt-2 p-2 bg-light border rounded" style="white-space:pre-wrap;word-break:break-all;">
+                              <pre id="cookieConsoleSnippet" class="mt-2 p-2 bg-light border rounded" style="white-space:pre-wrap;word-break:break-all;">
 ;(() => {
   try {
     const out = document.cookie.split('; ').filter(Boolean).join('; ');
@@ -967,6 +967,11 @@
   }
 })();
                               </pre>
+                              <div class="text-end mt-2">
+                                <button id="copyConsoleSnippetBtn" type="button" class="btn btn-sm btn-warning text-dark" aria-label="复制上方控制台代码">
+                                  <i class="fas fa-copy me-1" aria-hidden="true"></i> 复制上方代码
+                                </button>
+                              </div>
                               <small class="text-muted">仅在已登录的 <code>https://www.giffgaff.com</code> 页面执行。提示：控制台打印同时尝试复制到剪贴板。</small>
                             </div>
                             <p class="mb-2"><small class="text-muted">💡 建议包含含有 <code>token</code>/<code>session</code>/<code>auth</code> 关键字的 Cookie。</small></p>
@@ -3125,6 +3130,26 @@
             if (localStorage.getItem('giffgaff_cookie')) {
                 startCookieValidityMonitor();
             }
+
+            // 绑定“复制控制台代码”按钮
+            (function bindCopyConsoleSnippet(){
+                const btn = document.getElementById('copyConsoleSnippetBtn');
+                const pre = document.getElementById('cookieConsoleSnippet');
+                if (!btn || !pre) return;
+                if (btn.__bound) return; btn.__bound = true;
+                btn.addEventListener('click', () => {
+                    const txt = (pre.innerText || pre.textContent || '').trim();
+                    if (!txt) return;
+                    if (navigator.clipboard && window.isSecureContext) {
+                        navigator.clipboard.writeText(txt)
+                          .then(() => { try { showToast('代码已复制到剪贴板'); } catch(_) {} })
+                          .catch(() => { copyToClipboard(txt); try { showToast('代码已复制'); } catch(_) {} });
+                    } else {
+                        copyToClipboard(txt);
+                        try { showToast('代码已复制'); } catch(_) {}
+                    }
+                });
+            })();
         });
 
         // 页面可见性变化：在隐藏时暂停，显示时恢复
