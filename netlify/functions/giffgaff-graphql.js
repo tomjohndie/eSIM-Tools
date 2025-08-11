@@ -69,7 +69,7 @@ exports.handler = async (event, context) => {
     try {
         // 解析请求体
         const requestBody = JSON.parse(event.body || '{}');
-        const { mfaSignature, query, variables, operationName, cookie } = requestBody;
+        const { mfaSignature, mfaRef, query, variables, operationName, cookie } = requestBody;
 
         // 从请求体或 Authorization 头提取 accessToken（兼容两种方式）
         const lowerCaseHeaders = Object.fromEntries(
@@ -117,7 +117,7 @@ exports.handler = async (event, context) => {
             'Authorization': `Bearer ${accessToken}`,
             'Accept': 'application/json',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Origin': 'https://www.giffgaff.com',
+            'Origin': 'https://publicapi.giffgaff.com',
             'Referer': 'https://www.giffgaff.com/',
             'Accept-Language': 'en-US,en;q=0.9',
             'Cache-Control': 'no-cache',
@@ -136,11 +136,28 @@ exports.handler = async (event, context) => {
             requestHeaders['x-gg-app-build-number'] = process.env.GG_APP_BUILD_NUMBER || '763';
             requestHeaders['x-gg-app-device-manufacturer'] = process.env.GG_APP_DEVICE_MANUFACTURER || 'Google';
             requestHeaders['x-gg-app-device-model'] = process.env.GG_APP_DEVICE_MODEL || 'Pixel8';
+            requestHeaders['x-gg-app-version'] = process.env.GG_APP_VERSION || '14.0.8';
+            requestHeaders['x-gg-app-bundle-version'] = process.env.GG_APP_BUNDLE_VERSION || 'v31';
+            requestHeaders['apollographql-client-name'] = process.env.APOLLO_CLIENT_NAME || 'iOS 18.2';
+            requestHeaders['apollographql-client-version'] = process.env.APOLLO_CLIENT_VERSION || '17.25.2 1321';
+            try {
+                const { randomUUID } = require('crypto');
+                requestHeaders['x-request-id'] = randomUUID();
+            } catch (_) {}
         }
 
-        // 如果有MFA签名，添加到请求头
+        // 如果有MFA签名/引用，添加到请求头
         if (mfaSignature) {
             requestHeaders['X-MFA-Signature'] = mfaSignature;
+            requestHeaders['x-mfa-signature'] = mfaSignature;
+            requestHeaders['X-GG-MFA-SIGNATURE'] = mfaSignature;
+            requestHeaders['x-gg-mfa-signature'] = mfaSignature;
+        }
+        if (mfaRef) {
+            requestHeaders['X-GG-MFA-REF'] = mfaRef;
+            requestHeaders['x-gg-mfa-ref'] = mfaRef;
+            requestHeaders['X-MFA-REF'] = mfaRef;
+            requestHeaders['x-mfa-ref'] = mfaRef;
         }
 
         // 构建GraphQL请求体
@@ -154,6 +171,17 @@ exports.handler = async (event, context) => {
         const hostHdr = lowerCaseHeaders['x-forwarded-host'] || lowerCaseHeaders['host'] || '';
         const protoHdr = lowerCaseHeaders['x-forwarded-proto'] || 'https';
         const verifyCookieUrl = hostHdr ? `${protoHdr}://${hostHdr}/.netlify/functions/verify-cookie` : ((process.env.URL || '').replace(/\/$/, '') + '/.netlify/functions/verify-cookie');
+
+        // 小范围调试日志：输出将发送的关键头（不含敏感 Authorization）
+        try {
+            const debugHeaders = {
+                'X-MFA-Signature': requestHeaders['X-MFA-Signature'] || requestHeaders['x-mfa-signature'] || requestHeaders['X-GG-MFA-SIGNATURE'] || requestHeaders['x-gg-mfa-signature'] || null,
+                'X-GG-MFA-REF': requestHeaders['X-GG-MFA-REF'] || requestHeaders['x-gg-mfa-ref'] || requestHeaders['X-MFA-REF'] || requestHeaders['x-mfa-ref'] || null,
+                'x-gg-app-os': requestHeaders['x-gg-app-os'] || null,
+                'x-gg-app-build-number': requestHeaders['x-gg-app-build-number'] || null
+            };
+            console.log('GraphQL Outgoing Headers (debug):', debugHeaders);
+        } catch (_) {}
 
         // 调用Giffgaff GraphQL API（失败 401 时尝试用 cookie 刷新后重试一次）
         let response;

@@ -76,7 +76,7 @@ exports.handler = async (event, context) => {
     // 统一创建 GraphQL 客户端
     const createGraphql = (token, extraHeaders = {}) => (body) => axios.post(
       'https://publicapi.giffgaff.com/gateway/graphql',
-      body,
+      { ...body, mfaRef: ref },
       {
         headers: {
           'Content-Type': 'application/json',
