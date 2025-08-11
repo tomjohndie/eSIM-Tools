@@ -63,6 +63,7 @@ module.exports = {
   plugins: [
     new webpack.DefinePlugin({
       'process.env.ESIM_ACCESS_KEY': JSON.stringify(process.env.ESIM_ACCESS_KEY || ''),
+      'process.env.TURNSTILE_SITE_KEY': JSON.stringify(process.env.TURNSTILE_SITE_KEY || ''),
     }),
     new CompressionPlugin({
       test: /\.(js|css|html|svg)$/,

@@ -14,6 +14,13 @@ class APIManager {
       autoActivate: "/bff/auto-activate-esim",
       smsActivate: "/bff/giffgaff-sms-activate"
     };
+
+    // Turnstile token 获取器（若集成了 Turnstile）
+    this.getTurnstileToken = () => {
+      try {
+        return (typeof window !== 'undefined' && window.__cfTurnstileToken) ? window.__cfTurnstileToken : undefined;
+      } catch { return undefined; }
+    };
   }
 
   /**
@@ -35,6 +42,7 @@ class APIManager {
           ...(accessToken ? { accessToken } : {}),
           // 附带cookie以便服务端在令牌过期或缺失时用 cookie 兜底刷新
           cookie: (typeof localStorage !== 'undefined' ? localStorage.getItem('giffgaff_cookie') : null) || undefined,
+          turnstileToken: this.getTurnstileToken(),
           source: 'esim',
           preferredChannels: ['EMAIL']
         })
@@ -75,6 +83,7 @@ class APIManager {
               body: JSON.stringify({
                 accessToken: newAccessToken,
                 cookie: localStorage.getItem('giffgaff_cookie') || undefined,
+                turnstileToken: this.getTurnstileToken(),
                 source: 'esim',
                 preferredChannels: ['EMAIL']
               })
@@ -123,7 +132,8 @@ class APIManager {
       body: JSON.stringify({
         accessToken,
         ref: ref,
-        code: code
+        code: code,
+        turnstileToken: this.getTurnstileToken()
       })
     });
 
@@ -170,6 +180,7 @@ class APIManager {
         accessToken,
         cookie: (typeof localStorage !== 'undefined' ? localStorage.getItem('giffgaff_cookie') : null) || undefined,
         mfaSignature: mfaSignature || undefined,
+        turnstileToken: this.getTurnstileToken(),
         query,
         variables
       })
@@ -317,7 +328,8 @@ class APIManager {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        cookie: cookie
+        cookie: cookie,
+        turnstileToken: this.getTurnstileToken()
       })
     });
 
@@ -341,7 +353,8 @@ class APIManager {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        activationCode: activationCode
+        activationCode: activationCode,
+        turnstileToken: this.getTurnstileToken()
       })
     });
 

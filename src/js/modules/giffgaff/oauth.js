@@ -9,6 +9,12 @@ class OAuthManager {
       authUrl: "https://id.giffgaff.com/auth/oauth/authorize",
       redirectUri: "giffgaff://auth/callback/"
     };
+
+    this.getTurnstileToken = () => {
+      try {
+        return (typeof window !== 'undefined' && window.__cfTurnstileToken) ? window.__cfTurnstileToken : undefined;
+      } catch { return undefined; }
+    };
   }
 
   /**
@@ -115,13 +121,20 @@ class OAuthManager {
   // 前端不再直接持有 client_secret，改由服务端函数代为交换
   async exchangeToken(code, codeVerifier) {
     console.log(`发送令牌交换请求: code=${code.substring(0, 3)}*****, code_verifier=${codeVerifier.substring(0, 3)}*****`);
+    // 等待 Turnstile token（最多等待 ~2.5s）
+    let tsToken = this.getTurnstileToken();
+    for (let i = 0; i < 5 && !tsToken; i++) {
+      await new Promise(r => setTimeout(r, 500));
+      tsToken = this.getTurnstileToken();
+    }
     const res = await fetch('/bff/giffgaff-token-exchange', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         code, 
         code_verifier: codeVerifier, 
-        redirect_uri: this.config.redirectUri
+        redirect_uri: this.config.redirectUri,
+        turnstileToken: tsToken
       })
     });
     if (!res.ok) {
