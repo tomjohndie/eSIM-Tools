@@ -5,6 +5,8 @@
   publish = "."
   # Functions目录
   functions = "netlify/functions"
+  # Edge Functions 目录
+  edge_functions = "netlify/edge-functions"
 
 [build.environment]
 # 固定 Node 版本，避免二进制依赖（如 sharp）在 Node 22 下编译耗时
@@ -49,6 +51,11 @@
     Access-Control-Allow-Headers = "Content-Type, Authorization"
     Access-Control-Allow-Methods = "GET, POST, OPTIONS"
     Vary = "Origin"
+
+# 将 /bff/* 映射到 Edge Function bff-proxy
+[[edge_functions]]
+  path = "/bff/*"
+  function = "bff-proxy"
 
 [[redirects]]
   from = "/api/giffgaff/*"

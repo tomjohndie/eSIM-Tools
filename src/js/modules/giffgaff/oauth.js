@@ -115,14 +115,13 @@ class OAuthManager {
   // 前端不再直接持有 client_secret，改由服务端函数代为交换
   async exchangeToken(code, codeVerifier) {
     console.log(`发送令牌交换请求: code=${code.substring(0, 3)}*****, code_verifier=${codeVerifier.substring(0, 3)}*****`);
-    const res = await fetch('/.netlify/functions/giffgaff-token-exchange', {
+    const res = await fetch('/bff/giffgaff-token-exchange', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         code, 
         code_verifier: codeVerifier, 
-        redirect_uri: this.config.redirectUri,
-        authKey: (typeof window !== 'undefined' ? window.ESIM_ACCESS_KEY : undefined)
+        redirect_uri: this.config.redirectUri
       })
     });
     if (!res.ok) {
