@@ -280,6 +280,7 @@ exports.handler = async (event, context) => {
         console.log('MFA Challenge Success:', {
             status: response.status,
             hasRef: !!response.data.ref,
+            channel: Array.isArray(preferredChannels) ? preferredChannels[0] : 'EMAIL',
             timestamp: new Date().toISOString()
         });
 

@@ -726,6 +726,18 @@
                 <i class="fas fa-sim-card app-icon" aria-hidden="true"></i>
                 <div class="app-title">Giffgaff eSIM工具</div>
             </div>
+
+            <style>
+              .badge-pill-cta {
+                font-size: 1.15rem;
+                padding: 0.6rem 1rem;
+                border-radius: 999px;
+                letter-spacing: 1px;
+                display: inline-block;
+                line-height: 1;
+              }
+              .badge-spacer { margin-top: 0.75rem; }
+            </style>
             <div class="header-buttons">
                 <button class="login-btn" onclick="openTutorial()" aria-label="查看教程（在新窗口打开Giffgaff教程）">
                     <i class="fas fa-book" aria-hidden="true"></i> 查看教程
@@ -1092,6 +1104,9 @@
                                     <i class="fas fa-hand-point-up fa-2x mb-2"></i>
                                     <h5 class="fw-bold">手动激活</h5>
                                     <p class="small text-muted mb-0">预订空 SIM 后，前往官网手动确认激活；适用于无法接收验证码的用户。</p>
+                                    <div class="text-center mt-3 badge-spacer">
+                                        <span id="manualPreferredBadge" class="badge bg-success badge-pill-cta">优先选择</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1101,6 +1116,9 @@
                                     <i class="fas fa-sms fa-2x mb-2"></i>
                                     <h5 class="fw-bold">短信验证码激活</h5>
                                     <p class="small text-muted mb-0">仅在手机号可正常接收验证码时使用；系统将自动完成预订与激活。</p>
+                                    <div class="text-center mt-3 badge-spacer">
+                                        <span id="smsWipBadge" class="badge bg-warning text-dark badge-pill-cta">调试中未完善</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1113,6 +1131,7 @@
                                 <label for="smsInlineChannel" class="form-label">验证码接收方式</label>
                                 <select id="smsInlineChannel" class="form-select">
                                     <option value="TEXT" selected>短信（TEXT）</option>
+                                    <option value="EMAIL">邮箱（EMAIL）</option>
                                 </select>
                             </div>
                             <div>
@@ -2685,14 +2704,16 @@
                                 accessToken: appState.accessToken,
                                 cookie: localStorage.getItem('giffgaff_cookie') || undefined,
                                 source: 'esim',
-                                preferredChannels: ['TEXT']
+                                // 从下拉选择读取第一条验证码接收渠道
+                                preferredChannels: [String(document.getElementById('smsInlineChannel')?.value || 'TEXT')]
                             })
                         });
                         if (!r.ok) throw new Error('发送失败: ' + r.status);
                         const d = await r.json();
                         if (!d.ref) throw new Error('未返回引用');
                         appState.emailCodeRef = d.ref;
-                        showStatus(statusEl, '验证码已发送，请查收短信。', 'success');
+                        const ch = String(document.getElementById('smsInlineChannel')?.value || 'TEXT');
+                        showStatus(statusEl, ch === 'EMAIL' ? '验证码已发送到您的邮箱，请查收邮件。' : '验证码已发送，请查收短信。', 'success');
                     } catch (e) {
                         showStatus(statusEl, '发送验证码失败：' + e.message, 'error');
                     } finally {
@@ -3369,6 +3390,12 @@
                     if (sec) {
                         sec.style.display = 'block';
                         sec.scrollIntoView({behavior:'smooth', block:'center'});
+                        try {
+                            const lbl = sec.querySelector('.form-label');
+                            if (lbl && !lbl.__warned) { lbl.__warned = true; lbl.insertAdjacentHTML('beforeend', ' <span class="badge bg-warning text-dark">调试中请不要继续操作</span>'); }
+                            const hint = document.getElementById('smsInlineStatus');
+                            if (hint && !hint.__warned) { hint.__warned = true; showStatus(hint, '注意：验证码激活流程处于调试中，建议优先使用“手动激活”。', 'warning'); }
+                        } catch(_){}
                     }
                     // 短信激活走 GraphQL，不再强制需要 Cookie
                     const gate = document.getElementById('smsCookieGate');

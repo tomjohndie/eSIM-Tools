@@ -180,7 +180,7 @@ exports.handler = async (event, context) => {
                 'x-gg-app-os': requestHeaders['x-gg-app-os'] || null,
                 'x-gg-app-build-number': requestHeaders['x-gg-app-build-number'] || null
             };
-            console.log('GraphQL Outgoing Headers (debug):', debugHeaders);
+        console.log('GraphQL Outgoing Headers (debug):', debugHeaders);
         } catch (_) {}
 
         // 调用Giffgaff GraphQL API（失败 401 时尝试用 cookie 刷新后重试一次）
