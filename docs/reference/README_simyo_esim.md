@@ -42,7 +42,7 @@ const apiEndpoints = {
     login: "https://appapi.simyo.nl/simyoapi/api/v1/sessions",
     getEsim: "https://appapi.simyo.nl/simyoapi/api/v1/esim/get-by-customer",
     confirmInstall: "https://appapi.simyo.nl/simyoapi/api/v1/esim/reorder-profile-installed",
-    qrcode: "https://api.qrserver.com/v1/create-qr-code/"
+    qrcode: "https://qrcode.show/"
 };
 ```
 

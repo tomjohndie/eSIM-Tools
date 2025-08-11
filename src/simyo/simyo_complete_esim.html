@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; font-src 'self' data: https://cdnjs.cloudflare.com; connect-src 'self' https://api.qrserver.com https://appapi.simyo.nl https://api.giffgaff.com https://id.giffgaff.com https://publicapi.giffgaff.com; img-src 'self' data: https:; frame-src 'none';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; font-src 'self' data: https://cdnjs.cloudflare.com; connect-src 'self' https://qrcode.show https://api.qrserver.com https://appapi.simyo.nl https://api.giffgaff.com https://id.giffgaff.com https://publicapi.giffgaff.com; img-src 'self' data: https:; frame-src 'none';">
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <title>Simyo NL eSIM 申请工具</title>
@@ -1112,7 +1112,7 @@
             sendSmsCode: isNetlify ? "/api/simyo/esim/send-sms-code" : "http://localhost:3000/api/simyo/esim/send-sms-code", 
             verifyCode: isNetlify ? "/api/simyo/esim/verify-code" : "http://localhost:3000/api/simyo/esim/verify-code",
             confirmInstall: isNetlify ? "/api/simyo/esim/reorder-profile-installed" : "http://localhost:3000/api/simyo/esim/reorder-profile-installed",
-            qrcode: "https://api.qrserver.com/v1/create-qr-code/"
+            qrcode: "https://qrcode.show/"
         };
 
         // DOM元素
@@ -1734,7 +1734,7 @@
         function generateQRCode(data) {
             const size = 300;
             const vendors = [
-                (s, d) => `https://api.qrserver.com/v1/create-qr-code/?size=${s}x${s}&data=${encodeURIComponent(d)}`,
+                (s, d) => `https://qrcode.show/${encodeURIComponent(d)}?size=${s}`,
                 (s, d) => `https://quickchart.io/qr?size=${s}&text=${encodeURIComponent(d)}`,
                 (s, d) => `https://chart.googleapis.com/chart?cht=qr&chs=${s}x${s}&chl=${encodeURIComponent(d)}`
             ];

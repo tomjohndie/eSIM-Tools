@@ -1,5 +1,5 @@
 # Giffgaff eSIM 申请工具
-
+> 二维码供应商：优先 `https://qrcode.show/`，并保留 `quickchart.io` 与 `chart.googleapis.com` 作为备选。
 基于Giffgaff-swap-esim.json Postman脚本构建的完整eSIM申请网页工具。
 
 ## 🚀 项目概述

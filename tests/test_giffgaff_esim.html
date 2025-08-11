@@ -809,8 +809,8 @@
                 testFramework.assertTrue(lpaString.startsWith('LPA:'), 'LPA string should start with LPA:');
                 
                 // 模拟二维码生成
-                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(lpaString)}`;
-                testFramework.assertTrue(qrUrl.includes('qrserver.com'), 'Should generate QR code URL');
+                const qrUrl = `https://qrcode.show/${encodeURIComponent(lpaString)}?size=300`;
+                testFramework.assertTrue(qrUrl.includes('qrcode.show'), 'Should generate QR code URL');
 
                 return true;
             });

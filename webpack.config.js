@@ -89,6 +89,17 @@ module.exports = {
           }
         },
         {
+          urlPattern: /^https:\/\/qrcode\.show/,
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'qr-cache',
+            expiration: {
+              maxEntries: 50,
+              maxAgeSeconds: 24 * 60 * 60
+            }
+          }
+        },
+        {
           urlPattern: /^https:\/\/api\.giffgaff\.com/,
           handler: 'NetworkFirst',
           options: {

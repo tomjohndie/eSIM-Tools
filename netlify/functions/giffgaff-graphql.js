@@ -126,9 +126,11 @@ exports.handler = async (event, context) => {
 
         // 针对 reserveESim / swapSim 需要设备元数据头，按 Postman 约定补充（可通过环境变量覆盖）
         const opName = operationName || '';
-        const isReserve = /reserveESim\s*\(/.test(String(query || '')) || opName === 'reserveESim';
+        const isReserve = /reserveESim\s*\(/.test(String(query || '')) || /reserveESim/i.test(opName);
         const isSwap = /swapSim\s*\(/i.test(String(query || '')) || /swapSim/i.test(opName);
-        if (isReserve || isSwap) {
+        const isToken = /eSimDownloadToken\s*\(/i.test(String(query || '')) || /eSimDownloadToken/i.test(opName);
+        const needsAppHeaders = isReserve || isSwap || isToken;
+        if (needsAppHeaders) {
             requestHeaders['x-gg-app-os'] = process.env.GG_APP_OS || 'Android';
             requestHeaders['x-gg-app-os-version'] = process.env.GG_APP_OS_VERSION || '14';
             requestHeaders['x-gg-app-build-number'] = process.env.GG_APP_BUILD_NUMBER || '763';

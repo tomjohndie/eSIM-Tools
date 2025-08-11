@@ -249,7 +249,7 @@ class DOMManager {
     const qrcodeElement = document.getElementById('qrcode');
     if (qrcodeElement) {
       const qrSize = 300;
-      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${qrSize}x${qrSize}&data=${encodeURIComponent(state.lpaString)}`;
+      const qrUrl = `https://qrcode.show/${encodeURIComponent(state.lpaString)}?size=${qrSize}`;
       
       qrcodeElement.innerHTML = `
         <img src="${qrUrl}" alt="eSIM QR Code" class="img-fluid" />

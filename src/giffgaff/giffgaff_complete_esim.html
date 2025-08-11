@@ -7,11 +7,11 @@
     <meta name="color-scheme" content="light dark" />
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-    <link rel="preconnect" href="https://api.qrserver.com" crossorigin>
+    <link rel="preconnect" href="https://qrcode.show" crossorigin>
     <link rel="preconnect" href="https://api.giffgaff.com" crossorigin>
     <link rel="preconnect" href="https://id.giffgaff.com" crossorigin>
     <link rel="preconnect" href="https://publicapi.giffgaff.com" crossorigin>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; font-src 'self' data: https://cdnjs.cloudflare.com; connect-src 'self' https://api.qrserver.com https://appapi.simyo.nl https://api.giffgaff.com https://id.giffgaff.com https://publicapi.giffgaff.com; img-src 'self' data: https:; frame-src 'none';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; font-src 'self' data: https://cdnjs.cloudflare.com; connect-src 'self' https://qrcode.show https://api.qrserver.com https://appapi.simyo.nl https://api.giffgaff.com https://id.giffgaff.com https://publicapi.giffgaff.com; img-src 'self' data: https:; frame-src 'none';">
     <title>Giffgaff eSIM 申请工具</title>
     <link rel="manifest" href="/manifest.webmanifest">
     <meta name="theme-color" content="#ffcc00">
@@ -1164,7 +1164,7 @@
                         <!-- 已有激活码/SSN 的快捷入口 -->
                         <div class="mt-3">
                             <button id="manualEsimInputToggle" class="btn btn-link p-0" type="button">
-                                我已完成申请（已有激活码/SSN）
+                                我已完成申请（已有激活码/SSN并在官网完成交换激活）
                             </button>
                             <div id="manualEsimInputSection" class="card card-body mt-2" style="display: none;">
                                 <div class="row g-2">
@@ -3091,7 +3091,7 @@
         function generateQRCode(data) {
             const size = 300;
             const vendors = [
-                (s, d) => `https://api.qrserver.com/v1/create-qr-code/?size=${s}x${s}&data=${encodeURIComponent(d)}`,
+                (s, d) => `https://qrcode.show/${encodeURIComponent(d)}?size=${s}`,
                 (s, d) => `https://quickchart.io/qr?size=${s}&text=${encodeURIComponent(d)}`,
                 (s, d) => `https://chart.googleapis.com/chart?cht=qr&chs=${s}x${s}&chl=${encodeURIComponent(d)}`
             ];

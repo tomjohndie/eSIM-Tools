@@ -685,8 +685,8 @@
                 testFramework.assertTrue(lpaString.startsWith('LPA:'), 'Should generate valid LPA string');
                 
                 // 模拟二维码URL生成
-                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(lpaString)}&size=300x300`;
-                testFramework.assertTrue(qrUrl.includes('qrserver.com'), 'Should generate QR code URL');
+                const qrUrl = `https://qrcode.show/${encodeURIComponent(lpaString)}?size=300`;
+                testFramework.assertTrue(qrUrl.includes('qrcode.show'), 'Should generate QR code URL');
                 
                 await testFramework.sleep(500);
                 return true;

@@ -228,7 +228,7 @@ class SimyoApp {
     const displayElement = document.getElementById('esimDataDisplay');
     if (!displayElement) return;
     
-    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(esimData.lpaString)}`;
+    const qrCodeUrl = `https://qrcode.show/${encodeURIComponent(esimData.lpaString)}?size=300`;
     
     displayElement.innerHTML = `
       <div class="esim-info">

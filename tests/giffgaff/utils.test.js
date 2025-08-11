@@ -117,8 +117,8 @@ describe('Giffgaff Utils', () => {
       const data = 'test data';
       const url = Utils.generateQRCodeURL(data);
       
-      expect(url).toContain('https://api.qrserver.com/v1/create-qr-code/');
-      expect(url).toContain('size=300x300');
+      expect(url).toContain('https://qrcode.show/');
+      expect(url).toContain('size=300');
       expect(url).toContain('data=test%20data');
     });
 

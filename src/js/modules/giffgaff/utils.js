@@ -82,7 +82,7 @@ class Utils {
    * 生成二维码 URL
    */
   generateQRCodeURL(data, size = 300) {
-    return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(data)}`;
+    return `https://qrcode.show/${encodeURIComponent(data)}?size=${size}`;
   }
 
   /**

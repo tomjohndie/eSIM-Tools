@@ -28,6 +28,7 @@ Refused to connect to 'https://id.giffgaff.com/auth/oauth/token' because it viol
   style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; 
   font-src 'self' https://cdnjs.cloudflare.com; 
   connect-src 'self' 
+    https://qrcode.show 
     https://api.qrserver.com 
     https://appapi.simyo.nl 
     https://api.giffgaff.com 
