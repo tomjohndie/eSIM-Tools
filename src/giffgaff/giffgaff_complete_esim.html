@@ -2718,7 +2718,17 @@
                         
                         // 执行 swapSim（关键：将预订的新卡生效）
                         try {
-                            const swapResp = await fetch(apiEndpoints.graphql, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ accessToken: appState.accessToken, mfaSignature: appState.emailSignature, mfaRef: appState.emailCodeRef || undefined, query: `mutation SwapSim($activationCode: String!, $mfaSignature: String!) { swapSim(activationCode: $activationCode, mfaSignature: $mfaSignature) { old { ssn activationCode __typename } new { ssn activationCode __typename } __typename } }`, variables: { activationCode: appState.esimActivationCode, mfaSignature: appState.emailSignature }, operationName: 'SwapSim' }) });
+                            // 先尝试获取专用于 swap 的 mfa ref
+                            let swapRef = appState.emailCodeRef || null;
+                            try {
+                                const chResp = await fetch(apiEndpoints.graphql, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ accessToken: appState.accessToken, query: `mutation simSwapMfaChallenge { simSwapMfaChallenge { ref methods { value channel __typename } __typename } }`, variables:{}, operationName: 'simSwapMfaChallenge' }) });
+                                if (chResp.ok) {
+                                    const chData = await chResp.json();
+                                    swapRef = chData?.data?.simSwapMfaChallenge?.ref || swapRef;
+                                }
+                            } catch (_) {}
+
+                            const swapResp = await fetch(apiEndpoints.graphql, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ accessToken: appState.accessToken, mfaSignature: appState.emailSignature, mfaRef: swapRef || undefined, query: `mutation SwapSim($activationCode: String!, $mfaSignature: String!) { swapSim(activationCode: $activationCode, mfaSignature: $mfaSignature) { old { ssn activationCode __typename } new { ssn activationCode __typename } __typename } }`, variables: { activationCode: appState.esimActivationCode, mfaSignature: appState.emailSignature }, operationName: 'SwapSim' }) });
                             if (swapResp.ok) {
                                 const swapData = await swapResp.json();
                                 const newSim = swapData?.data?.swapSim?.new;

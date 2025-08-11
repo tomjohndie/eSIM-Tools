@@ -220,13 +220,21 @@ exports.handler = async (event, context) => {
     }
 
     // 4) 执行 swapSim，将预订的 eSIM 正式替换为新卡（App 流程关键步骤）
+    let swapRef = null;
     try {
+      // 先发起 GraphQL 的 simSwapMfaChallenge，获取用于 swap 的专属 ref
+      try {
+        const chBody = { query: `mutation simSwapMfaChallenge { simSwapMfaChallenge { ref methods { value channel __typename } __typename } }`, variables: {}, operationName: 'simSwapMfaChallenge' };
+        const ch = await createGraphql(accessToken)({ ...chBody });
+        swapRef = ch.data?.data?.simSwapMfaChallenge?.ref || null;
+      } catch (_) {}
+
       const swapBody = {
         query: `mutation SwapSim($activationCode: String!, $mfaSignature: String!) { swapSim(activationCode: $activationCode, mfaSignature: $mfaSignature) { old { ssn activationCode __typename } new { ssn activationCode __typename } __typename } }`,
         variables: { activationCode: currentActivationCode, mfaSignature },
         operationName: 'SwapSim'
       };
-      const rs = await createGraphql(accessToken)({ ...swapBody });
+      const rs = await createGraphql(accessToken)({ ...swapBody, mfaRef: swapRef || ref });
       const sw = rs.data?.data?.swapSim;
       if (sw?.new?.ssn) {
         currentSSN = sw.new.ssn;
