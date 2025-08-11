@@ -117,28 +117,65 @@ exports.handler = async (event, context) => {
     }
 
     // 2) 校验短信验证码，获取签名
-    const validationHeaders = {
+    // 优先尝试 token 通道；失败401且有 cookie 时，回退到 Web 通道
+    const buildV4Headers = (token, ck) => ({
       'Content-Type': 'application/json',
       'Accept': 'application/json',
       'User-Agent': 'giffgaff/1321 CFNetwork/1568.300.101 Darwin/24.2.0',
       'Origin': 'https://www.giffgaff.com',
-      'Referer': 'https://www.giffgaff.com/'
-    };
-    if (accessToken) validationHeaders['Authorization'] = `Bearer ${accessToken}`;
-    if (cookie) validationHeaders['Cookie'] = cookie;
-    if (csrfToken) validationHeaders['x-csrf-token'] = csrfToken;
+      'Referer': 'https://www.giffgaff.com/',
+      ...(csrfToken ? { 'x-csrf-token': csrfToken } : {}),
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      ...(ck ? { 'Cookie': ck } : {})
+    });
+
+    // 从 cookie 中提取 XSRF-TOKEN
+    let xxsrf = null;
+    if (cookie) {
+      const m = String(cookie).match(/XSRF-TOKEN=([^;]+)/);
+      if (m) xxsrf = decodeURIComponent(m[1]);
+    }
+
+    const buildV3Headers = (ck) => ({
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'Accept-Language': 'zh-CN,zh;q=0.9',
+      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0',
+      'Origin': 'https://id.giffgaff.com',
+      'Referer': 'https://id.giffgaff.com/auth/login/challenge',
+      'Device': 'web',
+      ...(csrfToken ? { 'x-csrf-token': csrfToken } : {}),
+      ...(xxsrf ? { 'x-xsrf-token': xxsrf } : {}),
+      ...(ck ? { 'Cookie': ck } : {})
+    });
 
     let validationResp;
     try {
       validationResp = await axios.post(
         'https://id.giffgaff.com/v4/mfa/validation',
         { ref, code },
-        { headers: validationHeaders, timeout: 30000 }
+        { headers: buildV4Headers(accessToken, cookie), timeout: 30000 }
       );
     } catch (err) {
-      const status = err.response?.status || 500;
+      const status = err.response?.status;
       const detail = err.response?.data;
-      return { statusCode: status, headers, body: JSON.stringify({ error: 'MFA Validation Failed', details: detail }) };
+      const tokenExpired = status === 401;
+      if (tokenExpired && cookie) {
+        try {
+          // 回退到 Web v3 验证，不带 Authorization
+          validationResp = await axios.post(
+            'https://id.giffgaff.com/auth/v3/mfa/validation',
+            { ref, code },
+            { headers: buildV3Headers(cookie), timeout: 30000 }
+          );
+        } catch (err2) {
+          const s2 = err2.response?.status || 500;
+          return { statusCode: s2, headers, body: JSON.stringify({ error: 'MFA Validation Failed', details: err2.response?.data || detail }) };
+        }
+      } else {
+        const s = status || 500;
+        return { statusCode: s, headers, body: JSON.stringify({ error: 'MFA Validation Failed', details: detail || null }) };
+      }
     }
 
     const mfaSignature = validationResp.data?.signature;
@@ -182,18 +219,9 @@ exports.handler = async (event, context) => {
       currentActivationCode = reservation.esim.activationCode;
     }
 
-    // 4) 通过已有的本项目函数执行网页激活（等价手工确认）
-    if (!currentActivationCode) {
-      return { statusCode: 400, headers, body: JSON.stringify({ error: 'ActivationCodeMissing', message: '缺少激活码' }) };
-    }
-
-    const autoActivateUrl = `${baseUrl}/.netlify/functions/auto-activate-esim`;
-    const autoResp = await axios.post(autoActivateUrl, { activationCode: currentActivationCode, cookie, accessToken }, { headers: { 'Content-Type': 'application/json' }, timeout: 60000 });
-    if (!(autoResp.data && (autoResp.data.success || autoResp.status === 200))) {
-      return { statusCode: 500, headers, body: JSON.stringify({ error: 'AutoActivateFailed', details: autoResp.data }) };
-    }
-
-    // 5) 轮询获取 LPA（最长 ~120秒）
+    // 4) 直接走 GraphQL 下载令牌（多数 App 流程不依赖网页 /activate）
+    //    这里不再调用网页 auto-activate-esim，避免 403 和与 App 流不一致
+    // 轮询获取 LPA（最长 ~120秒）
     const downloadQuery = {
       query: `query eSimDownloadToken($ssn: String!) { eSimDownloadToken(ssn: $ssn) { id host matchingId lpaString __typename } }`,
       variables: { ssn: currentSSN },

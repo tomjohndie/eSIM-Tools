@@ -1042,7 +1042,7 @@
                         
                         <div class="btn-group">
                             <button id="verifyEmailBtn" class="btn btn-primary">
-                                <i class="fas fa-check me-2"></i> 验证并一键激活
+                                <i class="fas fa-check me-2"></i> 验证验证码
                             </button>
                         </div>
                         
@@ -1079,19 +1079,88 @@
         <div id="step4" class="section reveal">
             <div class="card card-elevated">
                 <div class="card-header">
-                    <i class="fas fa-sim-card"></i> 第四步：申请eSIM
+                        <i class="fas fa-sim-card"></i> 第四步：申请/激活 eSIM
                 </div>
                 <div class="card-body">
                     <p class="mb-4" style="font-size: 17px; color: #212529;">
-                        预订eSIM：
+                        请选择一种方式完成 eSIM 激活：
                     </p>
-                    
-                    <div class="btn-group">
-                        <button id="reserveESimBtn" class="btn btn-primary">
-                            <i class="fas fa-bookmark me-2"></i> 预订eSIM
-                        </button>
+                    <div class="row row-cols-1 row-cols-md-2 g-3">
+                        <div class="col">
+                            <div id="manualActivateCard" class="card h-100" style="cursor:pointer;" role="button" tabindex="0" aria-label="选择手动激活">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-hand-point-up fa-2x mb-2"></i>
+                                    <h5 class="fw-bold">手动激活</h5>
+                                    <p class="small text-muted mb-0">预订空 SIM 后，前往官网手动确认激活；适用于无法接收验证码的用户。</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div id="smsActivateCard" class="card h-100" style="cursor:pointer;" role="button" tabindex="0" aria-label="选择短信验证码激活">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-sms fa-2x mb-2"></i>
+                                    <h5 class="fw-bold">短信验证码激活</h5>
+                                    <p class="small text-muted mb-0">仅在手机号可正常接收验证码时使用；系统将自动完成预订与激活。</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    
+
+                    <!-- 短信激活内联区域（在第四步内完成：发码→验码→后台激活） -->
+                    <div id="smsInlineSection" class="card card-body mt-3" style="display:none;">
+                        <div class="d-flex justify-content-between align-items-end flex-wrap gap-3">
+                            <div style="min-width:260px;">
+                                <label for="smsInlineChannel" class="form-label">验证码接收方式</label>
+                                <select id="smsInlineChannel" class="form-select">
+                                    <option value="TEXT" selected>短信（TEXT）</option>
+                                </select>
+                            </div>
+                            <div>
+                                <button id="smsInlineSendBtn" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane me-2"></i> 发送验证码
+                                </button>
+                            </div>
+                        </div>
+                        <div id="smsInlineStatus" class="status mt-2" role="status" aria-live="polite"></div>
+                        <div class="mt-3" style="max-width:420px;">
+                            <label for="smsInlineCode" class="form-label">短信验证码</label>
+                            <input id="smsInlineCode" type="text" class="form-control" placeholder="输入6位验证码" maxlength="6" />
+                        </div>
+                        <div class="btn-group mt-3">
+                            <button id="smsInlineVerifyBtn" class="btn btn-primary">
+                                <i class="fas fa-check me-2"></i> 验证并继续激活
+                            </button>
+                        </div>
+
+                        <!-- Cookie 闸门：当缺少 giffgaff 官网 Cookie 时，先要求用户粘贴并验证 -->
+                        <div id="smsCookieGate" class="alert alert-warning mt-3" style="display:none;">
+                            <div class="d-flex align-items-start gap-3 flex-wrap">
+                                <div class="flex-fill" style="min-width:260px;">
+                                    <p class="mb-2"><strong>提示：</strong>短信验证码激活需要 giffgaff 官网 Cookie 才能完成网页激活流程。</p>
+                                    <label for="smsCookieInput" class="form-label">在此粘贴 Cookie：</label>
+                                    <textarea id="smsCookieInput" class="form-control" rows="3" placeholder="从 https://www.giffgaff.com 复制的 Cookie"></textarea>
+                                </div>
+                                <div class="d-flex flex-column gap-2" style="min-width:200px;">
+                                    <button id="smsCookieVerifyBtn" type="button" class="btn btn-warning text-dark">
+                                        <i class="fas fa-shield-alt me-2"></i> 验证 Cookie
+                                    </button>
+                                    <button id="smsUseManualBtn" type="button" class="btn btn-outline-secondary">
+                                        改用手动激活
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="smsCookieGateStatus" class="status mt-2" role="status" aria-live="polite"></div>
+                        </div>
+                    </div>
+
+                    <!-- 手动激活区块（仅在点击“手动激活”卡片后显示） -->
+                    <div id="manualBlock" class="mt-3" style="display:none;">
+                        <div class="btn-group">
+                            <button id="reserveESimBtn" class="btn btn-primary">
+                                <i class="fas fa-bookmark me-2"></i> 预订eSIM
+                            </button>
+                        </div>
+
                         <!-- 已有激活码/SSN 的快捷入口 -->
                         <div class="mt-3">
                             <button id="manualEsimInputToggle" class="btn btn-link p-0" type="button">
@@ -1114,10 +1183,10 @@
                             </div>
                         </div>
 
-                    <div id="esimReserveStatus" class="status" role="status" aria-live="polite"></div>
-                    
-                    <!-- eSIM信息显示区域 -->
-                    <div id="esimInfoDisplay" class="mt-4" style="display: none;">
+                        <div id="esimReserveStatus" class="status mt-2" role="status" aria-live="polite"></div>
+
+                        <!-- eSIM信息显示区域 -->
+                        <div id="esimInfoDisplay" class="mt-4" style="display: none;">
                         <div class="card border-warning">
                             <div class="card-header bg-warning text-dark">
                                 <i class="fas fa-exclamation-triangle me-2" aria-hidden="true"></i>
@@ -1201,6 +1270,7 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
                     </div>
                 </div>
             </div>
@@ -1548,7 +1618,8 @@
             if (appState.emailSignature) {
                 elements.statusMfaSignature.textContent = appState.emailSignature;
                 elements.statusMfaSignature.className = 'status-value connected';
-                addTooltip(elements.statusMfaSignature, appState.emailSignature);
+                // MFA 签名始终允许悬浮查看完整内容（即便未截断）
+                addTooltip(elements.statusMfaSignature, appState.emailSignature, true);
             } else {
                 elements.statusMfaSignature.textContent = '未验证';
                 elements.statusMfaSignature.className = 'status-value disconnected';
@@ -1608,14 +1679,12 @@
         }
 
         // 添加悬浮提示功能
-        function addTooltip(element, fullText) {
+        function addTooltip(element, fullText, forceShow = false) {
             if (!element || !fullText) return;
             
-            // 检查文本是否被截断
+            // 检查文本是否被截断；若 forceShow 为 true 则忽略此检查
             const isTruncated = element.scrollWidth > element.clientWidth;
-            
-            // 只有被截断才添加悬浮框
-            if (!isTruncated) return;
+            if (!forceShow && !isTruncated) return;
             
             // 移除现有的提示框
             removeTooltip(element);
@@ -2369,43 +2438,34 @@
                 elements.verifyEmailBtn.innerHTML = '<span class="loading"></span> 验证中...';
                 elements.verifyEmailBtn.disabled = true;
 
-                showStatus(elements.emailVerifyStatus, "正在验证并自动执行激活...", "success");
-
-                // 使用后端编排：短信验证码一键激活并获取LPA
+                showStatus(elements.emailVerifyStatus, "正在验证验证码...", "success");
                 const ref = appState.emailCodeRef;
                 if (!ref) throw new Error('缺少验证码引用，请先发送验证码');
 
-                const respSms = await fetch(apiEndpoints.smsActivate, {
+                // 仅做验证，获取签名
+                const resp = await fetch(apiEndpoints.mfaValidation, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': appState.accessToken ? `Bearer ${appState.accessToken}` : undefined
                     },
                     body: JSON.stringify({
-                        ref,
-                        code,
                         accessToken: appState.accessToken,
                         cookie: localStorage.getItem('giffgaff_cookie') || undefined,
-                        memberId: appState.memberId || undefined,
-                        ssn: appState.esimSSN || undefined,
-                        activationCode: appState.esimActivationCode || undefined
+                        ref,
+                        code
                     })
                 });
-                if (!respSms.ok) {
-                    const t = await respSms.text();
-                    throw new Error(`后端编排失败: ${respSms.status} - ${t}`);
+                if (!resp.ok) {
+                    const t = await resp.text();
+                    throw new Error(`验证失败: ${resp.status} - ${t}`);
                 }
-                const result = await respSms.json();
-
-                if (result.success && result.lpaString) {
-                    appState.lpaString = result.lpaString;
-                    appState.esimSSN = result.ssn || appState.esimSSN;
-                    appState.esimActivationCode = result.activationCode || appState.esimActivationCode;
-                    showStatus(elements.emailVerifyStatus, "激活成功，已获取LPA！", "success");
-                    updateResultUI();
-                } else {
-                    showStatus(elements.emailVerifyStatus, result.message || '激活已提交，稍后到“获取eSIM Token”重试。', 'warning');
-                }
+                const data = await resp.json();
+                appState.emailSignature = data.signature || '';
+                showStatus(elements.emailVerifyStatus, '验证码验证成功，已获得签名。', 'success');
+                updateStatus();
+                saveSession();
+                setTimeout(() => { showSection(3); }, 1000);
                 
             } catch (error) {
                 showStatus(elements.emailVerifyStatus, "验证码验证失败：" + error.message, "error");
@@ -2584,6 +2644,101 @@
                 elements.reserveESimBtn.disabled = false;
             }
         });
+
+        // Step 4: 短信激活内联逻辑
+        (function bindSmsInline(){
+            const sendBtn = document.getElementById('smsInlineSendBtn');
+            const verifyBtn = document.getElementById('smsInlineVerifyBtn');
+            const codeInput = document.getElementById('smsInlineCode');
+            const statusEl = document.getElementById('smsInlineStatus');
+            const cookieGate = document.getElementById('smsCookieGate');
+            if (sendBtn && !sendBtn.__bound) {
+                sendBtn.__bound = true;
+                sendBtn.addEventListener('click', async () => {
+                    // 发送验证码不强制需要 Cookie
+                    try {
+                        sendBtn.innerHTML = '<span class="loading"></span> 发送中...';
+                        sendBtn.disabled = true;
+                        showStatus(statusEl, '正在发送短信验证码...', 'success');
+                        const r = await fetch(apiEndpoints.mfaChallenge, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': appState.accessToken ? `Bearer ${appState.accessToken}` : undefined },
+                            body: JSON.stringify({
+                                accessToken: appState.accessToken,
+                                cookie: localStorage.getItem('giffgaff_cookie') || undefined,
+                                source: 'esim',
+                                preferredChannels: ['TEXT']
+                            })
+                        });
+                        if (!r.ok) throw new Error('发送失败: ' + r.status);
+                        const d = await r.json();
+                        if (!d.ref) throw new Error('未返回引用');
+                        appState.emailCodeRef = d.ref;
+                        showStatus(statusEl, '验证码已发送，请查收短信。', 'success');
+                    } catch (e) {
+                        showStatus(statusEl, '发送验证码失败：' + e.message, 'error');
+                    } finally {
+                        sendBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i> 发送验证码';
+                        sendBtn.disabled = false;
+                    }
+                });
+            }
+            if (verifyBtn && !verifyBtn.__bound) {
+                verifyBtn.__bound = true;
+                verifyBtn.addEventListener('click', async () => {
+                    // 不再强制 Cookie（短信激活采用 GraphQL 流程）
+                    const code = (codeInput?.value || '').trim();
+                    if (!/^\d{6}$/.test(code)) { showStatus(statusEl, '请输入6位数字验证码', 'error'); return; }
+                    if (!appState.emailCodeRef) { showStatus(statusEl, '缺少验证码引用，请先发送验证码', 'error'); return; }
+                    try {
+                        verifyBtn.innerHTML = '<span class="loading"></span> 验证中...';
+                        verifyBtn.disabled = true;
+                        const resp = await fetch(apiEndpoints.mfaValidation, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': appState.accessToken ? `Bearer ${appState.accessToken}` : undefined },
+                            body: JSON.stringify({ accessToken: appState.accessToken, cookie: localStorage.getItem('giffgaff_cookie') || undefined, ref: appState.emailCodeRef, code })
+                        });
+                        if (!resp.ok) throw new Error('验证失败: ' + resp.status);
+                        const data = await resp.json();
+                        appState.emailSignature = data.signature || '';
+                        showStatus(statusEl, '验证码验证成功，开始自动预订与激活...', 'success');
+                        // 预订 eSIM
+                        const reserveResp = await fetch(apiEndpoints.graphql, {
+                            method: 'POST', headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ accessToken: appState.accessToken, mfaSignature: appState.emailSignature, query: `mutation reserveESim($input: ESimReservationInput!) { reserveESim: reserveESim(input: $input) { esim { ssn activationCode deliveryStatus __typename } __typename } }`, variables: { input: { memberId: appState.memberId, userIntent: 'SWITCH' } }, operationName: 'reserveESim' })
+                        });
+                        if (!reserveResp.ok) throw new Error('预订失败: ' + reserveResp.status);
+                        const reserveData = await reserveResp.json();
+                        appState.esimSSN = reserveData.data?.reserveESim?.esim?.ssn || appState.esimSSN;
+                        appState.esimActivationCode = reserveData.data?.reserveESim?.esim?.activationCode || appState.esimActivationCode;
+                        appState.esimDeliveryStatus = reserveData.data?.reserveESim?.esim?.deliveryStatus || 'RESERVED';
+                        updateStatus();
+                        // 自动激活（网页流）
+                        const actResp = await fetch(apiEndpoints.autoActivate, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ activationCode: appState.esimActivationCode, cookie: localStorage.getItem('giffgaff_cookie') || undefined, accessToken: appState.accessToken || undefined }) });
+                        if (!actResp.ok) throw new Error('激活请求失败: ' + actResp.status);
+                        const actData = await actResp.json();
+                        showStatus(statusEl, actData.success ? '激活已提交/成功，正在获取二维码...' : (actData.message || '激活失败'), actData.success ? 'success' : 'error');
+                        // 获取 LPA
+                        const tokenResp = await fetch(apiEndpoints.graphql, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ accessToken: appState.accessToken, mfaSignature: appState.emailSignature, query: `query eSimDownloadToken($ssn: String!) { eSimDownloadToken(ssn: $ssn) { lpaString __typename } }`, variables: { ssn: appState.esimSSN }, operationName: 'eSimDownloadToken' }) });
+                        if (!tokenResp.ok) throw new Error('获取LPA失败: ' + tokenResp.status);
+                        const tokenData = await tokenResp.json();
+                        appState.lpaString = tokenData.data?.eSimDownloadToken?.lpaString || '';
+                        if (appState.lpaString) {
+                            showSection(5);
+                            showESimResult();
+                        } else {
+                            showStatus(statusEl, '暂未获取到LPA，请在第五步稍后重试“获取eSIM Token”。', 'warning');
+                        }
+                    } catch (e) {
+                        showStatus(statusEl, '短信激活失败：' + e.message, 'error');
+                    } finally {
+                        verifyBtn.innerHTML = '<i class="fas fa-check me-2"></i> 验证并继续激活';
+                        verifyBtn.disabled = false;
+                    }
+                });
+            }
+            // Cookie 闸门逻辑移除（保留空容器以兼容DOM结构）
+        })();
 
         // 显示eSIM信息和手动激活指导
         function showESIMInfoAndGuide() {
@@ -3089,6 +3244,39 @@
         
         // 页面加载完成后的初始化
         document.addEventListener('DOMContentLoaded', function() {
+            // Step4 卡片选择交互（与第一步UI一致）
+            (function bindStep4Cards(){
+                const manual = document.getElementById('manualActivateCard');
+                const sms = document.getElementById('smsActivateCard');
+                const bind = (el, handler) => {
+                    if (!el || el.__bound) return; el.__bound = true;
+                    el.addEventListener('click', handler);
+                    el.addEventListener('keydown', (e)=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault(); handler();}});
+                };
+                bind(manual, ()=>{
+                    // 仅显示手动区块，隐藏短信区块
+                    const manualBlock = document.getElementById('manualBlock');
+                    const smsBlock = document.getElementById('smsInlineSection');
+                    if (smsBlock) smsBlock.style.display = 'none';
+                    if (manualBlock) {
+                        manualBlock.style.display = 'block';
+                        manualBlock.scrollIntoView({behavior:'smooth', block:'center'});
+                    }
+                });
+                bind(sms, ()=>{
+                    // 仅显示短信区块，隐藏手动区块
+                    const sec = document.getElementById('smsInlineSection');
+                    const manualBlock = document.getElementById('manualBlock');
+                    if (manualBlock) manualBlock.style.display = 'none';
+                    if (sec) {
+                        sec.style.display = 'block';
+                        sec.scrollIntoView({behavior:'smooth', block:'center'});
+                    }
+                    // 短信激活走 GraphQL，不再强制需要 Cookie
+                    const gate = document.getElementById('smsCookieGate');
+                    if (gate) gate.style.display = 'none';
+                });
+            })();
             console.log('Giffgaff eSIM申请工具已加载');
             
             // 初始化服务时间检查（立即渲染一次）
