@@ -12,6 +12,7 @@ import '../styles/mobile-responsive.css';
 
 // 导入性能优化模块
 import './performance.js';
+import { autoInjectFooter } from './modules/footer.js';
 
 // 导入 Simyo 应用主模块
 import simyoApp from './modules/simyo/app.js';
@@ -23,3 +24,6 @@ window.simyoApp = simyoApp;
 
 // 导出应用实例
 export default simyoApp;
+
+// 注入统一版权页脚
+try { autoInjectFooter(); } catch (_) {}

@@ -78,10 +78,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Silentely/esim-tools.git"
+    "url": "https://github.com/Silentely/eSIM-Tools.git"
   },
   "bugs": {
-    "url": "https://github.com/Silentely/esim-tools/issues"
+    "url": "https://github.com/Silentely/eSIM-Tools/issues"
   },
   "homepage": "https://esim.cosr.eu.org"
 }

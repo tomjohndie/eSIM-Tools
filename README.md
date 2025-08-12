@@ -1,13 +1,13 @@
 <div align="center">
-<h1 align="center">eSIM工具集 🚀<br><img align='middle' src='https://anay.cosr.eu.org/?text=@Silentely/bili-calendar'></img></h1>
-<img align='middle' src='https://anay.cosr.eu.org/?repo=Silentely/bili-calendar'></img>
+<h1 align="center">eSIM Tools 🚀<br><img align='middle' src='https://anay.cosr.eu.org/?text=@Silentely/eSIM-Tools'></img></h1>
+<img align='middle' src='https://anay.cosr.eu.org/?repo=Silentely/eSIM-Tools'></img>
 <br>
-<img src="https://img.shields.io/github/forks/Silentely/bili-calendar?color=orange" alt="GitHub forks">
-<img src="https://img.shields.io/github/issues/Silentely/bili-calendar?color=green" alt="GitHub issues">
+<img src="https://img.shields.io/github/forks/Silentely/eSIM-Tools?color=orange" alt="GitHub forks">
+<img src="https://img.shields.io/github/issues/Silentely/eSIM-Tools?color=green" alt="GitHub issues">
 <br>
-<img src="https://img.shields.io/github/license/Silentely/bili-calendar?color=ff69b4" alt="License">
-<img src="https://img.shields.io/github/languages/code-size/Silentely/bili-calendar?color=blueviolet" alt="Code size">
-<img src="https://img.shields.io/github/last-commit/Silentely/bili-calendar/main?label=%E4%B8%8A%E6%AC%A1%E6%9B%B4%E6%96%B0&color=success" alt="Last commit">
+<img src="https://img.shields.io/github/license/Silentely/eSIM-Tools?color=ff69b4" alt="License">
+<img src="https://img.shields.io/github/languages/code-size/Silentely/eSIM-Tools?color=blueviolet" alt="Code size">
+<img src="https://img.shields.io/github/last-commit/Silentely/eSIM-Tools/main?label=%E4%B8%8A%E6%AC%A1%E6%9B%B4%E6%96%B0&color=success" alt="Last commit">
 <img src="https://api.netlify.com/api/v1/badges/8fc159e2-3996-4e1b-bf9d-1945a3474682/deploy-status" alt="Netlify Status">
 <br>
 </div>
@@ -68,8 +68,8 @@
 
 1. **克隆仓库**
    ```bash
-   git clone https://github.com/Silentely/esim-tools.git
-   cd esim-tools
+   git clone https://github.com/Silentely/eSIM-Tools.git
+   cd eSIM-Tools
    ```
 
 2. **安装依赖**
@@ -332,7 +332,7 @@ open tests/test_simyo_esim.html
 ## 📞 支持
 
 如果您遇到问题或有建议，请：
-- 提交 [GitHub Issue](https://github.com/Silentely/esim-tools/issues)
+- 提交 [GitHub Issue](https://github.com/Silentely/eSIM-Tools/issues)
 - 查看 [常见问题解答](./docs/guides/DEPLOYMENT_GUIDE.md#故障排除)
 - 参考详细文档和使用指南
 

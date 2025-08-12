@@ -12,6 +12,7 @@ import '../styles/mobile-responsive.css';
 
 // 导入性能优化模块
 import './performance.js';
+import { autoInjectFooter } from './modules/footer.js';
 
 // 导入 Giffgaff 应用主模块
 import giffgaffApp from './modules/giffgaff/app.js';
@@ -24,3 +25,6 @@ window.app = giffgaffApp; // 简写别名
 
 // 导出应用实例
 export default giffgaffApp;
+
+// 注入统一版权页脚
+try { autoInjectFooter(); } catch (_) {}

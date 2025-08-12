@@ -1,5 +1,5 @@
 // Service Worker for eSIM Tools
-const CACHE_NAME = 'esim-tools-v2.1.0';
+const CACHE_NAME = 'eSIM-Tools-v2.1.0';
 const STATIC_CACHE = 'static-v2.1.0';
 const DYNAMIC_CACHE = 'dynamic-v2.1.0';
 

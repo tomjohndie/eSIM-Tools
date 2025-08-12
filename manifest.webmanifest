@@ -1,6 +1,6 @@
 {
-  "name": "eSIM 工具",
-  "short_name": "eSIM",
+  "name": "eSIM Tools",
+  "short_name": "eSIM Tools",
   "description": "Giffgaff 与 Simyo eSIM 申请与管理工具",
   "start_url": "/",
   "scope": "/",

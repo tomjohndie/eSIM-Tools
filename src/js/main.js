@@ -5,6 +5,8 @@ import '../styles/mobile-responsive.css';
 
 // 初始化性能优化
 import './performance.js';
+import './modules/footer.js';
+import { autoInjectFooter } from './modules/footer.js';
 // 入口脚本：避免冗余控制台输出
 
 // 通过构建时注入的环境变量设置访问密钥（仅用于本站 Netlify Functions）
@@ -55,3 +57,6 @@ if (window.TURNSTILE_SITE_KEY) {
     initTurnstile();
   }
 }
+
+// 统一注入版权页脚
+try { autoInjectFooter(); } catch (_) {}

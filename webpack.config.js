@@ -8,7 +8,8 @@ module.exports = {
   entry: {
     main: './src/js/main.js',
     giffgaff: './src/js/giffgaff.js',
-    simyo: './src/js/simyo.js'
+    simyo: './src/js/simyo.js',
+    footer: './src/js/bootstrap-footer.js'
   },
   output: {
     path: path.resolve(__dirname, 'dist'),

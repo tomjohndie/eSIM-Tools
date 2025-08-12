@@ -28,7 +28,7 @@ eSIM工具集是一个专为Giffgaff和Simyo用户设计的eSIM管理工具集�
 ## 项目结构
 
 ```
-esim-tools/
+eSIM-Tools/
 ├── src/
 │   ├── giffgaff/
 │   │   └── giffgaff_complete_esim.html  # Giffgaff主工具

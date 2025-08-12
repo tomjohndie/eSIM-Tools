@@ -18,7 +18,7 @@ if [ ! -d ".git" ]; then
     git commit -m "Initial commit: eSIM Tools with Netlify deployment"
     
     echo "📋 请设置远程仓库:"
-    echo "   git remote add origin https://github.com/your-username/esim-tools.git"
+    echo "   git remote add origin https://github.com/your-username/eSIM-Tools.git"
     echo "   git push -u origin main"
     echo ""
     echo "然后在Netlify中连接此仓库进行自动部署"
@@ -42,7 +42,7 @@ else
             git push
         else
             echo "⚠️  未设置远程仓库，请手动设置:"
-            echo "   git remote add origin https://github.com/your-username/esim-tools.git"
+            echo "   git remote add origin https://github.com/your-username/eSIM-Tools.git"
             echo "   git push -u origin main"
         fi
     fi
